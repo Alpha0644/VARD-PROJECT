@@ -48,7 +48,7 @@ export default function LoginPage() {
                 </p>
 
                 {error && (
-                    <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+                    <div role="alert" className="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
                         {error}
                     </div>
                 )}
@@ -60,6 +60,7 @@ export default function LoginPage() {
                         </label>
                         <input
                             id="email"
+                            name="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -70,11 +71,17 @@ export default function LoginPage() {
                     </div>
 
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                            Mot de passe
-                        </label>
+                        <div className="flex items-center justify-between mb-2">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                Mot de passe
+                            </label>
+                            <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                                Mot de passe oublié ?
+                            </Link>
+                        </div>
                         <input
                             id="password"
+                            name="password"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}

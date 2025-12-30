@@ -78,7 +78,7 @@ export default function RegisterPage() {
                 </p>
 
                 {error && (
-                    <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+                    <div role="alert" className="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
                         {error}
                     </div>
                 )}
@@ -91,10 +91,11 @@ export default function RegisterPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 type="button"
+                                value="AGENT"
                                 onClick={() => setFormData({ ...formData, role: 'AGENT' })}
                                 className={`p-4 border-2 rounded-lg transition ${formData.role === 'AGENT'
-                                        ? 'border-blue-600 bg-blue-50'
-                                        : 'border-gray-300 hover:border-gray-400'
+                                    ? 'border-blue-600 bg-blue-50'
+                                    : 'border-gray-300 hover:border-gray-400'
                                     }`}
                             >
                                 <div className="font-semibold">Agent</div>
@@ -102,10 +103,11 @@ export default function RegisterPage() {
                             </button>
                             <button
                                 type="button"
+                                value="COMPANY"
                                 onClick={() => setFormData({ ...formData, role: 'COMPANY' })}
                                 className={`p-4 border-2 rounded-lg transition ${formData.role === 'COMPANY'
-                                        ? 'border-blue-600 bg-blue-50'
-                                        : 'border-gray-300 hover:border-gray-400'
+                                    ? 'border-blue-600 bg-blue-50'
+                                    : 'border-gray-300 hover:border-gray-400'
                                     }`}
                             >
                                 <div className="font-semibold">Entreprise</div>
@@ -120,6 +122,7 @@ export default function RegisterPage() {
                         </label>
                         <input
                             id="name"
+                            name="name"
                             type="text"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -135,6 +138,7 @@ export default function RegisterPage() {
                         </label>
                         <input
                             id="email"
+                            name="email"
                             type="email"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -150,6 +154,7 @@ export default function RegisterPage() {
                         </label>
                         <input
                             id="password"
+                            name="password"
                             type="password"
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
