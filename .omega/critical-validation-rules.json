@@ -1,0 +1,86 @@
+{
+    "version": "3.0.1",
+    "comment": "Smart Emergency Brake - These rules prevent AI from auto-validating critical code.",
+    "rules": [
+        {
+            "id": "money_logic",
+            "triggers": [
+                "stripe",
+                "paypal",
+                "payment",
+                "charge",
+                "refund",
+                "currency",
+                "wallet",
+                "subscription"
+            ],
+            "risk_level": "CRITICAL",
+            "required_action": "STOP_AUTO_TEST",
+            "message": "🚨 MONEY ZONE: I detected payment logic. I am PROHIBITED from auto-validating this. You MUST write the test manually or provide a specific CONTEXT example."
+        },
+        {
+            "id": "data_destruction",
+            "triggers": [
+                "delete.*from",
+                "drop.*table",
+                "truncate",
+                "remove.*user",
+                "destroy"
+            ],
+            "risk_level": "CRITICAL",
+            "required_action": "ADD_WARNING_COMMENT",
+            "message": "⚠️ DATA DANGER: Destructive code detected. Verify the WHERE clause 3 times. Adding WARNING comment."
+        },
+        {
+            "id": "auth_security",
+            "triggers": [
+                "login",
+                "signup",
+                "password",
+                "jwt",
+                "session",
+                "oauth",
+                "cookie",
+                "token"
+            ],
+            "risk_level": "HIGH",
+            "required_action": "FORCE_SECURITY_CHECKLIST",
+            "message": "🔒 SECURITY ZONE: Auth logic detected. Have you verified the 7-Point Security Checklist in SECURITY.md?"
+        },
+        {
+            "id": "financial_calculation",
+            "triggers": [
+                "tax",
+                "vat",
+                "discount",
+                "calculate.*price",
+                "interest",
+                "commission"
+            ],
+            "risk_level": "HIGH",
+            "required_action": "REQUIRE_CONTEXT_EXAMPLE",
+            "message": "🧮 CALCULATION RISK: Financial math detected. Please provide a concrete example (e.g., '100 * 0.2 = 20') to verify this logic."
+        },
+        {
+            "id": "crypto_secrets",
+            "triggers": [
+                "private_key",
+                "secret_key",
+                "sign",
+                "encrypt",
+                "decrypt",
+                "hash"
+            ],
+            "risk_level": "CRITICAL",
+            "required_action": "ENV_VAR_CHECK",
+            "message": "🗝️ CRYPTO RISK: Cryptography detected. Ensure NO hardcoded secrets are used. Move all keys to .env."
+        }
+    ],
+    "actions_definition": {
+        "STOP_AUTO_TEST": "Do not generate a passing test. Generate a failing placeholder test asking for human input.",
+        "ADD_WARNING_COMMENT": "Inject // ⚠️ CRITICAL: VERIFY THIS LOGIC MANUALLY into the code.",
+        "FORCE_SECURITY_CHECKLIST": "Display the security checklist before outputting code.",
+        "REQUIRE_CONTEXT_EXAMPLE": "Ask user for a specific input/output example before writing the function.",
+        "ENV_VAR_CHECK": "Scan code for string literals that look like secrets."
+    }
+}

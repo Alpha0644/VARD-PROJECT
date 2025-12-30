@@ -1,0 +1,60 @@
+{
+  "name": "omega-v3",
+  "version": "3.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    
+    "_comment_tests": "Testing scripts",
+    "test": "vitest",
+    "test:unit": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run --coverage --reporter=json --reporter=default",
+    
+    "_comment_mutation": "Mutation testing (detects useless tests)",
+    "test:mutation": "stryker run",
+    "test:mutation:watch": "stryker run --watch",
+    
+    "_comment_visual": "Visual regression testing",
+    "test:visual": "backstop test",
+    "test:visual:reference": "backstop reference",
+    "test:visual:approve": "backstop approve",
+    
+    "_comment_monitoring": "Production monitoring",
+    "monitor:costs": "node tools/cost-monitor.js",
+    "monitor:uptime": "curl https://yourdomain.com/api/health",
+    
+    "_comment_setup": "One-time setup scripts",
+    "setup:sentry": "bash tools/setup-sentry.sh",
+    "setup:uptime": "bash tools/setup-uptime-monitoring.sh"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@prisma/client": "^5.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "@playwright/test": "^1.40.0",
+    
+    "_comment": "Mutation Testing (FREE)",
+    "@stryker-mutator/core": "^8.0.0",
+    "@stryker-mutator/typescript-checker": "^8.0.0",
+    "@stryker-mutator/vitest-runner": "^8.0.0",
+    
+    "_comment": "Visual Regression (FREE)",
+    "backstopjs": "^6.3.0",
+    
+    "_comment": "Production Monitoring (FREE tier)",
+    "@sentry/nextjs": "^7.0.0"
+  }
+}

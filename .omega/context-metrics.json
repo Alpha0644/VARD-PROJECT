@@ -1,0 +1,12 @@
+{
+    "version": "3.0.0",
+    "last_refresh": null,
+    "messages_since_refresh": 0,
+    "current_complexity_score": 0.0,
+    "drift_detected": false,
+    "drift_incidents_count": 0,
+    "emergency_refreshes_count": 0,
+    "current_mode": null,
+    "architect_task_streak": 0,
+    "refresh_history": []
+}

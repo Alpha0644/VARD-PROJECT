@@ -1,0 +1,155 @@
+{
+    "version": "3.0.0",
+    "real_time_checks": {
+        "enabled": true,
+        "stream_analysis": true,
+        "auto_fix": true
+    },
+    "violation_patterns": [
+        {
+            "id": "typescript_any",
+            "severity": "critical",
+            "pattern": ":\\s*any\\b",
+            "description": "TypeScript 'any' type detected",
+            "auto_fix": {
+                "enabled": true,
+                "strategy": "replace_with_unknown_plus_zod",
+                "template": ": unknown // TODO: Add Zod validation"
+            },
+            "message": "⚠️ VIOLATION DETECTED: TypeScript 'any' type\n   Auto-fixing: Replacing with 'unknown' + Zod validation reminder"
+        },
+        {
+            "id": "hardcoded_secret",
+            "severity": "critical",
+            "pattern": "(password|api_key|secret|token)\\s*=\\s*[\"'][^\"']+[\"']",
+            "description": "Hardcoded secret detected",
+            "auto_fix": {
+                "enabled": true,
+                "strategy": "extract_to_env",
+                "template": "process.env.{VAR_NAME}"
+            },
+            "message": "🚨 CRITICAL: Hardcoded secret detected\n   Auto-fixing: Moving to environment variable"
+        },
+        {
+            "id": "sql_injection",
+            "pattern": "(SELECT|INSERT|UPDATE|DELETE).*WHERE.*\\$\\{",
+            "severity": "critical",
+            "description": "SQL injection vulnerability",
+            "auto_fix": {
+                "enabled": true,
+                "strategy": "use_orm",
+                "recommendation": "Use Prisma ORM or parameterized queries"
+            },
+            "message": "🚨 CRITICAL: SQL injection risk\n   Auto-fixing: Converting to Prisma query"
+        },
+        {
+            "id": "dangerous_html",
+            "pattern": "dangerouslySetInnerHTML.*{{.*}}",
+            "severity": "high",
+            "description": "Unsafe HTML rendering",
+            "auto_fix": {
+                "enabled": true,
+                "strategy": "add_sanitizer",
+                "template": "dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize({content}) }}"
+            },
+            "message": "⚠️ XSS RISK: dangerouslySetInnerHTML without sanitization\n   Auto-fixing: Adding DOMPurify.sanitize()"
+        },
+        {
+            "id": "missing_null_check",
+            "pattern": "\\w+\\?\\.(\\w+)\\.(\\w+)",
+            "severity": "medium",
+            "description": "Chained optional access without null check",
+            "auto_fix": {
+                "enabled": true,
+                "strategy": "add_null_check",
+                "template": "if ({obj}) { {obj}.{prop} }"
+            },
+            "message": "⚠️ POTENTIAL ERROR: Deep optional chaining\n   Recommendation: Add explicit null check"
+        },
+        {
+            "id": "async_without_await",
+            "pattern": "async\\s+function\\s+\\w+\\([^)]*\\)\\s*{[^}]*}(?!.*await)",
+            "severity": "medium",
+            "description": "Async function without await",
+            "auto_fix": {
+                "enabled": false,
+                "strategy": "warn_only"
+            },
+            "message": "⚠️ WARNING: Async function without await keyword\n   This might be intentional, but verify you're not missing an await"
+        },
+        {
+            "id": "react_map_without_key",
+            "pattern": "\\.map\\([^)]*=>\\s*<\\w+(?!.*key=)",
+            "severity": "medium",
+            "description": "React map without key prop",
+            "auto_fix": {
+                "enabled": true,
+                "strategy": "add_key_prop",
+                "template": "key={item.id}"
+            },
+            "message": "⚠️ REACT WARNING: .map() without key prop\n   Auto-fixing: Adding key={item.id}"
+        },
+        {
+            "id": "console_log",
+            "pattern": "console\\.(log|debug|info)\\(",
+            "severity": "low",
+            "description": "Console.log in production code",
+            "auto_fix": {
+                "enabled": true,
+                "strategy": "replace_with_logger",
+                "template": "logger.info("
+            },
+            "message": "ℹ️ CODE QUALITY: console.log detected\n   Auto-fixing: Replacing with logger.info()"
+        },
+        {
+            "id": "duplicate_import",
+            "pattern": "import\\s+.*\\s+from\\s+[\"'](.+)[\"'].*import\\s+.*\\s+from\\s+[\"']\\1[\"']",
+            "severity": "low",
+            "description": "Duplicate imports from same module",
+            "auto_fix": {
+                "enabled": true,
+                "strategy": "merge_imports"
+            },
+            "message": "ℹ️ OPTIMIZATION: Duplicate imports detected\n   Auto-fixing: Merging into single import statement"
+        }
+    ],
+    "performance_patterns": [
+        {
+            "id": "n_plus_one_query",
+            "pattern": "for\\s*\\(.*\\)\\s*{[^}]*await\\s+(db|prisma)\\.",
+            "severity": "high",
+            "description": "Potential N+1 query problem",
+            "auto_fix": {
+                "enabled": true,
+                "strategy": "suggest_batch",
+                "recommendation": "Use .findMany() with include or batch queries"
+            },
+            "message": "⚡ PERFORMANCE: N+1 query detected\n   Recommendation: Use batch query instead of loop"
+        },
+        {
+            "id": "unmemoized_function",
+            "pattern": "onClick=\\{\\(\\)\\s*=>",
+            "severity": "low",
+            "description": "Inline arrow function in JSX",
+            "auto_fix": {
+                "enabled": false,
+                "strategy": "suggest_usecallback",
+                "recommendation": "Consider useCallback for performance"
+            },
+            "message": "ℹ️ PERFORMANCE TIP: Inline arrow function in onClick\n   Consider useCallback if parent re-renders often"
+        }
+    ],
+    "auto_correction_flow": {
+        "1_detect": "Stream-based pattern matching during code generation",
+        "2_analyze": "Determine severity and auto-fix availability",
+        "3_fix": "Apply auto-fix if available and severity > medium",
+        "4_notify": "Show user what was detected and fixed",
+        "5_learn": "Store pattern in learned-patterns.json for future reference"
+    },
+    "statistics": {
+        "track_violations": true,
+        "track_auto_fixes": true,
+        "generate_report": true,
+        "report_path": ".omega/quality-reports/"
+    }
+}

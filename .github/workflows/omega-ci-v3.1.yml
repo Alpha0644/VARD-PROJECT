@@ -1,0 +1,115 @@
+# Update omega-ci.yml to add mutation testing gate
+
+name: OMEGA v3.1 CI/CD Pipeline (with Mutation Testing)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  
+jobs:
+  # ... (existing quality-gates job) ...
+
+  # NEW: Mutation Testing (runs weekly to save CI minutes)
+  mutation-testing:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[mutation]')
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci
+      
+      - name: 🧬 Run Mutation Tests
+        run: |
+          npm install -D @stryker-mutator/core @stryker-mutator/typescript-checker
+          npx stryker run
+      
+      - name: 📊 Upload Mutation Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: mutation-report
+          path: reports/mutation/
+      
+      - name: 🚨 Check Mutation Score
+        run: |
+          SCORE=$(cat reports/mutation/mutation.json | jq '.mutationScore')
+          echo "Mutation Score: $SCORE%"
+          if (( $(echo "$SCORE < 70" | bc -l) )); then
+            echo "❌ Mutation score below 70%: $SCORE%"
+            echo "This means some tests don't actually test anything!"
+            exit 1
+          fi
+
+  # NEW: Cost Check (runs daily)
+  cost-monitoring:
+    name: Cost Monitoring
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: 💰 Check Costs
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          MONTHLY_BUDGET: ${{ secrets.MONTHLY_BUDGET || '100' }}
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+        run: node tools/cost-monitor.js
+
+  # NEW: Visual Regression (on PR only)
+  visual-regression:
+    name: Visual Regression Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npm install -D backstopjs
+      
+      - name: 🏗️ Build application
+        run: npm run build
+      
+      - name: 🎨 Run Visual Tests
+        run: |
+          npm run dev &
+          sleep 10
+          npx backstop test
+      
+      - name: 📸 Upload Visual Diff Report
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: visual-regression-report
+          path: reports/visual/
+
+# Schedule: Daily cost check + Weekly mutation test
+on:
+  schedule:
+    - cron: '0 8 * * *'    # Daily at 8am UTC
+    - cron: '0 0 * * 0'    # Weekly on Sunday

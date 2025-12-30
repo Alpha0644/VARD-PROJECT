@@ -1,0 +1,104 @@
+{
+  "version": "3.0.0",
+  "mode_detection": {
+    "enabled": true,
+    "confidence_threshold": 0.7,
+    "rules": [
+      {
+        "mode": "FAST-TRACK",
+        "keywords": {
+          "primary": ["color", "css", "padding", "margin", "spacing", "text", "typo", "icon", "font"],
+          "exclude": ["user", "data", "auth", "payment", "api", "security", "database"]
+        },
+        "patterns": [
+          "change .* (color|background|text)",
+          "update .* (spacing|padding|margin)",
+          "fix .* typo",
+          "replace .* icon",
+          "rename .* (variable|function|file)"
+        ],
+        "confidence": 0.9,
+        "allow_override": true
+      },
+      {
+        "mode": "ARCHITECT",
+        "keywords": {
+          "primary": ["database", "auth", "payment", "api", "security", "user data", "sql", "prisma", "authentication", "authorization"],
+          "secondary": ["create table", "migration", "webhook", "stripe", "jwt", "session"]
+        },
+        "patterns": [
+          "(create|add|modify) .* (table|schema|model)",
+          "(setup|configure|implement) .* (auth|payment|security)",
+          ".* (api route|endpoint)",
+          ".* user .* data"
+        ],
+        "confidence": 1.0,
+        "allow_override": false,
+        "force_protocols": [
+          "security_checklist",
+          "test_first",
+          "zod_validation"
+        ]
+      },
+      {
+        "mode": "BUILDER",
+        "keywords": {
+          "primary": ["component", "button", "layout", "ui", "design", "interface", "page", "form"],
+          "secondary": ["responsive", "style", "theme", "navigation", "menu"]
+        },
+        "patterns": [
+          "(create|add|modify) .* component",
+          "(design|build) .* (page|layout|interface)",
+          ".* (responsive|mobile|desktop)",
+          "(update|change) .* design"
+        ],
+        "confidence": 0.8,
+        "allow_override": true
+      },
+      {
+        "mode": "DEBUG",
+        "keywords": {
+          "primary": ["bug", "error", "fix", "broken", "not working", "issue", "problem"],
+          "secondary": ["crash", "fail", "exception", "undefined", "null"]
+        },
+        "patterns": [
+          "fix .* (bug|error|issue)",
+          ".* not working",
+          ".* (crash|fail)",
+          "debug .*",
+          "why .* (not|doesn't)"
+        ],
+        "confidence": 0.85,
+        "allow_override": true
+      },
+      {
+        "mode": "REFACTOR",
+        "keywords": {
+          "primary": ["refactor", "optimize", "improve", "clean", "restructure", "reorganize"],
+          "secondary": ["performance", "speed", "efficiency", "maintainability"]
+        },
+        "patterns": [
+          "refactor .*",
+          "optimize .* (performance|speed|code)",
+          "improve .* (code|structure)",
+          "clean up .*",
+          "make .* (faster|better|cleaner)"
+        ],
+        "confidence": 0.8,
+        "allow_override": true
+      }
+    ]
+  },
+  "auto_detection_prompts": {
+    "confidence_high": "🤖 AUTO-DETECTED MODE: {mode} (Confidence: {confidence}%)\n   Keywords detected: {keywords}\n   Proceeding with {mode} protocols.",
+    "confidence_medium": "🤖 SUGGESTED MODE: {mode} (Confidence: {confidence}%)\n   You can override by saying 'Actually, use {alternative_mode}'",
+    "confidence_low": "❓ AMBIGUOUS REQUEST\n   Detected keywords: {keywords}\n   Please specify mode: ARCHITECT, BUILDER, FAST-TRACK, DEBUG, or REFACTOR",
+    "override_rejected": "⚠️ MODE OVERRIDE REJECTED\n   Request contains critical keywords: {critical_keywords}\n   ARCHITECT mode enforced for security."
+  },
+  "learning": {
+    "enabled": true,
+    "store_patterns": true,
+    "success_threshold": 0.9,
+    "adjustment_rate": 0.1
+  }
+}

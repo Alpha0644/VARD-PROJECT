@@ -1,0 +1,81 @@
+{
+    "id": "backstop_default",
+    "viewports": [
+        {
+            "label": "phone",
+            "width": 375,
+            "height": 667
+        },
+        {
+            "label": "tablet",
+            "width": 768,
+            "height": 1024
+        },
+        {
+            "label": "desktop",
+            "width": 1920,
+            "height": 1080
+        }
+    ],
+    "scenarios": [
+        {
+            "label": "Homepage",
+            "url": "http://localhost:3000",
+            "referenceUrl": "",
+            "readyEvent": "",
+            "readySelector": "",
+            "delay": 500,
+            "hideSelectors": [],
+            "removeSelectors": [],
+            "hoverSelector": "",
+            "clickSelector": "",
+            "postInteractionWait": 0,
+            "selectors": [
+                "document"
+            ],
+            "selectorExpansion": true,
+            "expect": 0,
+            "misMatchThreshold": 0.1,
+            "requireSameDimensions": true
+        },
+        {
+            "label": "Login Page",
+            "url": "http://localhost:3000/login",
+            "delay": 500,
+            "selectors": [
+                "document"
+            ],
+            "misMatchThreshold": 0.1
+        },
+        {
+            "label": "Dashboard",
+            "url": "http://localhost:3000/dashboard",
+            "delay": 1000,
+            "selectors": [
+                "document"
+            ],
+            "misMatchThreshold": 0.1
+        }
+    ],
+    "paths": {
+        "bitmaps_reference": "tests/visual/reference",
+        "bitmaps_test": "tests/visual/test",
+        "engine_scripts": "tests/visual/engine_scripts",
+        "html_report": "reports/visual",
+        "ci_report": "reports/visual"
+    },
+    "report": [
+        "browser",
+        "CI"
+    ],
+    "engine": "puppeteer",
+    "engineOptions": {
+        "args": [
+            "--no-sandbox"
+        ]
+    },
+    "asyncCaptureLimit": 5,
+    "asyncCompareLimit": 50,
+    "debug": false,
+    "debugWindow": false
+}

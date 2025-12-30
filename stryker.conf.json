@@ -1,0 +1,47 @@
+{
+    "$schema": "https://stryker-mutator.io/stryker-schema.json",
+    "_comment": "Mutation Testing - Kills your code to verify tests actually work",
+    "packageManager": "npm",
+    "testRunner": "vitest",
+    "coverageAnalysis": "perTest",
+    "mutate": [
+        "lib/**/*.ts",
+        "app/**/*.ts",
+        "!**/*.test.ts",
+        "!**/*.spec.ts",
+        "!**/node_modules/**"
+    ],
+    "thresholds": {
+        "high": 80,
+        "low": 60,
+        "break": 50
+    },
+    "checkers": [
+        "typescript"
+    ],
+    "tsconfigFile": "tsconfig.json",
+    "mutator": {
+        "plugins": [
+            "@stryker-mutator/typescript-checker"
+        ]
+    },
+    "reporters": [
+        "html",
+        "clear-text",
+        "progress",
+        "dashboard"
+    ],
+    "htmlReporter": {
+        "fileName": "reports/mutation/mutation-report.html"
+    },
+    "dashboard": {
+        "project": "github.com/youruser/yourproject",
+        "version": "main"
+    },
+    "timeoutMS": 60000,
+    "ignorePatterns": [
+        "**/*.config.ts",
+        "**/migrations/**",
+        "**/scripts/**"
+    ]
+}
