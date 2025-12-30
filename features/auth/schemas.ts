@@ -10,9 +10,9 @@ const passwordSchema = z
 // Email validation
 const emailSchema = z
     .string()
-    .email('Email invalide')
-    .toLowerCase()
     .trim()
+    .toLowerCase()
+    .email('Email invalide')
 
 // Register Schema
 export const registerSchema = z.object({
