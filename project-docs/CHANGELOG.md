@@ -1,73 +1,33 @@
-# CHANGELOG
+# Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-
----
-
-## [Unreleased]
+## [Unreleased] - 2025-12-30
 
 ### Added
-- Initial OMEGA PROTOCOL v2.0 configuration
-- Enterprise-grade architecture documentation
-- Comprehensive security protocols
-- Testing strategy with templates
-- Deployment and DevOps guidelines
-- RGPD/GDPR compliance framework
-- Performance optimization guidelines
-
-### Security
-- Pre-commit hooks for secret detection
-- Zod validation schemas for all inputs
-- Rate limiting configuration
-- Security headers in Next.js config
-
----
-
-## [1.0.0] - 2025-12-29
-
-### Added
-- Project initialization with OMEGA PROTOCOL v2.0
-- Architecture documentation (CONTEXT, STACK, SECURITY, TESTING, DEPLOYMENT, COMPLIANCE, PERFORMANCE)
-- Validation schemas library (VALIDATION_SCHEMAS.md)
-- Project structure documentation
-- Git hooks for quality gates
-
----
-
-**Template for Future Entries:**
-
-```markdown
-## [Version] - YYYY-MM-DD
-
-### Added
-- 🎉 New features
-
-### Changed
-- ♻️ Changes in existing functionality
+- 🏗️ **MVP Foundation**: Initialized project structure with OMEGA Protocol v3.1.
+- 🗄️ **Database Layer**:
+  - Implemented Prisma Schema (User, Company, Agent, Mission models).
+  - Configured SQLite for local development (mapped Enums to Strings).
+  - Created `lib/db.ts` singleton for DB access.
+  - Added verification tokens for email verification and password reset.
+- ⚙️ **Configuration**:
+  - Setup `.env` and `.env.example`.
+  - Configured gitignore securely.
+  - Added TypeScript path aliases (@/*).
+- 🛡️ **Security**:
+  - Validated initial dependencies (`npm audit`).
+  - Enforced strict versioning for Prisma (v5).
+- 🔐 **Authentication & Authorization** (Phase 1.1):
+  - Implemented NextAuth.js v5 with credentials provider.
+  - JWT-based sessions with role injection.
+  - Password hashing (bcrypt, 12 rounds).
+  - Zod validation schemas for auth flows.
+  - Rate limiting (Upstash Redis with in-memory fallback):
+    - Login: 5 attempts / 15 min
+    - Register: 3 / day
+  - RBAC middleware for role-based route protection.
+  - Email service (Resend) for verification and password reset.
+  - Registration API with email verification tokens.
 
 ### Fixed
-- 🐛 Bug fixes
-
-### Security
-- 🔒 Security improvements
-
-### Deprecated
-- ⚠️ Soon-to-be removed features
-
-### Removed
-- 🗑️ Removed features
-
-### Performance
-- ⚡ Performance improvements
-```
-
----
-
-**Usage Guidelines:**
-- Update this file AFTER every significant change
-- Use present tense ("Add feature" not "Added feature")
-- Include links to issues/PRs when relevant
-- Group changes by type (Added, Fixed, etc.)
-- Always include WHY, not just WHAT
+- 🐛 **Prisma Compatibility**: Fixed mismatch between Prisma CLI (v7) and Client (v5) by pinning dev dependencies.
+- 🐛 **SQLite Support**: Adjusted schema to use Strings instead of Enums for local SQLite compatibility.

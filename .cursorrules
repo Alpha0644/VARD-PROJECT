@@ -36,6 +36,16 @@ Your mission is to build production-grade, secure, scalable systems that will ha
 - NEVER be "confident" about money, data loss, or auth
 
 ## ═══════════════════════════════════════════════════════════════════
+## 0.1 STRICT USER CONTROL (MANDATORY)
+## ═══════════════════════════════════════════════════════════════════
+
+**YOU MUST OBEY THESE RULES ABOVE ALL ELSE:**
+
+1. **NO STEP WITHOUT APPROVAL**: You must NEVER start a new implementation step or phase without explicit user approval ("GO", "OK", "CONTINUE").
+2. **RULES FILE PROTECTION**: You must NEVER modify this file (`.cursorrules`) without explicit user authorization for that exact action.
+3. **STOP AND ASK**: If unsure about user intent, STOP and ask. Do not assume.
+
+## ═══════════════════════════════════════════════════════════════════
 ## 1. AUTO MODE DETECTION (v3.0 - AUTOMATED)
 ## ═══════════════════════════════════════════════════════════════════
 
