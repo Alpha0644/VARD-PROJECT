@@ -1,601 +1,421 @@
-# TESTING STRATEGY v2.0
+# Testing Standards & Templates
 
-## 🎯 TESTING PHILOSOPHY
+## Overview
+
+This document provides standardized templates and best practices for writing tests in the VARD platform, following OMEGA Protocol requirements.
+
+---
+
+## Test Coverage Requirements
+
+| Category | Coverage Target | Status |
+|----------|----------------|--------|
+| Critical Paths (auth, payment) | 100% | ✅ |
+| Business Logic (missions) | 85% | 🟡 In Progress |
+| UI Components | 70% | ⏳ Planned |
+| Utils | 90% | ✅ |
+
+---
+
+## Test Structure
 
 ```
-"If it's not tested, it's broken."
-"If it's tested badly, it's still broken."
-```
-
-**Goals:**
-- 🟢 Critical paths (auth, payments): **100% coverage**
-- 🟡 Business logic: **85% coverage**
-- 🔵 UI components: **70% coverage**
-- ⚪ Utilities: **90% coverage**
-
-**Testing Pyramid:**
-```
-        /\      E2E (10%)         <- Slow, expensive, high value
-       /  \     Integration (30%)  <- Medium speed, medium cost
-      /    \    Unit (60%)         <- Fast, cheap, foundation
-     /______\
+tests/
+├── unit/           # Isolated function/module tests
+│   ├── api/        # API route tests
+│   ├── lib/        # Library function tests
+│   └── auth/       # Auth schema tests
+├── e2e/            # End-to-end user flows (Playwright)
+├── utils/          # Test utilities & mocks
+└── setup.ts        # Global test configuration
 ```
 
 ---
 
-## 1. UNIT TESTS (Vitest + Testing Library)
+## 1. Unit Test Template
 
-### What to Test
-- ✅ Pure functions (utils, helpers)
-- ✅ Custom hooks
-- ✅ Business logic (validation, calculations)
-- ✅ Data transformers
+### File Naming
+- `[feature].test.ts` for logic/utils
+- `[route-name].test.ts` for API routes
 
-### Template: Testing a Utility Function
-
+### Template
 ```typescript
-// /lib/utils/currency.ts
-export function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(amount / 100) // Amount in cents
-}
-
-// /tests/lib/utils/currency.test.ts
-import { describe, it, expect } from 'vitest'
-import { formatCurrency } from '@/lib/utils/currency'
-
-describe('formatCurrency', () => {
-  it('formats USD correctly', () => {
-    expect(formatCurrency(1234, 'USD')).toBe('$12.34')
-  })
-
-  it('formats EUR correctly', () => {
-    expect(formatCurrency(5000, 'EUR')).toBe('€50.00')
-  })
-
-  it('handles zero', () => {
-    expect(formatCurrency(0, 'USD')).toBe('$0.00')
-  })
-
-  it('handles negative amounts', () => {
-    expect(formatCurrency(-500, 'USD')).toBe('-$5.00')
-  })
-
-  it('throws on invalid currency', () => {
-    expect(() => formatCurrency(100, 'INVALID')).toThrow()
-  })
-})
-```
-
-### Template: Testing a React Hook
-
-```typescript
-// /hooks/useDebounce.ts
-export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value)
-
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(value), delay)
-    return () => clearTimeout(handler)
-  }, [value, delay])
-
-  return debouncedValue
-}
-
-// /tests/hooks/useDebounce.test.ts
-import { renderHook, act } from '@testing-library/react'
-import { useDebounce } from '@/hooks/useDebounce'
-import { vi } from 'vitest'
-
-describe('useDebounce', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  it('debounces value changes', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 500 } }
-    )
-
-    expect(result.current).toBe('initial')
-
-    // Change value
-    rerender({ value: 'updated', delay: 500 })
-    expect(result.current).toBe('initial') // Still old value
-
-    // Fast forward time
-    act(() => {
-      vi.advanceTimersByTime(500)
-    })
-
-    expect(result.current).toBe('updated') // Now updated
-  })
-})
-```
-
-### Template: Testing a React Component
-
-```typescript
-// /components/ui/Button.tsx
-export function Button({ children, variant = 'primary', onClick }: ButtonProps) {
-  return (
-    <button
-      className={cn(buttonVariants({ variant }))}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  )
-}
-
-// /tests/components/ui/Button.test.tsx
-import { render, screen, fireEvent } from '@testing-library/react'
-import { Button } from '@/components/ui/Button'
-import { vi } from 'vitest'
-
-describe('Button', () => {
-  it('renders children', () => {
-    render(<Button>Click me</Button>)
-    expect(screen.getByText('Click me')).toBeInTheDocument()
-  })
-
-  it('calls onClick handler', () => {
-    const handleClick = vi.fn()
-    render(<Button onClick={handleClick}>Click</Button>)
-    
-    fireEvent.click(screen.getByText('Click'))
-    expect(handleClick).toHaveBeenCalledTimes(1)
-  })
-
-  it('applies variant classes', () => {
-    const { container } = render(<Button variant="destructive">Delete</Button>)
-    const button = container.querySelector('button')
-    expect(button).toHaveClass('bg-destructive')
-  })
-
-  it('is accessible', () => {
-    render(<Button>Accessible</Button>)
-    const button = screen.getByRole('button', { name: /accessible/i })
-    expect(button).toBeInTheDocument()
-  })
-})
-```
-
----
-
-## 2. INTEGRATION TESTS (API Routes & Database)
-
-### What to Test
-- ✅ API endpoints (complete request/response cycle)
-- ✅ Database operations
-- ✅ Authentication flows
-- ✅ Business logic involving multiple layers
-
-### Template: Testing an API Route
-
-```typescript
-// /app/api/users/route.ts
-export async function GET(req: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const users = await db.user.findMany({
-    select: { id: true, name: true, email: true },
-    take: 20,
-  })
-
-  return NextResponse.json({ users })
-}
-
-// /tests/api/users/route.test.ts
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { GET } from '@/app/api/users/route'
-import { db } from '@/lib/db'
-
-describe('GET /api/users', () => {
-  beforeEach(async () => {
-    // Seed test database
-    await db.user.create({
-      data: { email: 'test@example.com', name: 'Test User' },
-    })
-  })
-
-  afterEach(async () => {
-    // Clean up
-    await db.user.deleteMany()
-  })
-
-  it('returns 401 if not authenticated', async () => {
-    const req = new Request('http://localhost/api/users')
-    const res = await GET(req)
-    
-    expect(res.status).toBe(401)
-  })
-
-  it('returns users if authenticated', async () => {
-    // Mock authenticated session
-    vi.mock('@/lib/auth', () => ({
-      getServerSession: () => ({ user: { id: '1', email: 'test@example.com' } }),
-    }))
-
-    const req = new Request('http://localhost/api/users')
-    const res = await GET(req)
-    const data = await res.json()
-
-    expect(res.status).toBe(200)
-    expect(data.users).toHaveLength(1)
-    expect(data.users[0]).toHaveProperty('email', 'test@example.com')
-  })
-})
-```
-
-### Template: Testing Auth Flow
-
-```typescript
-// /tests/api/auth/login.test.ts
-describe('POST /api/auth/login', () => {
-  it('returns JWT on valid credentials', async () => {
-    // Create test user
-    await db.user.create({
-      data: {
-        email: 'test@example.com',
-        password: await bcrypt.hash('ValidPassword123!', 12),
-      },
-    })
-
-    const res = await fetch('http://localhost:3000/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({
-        email: 'test@example.com',
-        password: 'ValidPassword123!',
-      }),
-    })
-
-    expect(res.status).toBe(200)
-    const data = await res.json()
-    expect(data).toHaveProperty('token')
-  })
-
-  it('returns 401 on wrong password', async () => {
-    await db.user.create({
-      data: {
-        email: 'test@example.com',
-        password: await bcrypt.hash('correct', 12),
-      },
-    })
-
-    const res = await fetch('http://localhost:3000/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({
-        email: 'test@example.com',
-        password: 'wrong',
-      }),
-    })
-
-    expect(res.status).toBe(401)
-  })
-
-  it('rate limits after 5 failed attempts', async () => {
-    await db.user.create({
-      data: {
-        email: 'test@example.com',
-        password: await bcrypt.hash('correct', 12),
-      },
-    })
-
-    // 5 failed attempts
-    for (let i = 0; i < 5; i++) {
-      await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: 'test@example.com',
-          password: 'wrong',
-        }),
-      })
-    }
-
-    // 6th should be blocked
-    const res = await fetch('http://localhost:3000/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({
-        email: 'test@example.com',
-        password: 'wrong',
-      }),
-    })
-
-    expect(res.status).toBe(429) // Too Many Requests
-  })
-})
-```
-
----
-
-## 3. E2E TESTS (Playwright)
-
-### What to Test
-- ✅ Critical user journeys (signup → purchase → confirmation)
-- ✅ Complex interactions across multiple pages
-- ✅ Real browser behavior (forms, navigation, animations)
-
-### Template: Testing Checkout Flow
-
-```typescript
-// /tests/e2e/checkout.spec.ts
-import { test, expect } from '@playwright/test'
-
-test.describe('Checkout Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    // Login first
-    await page.goto('/login')
-    await page.fill('[name="email"]', 'test@example.com')
-    await page.fill('[name="password"]', 'ValidPassword123!')
-    await page.click('button[type="submit"]')
-    await page.waitForURL('/dashboard')
-  })
-
-  test('complete purchase flow', async ({ page }) => {
-    // 1. Browse product
-    await page.goto('/products')
-    await page.click('[data-testid="product-card"]:first-child')
-
-    // 2. Add to cart
-    await page.click('[data-testid="add-to-cart"]')
-    await expect(page.locator('[data-testid="cart-count"]')).toHaveText('1')
-
-    // 3. Go to checkout
-    await page.goto('/checkout')
-
-    // 4. Fill payment (Stripe test mode)
-    await page.fill('[name="cardNumber"]', '4242 4242 4242 4242')
-    await page.fill('[name="cardExpiry"]', '12/25')
-    await page.fill('[name="cardCvc"]', '123')
-
-    // 5. Submit payment
-    await page.click('[data-testid="pay-button"]')
-
-    // 6. Verify success
-    await page.waitForURL('/order/success')
-    await expect(page.locator('h1')).toContainText('Payment Successful')
-
-    // 7. Check database (optional)
-    // const orders = await db.order.findMany({ where: { userId: testUser.id }})
-    // expect(orders).toHaveLength(1)
-  })
-
-  test('handles payment errors gracefully', async ({ page }) => {
-    await page.goto('/checkout')
-
-    // Use Stripe test card for declined payment
-    await page.fill('[name="cardNumber"]', '4000 0000 0000 0002')
-    await page.fill('[name="cardExpiry"]', '12/25')
-    await page.fill('[name="cardCvc"]', '123')
-
-    await page.click('[data-testid="pay-button"]')
-
-    // Should show error message
-    await expect(page.locator('[role="alert"]')).toContainText('Card declined')
-
-    // Should NOT redirect
-    expect(page.url()).toContain('/checkout')
-  })
-})
-```
-
-### Template: Testing Accessibility
-
-```typescript
-// /tests/e2e/accessibility.spec.ts
-import { test, expect } from '@playwright/test'
-import AxeBuilder from '@axe-core/playwright'
-
-test.describe('Accessibility', () => {
-  test('homepage should not have accessibility violations', async ({ page }) => {
-    await page.goto('/')
-
-    const accessibilityScanResults = await new AxeBuilder({ page }).analyze()
-
-    expect(accessibilityScanResults.violations).toEqual([])
-  })
-
-  test('keyboard navigation works', async ({ page }) => {
-    await page.goto('/')
-
-    // Tab through interactive elements
-    await page.keyboard.press('Tab')
-    await expect(page.locator(':focus')).toHaveAttribute('href', '/pricing')
-
-    await page.keyboard.press('Enter')
-    await page.waitForURL('/pricing')
-  })
-})
-```
-
----
-
-## 4. SNAPSHOT TESTS (UI Consistency)
-
-```typescript
-// /tests/components/PricingCard.test.tsx
-import { render } from '@testing-library/react'
-import { PricingCard } from '@/components/PricingCard'
-
-describe('PricingCard', () => {
-  it('matches snapshot', () => {
-    const { container } = render(
-      <PricingCard
-        title="Pro"
-        price={29}
-        features={['Feature 1', 'Feature 2']}
-      />
-    )
-
-    expect(container.firstChild).toMatchSnapshot()
-  })
-})
-```
-
----
-
-## 5. TESTING BEST PRACTICES
-
-### AAA Pattern (Arrange, Act, Assert)
-```typescript
-test('adds item to cart', () => {
-  // Arrange
-  const cart = new Cart()
-  const item = { id: '1', name: 'Product', price: 1000 }
-
-  // Act
-  cart.addItem(item)
-
-  // Assert
-  expect(cart.items).toHaveLength(1)
-  expect(cart.total).toBe(1000)
-})
-```
-
-### Test Naming Convention
-```
-✅ GOOD: 'returns 401 when user is not authenticated'
-❌ BAD:  'test1', 'it works'
-```
-
-### One Assertion Per Test (when possible)
-```typescript
-// ❌ AVOID (hard to debug which assertion failed)
-test('user creation', () => {
-  const user = createUser()
-  expect(user.id).toBeDefined()
-  expect(user.email).toContain('@')
-  expect(user.role).toBe('USER')
-})
-
-// ✅ PREFER (clear failure messages)
-test('assigns ID to new user', () => {
-  expect(createUser().id).toBeDefined()
-})
-
-test('validates email format', () => {
-  expect(createUser().email).toContain('@')
-})
-
-test('defaults to USER role', () => {
-  expect(createUser().role).toBe('USER')
-})
-```
-
-### Mock External Dependencies
-```typescript
-// Mock Stripe API
-vi.mock('stripe', () => ({
-  default: vi.fn(() => ({
-    paymentIntents: {
-      create: vi.fn().mockResolvedValue({ id: 'pi_test' }),
-    },
-  })),
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { functionToTest } from '@/path/to/function'
+
+// Mock dependencies
+vi.mock('@/lib/dependency', () => ({
+  dependencyFunction: vi.fn(),
 }))
+
+describe('Feature Name', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  describe('Happy Path', () => {
+    it('should do X when Y', async () => {
+      // Arrange
+      const input = { ... }
+      vi.mocked(dependencyFunction).mockResolvedValue({ ... })
+
+      // Act
+      const result = await functionToTest(input)
+
+      // Assert
+      expect(result).toEqual(expectedOutput)
+      expect(dependencyFunction).toHaveBeenCalledWith(expectedArgs)
+    })
+  })
+
+  describe('Error Handling', () => {
+    it('should throw error when invalid input', async () => {
+      const invalidInput = { ... }
+
+      await expect(functionToTest(invalidInput)).rejects.toThrow('Expected error message')
+    })
+  })
+})
 ```
 
 ---
 
-## 6. CI/CD INTEGRATION
+## 2. API Route Test Template
 
-### GitHub Actions Workflow
+### Example: POST /api/resource
+```typescript
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { POST } from '@/app/api/resource/route'
+import { db } from '@/lib/db'
+import { auth } from '@/lib/auth'
+
+vi.mock('@/lib/db')
+vi.mock('@/lib/auth')
+
+describe('POST /api/resource', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should create resource on valid request', async () => {
+    // Mock auth session
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: 'user-123', role: 'AGENT', isVerified: true },
+    } as any)
+
+    // Mock DB response
+    vi.mocked(db.resource.create).mockResolvedValue({
+      id: 'resource-123',
+      ...mockData,
+    } as any)
+
+    const request = new Request('http://localhost:3000/api/resource', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Test Resource' }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(201)
+    expect(data.resource.id).toBe('resource-123')
+  })
+
+  it('should return 401 if not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValue(null)
+
+    const request = new Request('http://localhost:3000/api/resource', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    })
+
+    const response = await POST(request)
+
+    expect(response.status).toBe(401)
+  })
+
+  it('should return 400 on validation error', async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: 'user-123', role: 'AGENT', isVerified: true },
+    } as any)
+
+    const request = new Request('http://localhost:3000/api/resource', {
+      method: 'POST',
+      body: JSON.stringify({ name: '' }), // Invalid: empty name
+    })
+
+    const response = await POST(request)
+
+    expect(response.status).toBe(400)
+  })
+
+  it('should enforce rate limiting', async () => {
+    // Test rate limit logic (if applicable)
+  })
+})
+```
+
+---
+
+## 3. E2E Test Template (Playwright)
+
+### File Naming
+- `[feature]-flow.spec.ts`
+
+### Template
+```typescript
+import { test, expect } from '@playwright/test'
+
+test.describe('Complete User Flow', () => {
+  test('user can register, login, and complete action', async ({ page }) => {
+    // 1. Navigate to registration
+    await page.goto('/register')
+
+    // 2. Fill registration form
+    await page.fill('[name="email"]', 'test@example.com')
+    await page.fill('[name="password"]', 'SecurePass123')
+    await page.fill('[name="name"]', 'Test User')
+    await page.selectOption('[name="role"]', 'AGENT')
+
+    // 3. Submit
+    await page.click('button[type="submit"]')
+
+    // 4. Wait for redirect
+    await page.waitForURL('/login')
+
+    // 5. Login
+    await page.fill('[name="email"]', 'test@example.com')
+    await page.fill('[name="password"]', 'SecurePass123')
+    await page.click('button[type="submit"]')
+
+    // 6. Verify dashboard loaded
+    await page.waitForURL('/agent/dashboard')
+    await expect(page.locator('h1')).toContainText('Dashboard')
+
+    // 7. Perform action
+    await page.click('[data-testid="accept-mission"]')
+
+    // 8. Verify result
+    await expect(page.locator('.success-message')).toBeVisible()
+  })
+
+  test('handles error states correctly', async ({ page }) => {
+    await page.goto('/login')
+    
+    // Wrong password
+    await page.fill('[name="email"]', 'test@example.com')
+    await page.fill('[name="password"]', 'wrongpassword')
+    await page.click('button[type="submit"]')
+
+    // Verify error message
+    await expect(page.locator('.error-message')).toContainText('incorrect')
+  })
+})
+```
+
+---
+
+## 4. Component Test Template (React Testing Library)
+
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { Component } from '@/components/feature/Component'
+
+describe('Component', () => {
+  it('renders correctly', () => {
+    render(<Component prop="value" />)
+    
+    expect(screen.getByText('Expected Text')).toBeInTheDocument()
+  })
+
+  it('calls callback on button click', () => {
+    const mockCallback = vi.fn()
+    
+    render(<Component onAction={mockCallback} />)
+    
+    fireEvent.click(screen.getByRole('button', { name: 'Action' }))
+    
+    expect(mockCallback).toHaveBeenCalledTimes(1)
+  })
+
+  it('updates UI on state change', async () => {
+    render(<Component />)
+    
+    const input = screen.getByLabelText('Input Label')
+    fireEvent.change(input, { target: { value: 'New Value' } })
+    
+    expect(screen.getByDisplayValue('New Value')).toBeInTheDocument()
+  })
+})
+```
+
+---
+
+## 5. Mock Utilities
+
+### Using Typed Mocks
+
+```typescript
+import { createMockDb, createMockAuth } from '@/tests/utils/mocks'
+
+const mockDb = createMockDb()
+const mockAuth = createMockAuth()
+
+// Use in tests
+vi.mocked(db).mockImplementation(() => mockDb)
+vi.mocked(auth).mockImplementation(() => mockAuth)
+```
+
+### Custom Mock Factory
+```typescript
+// tests/utils/factories.ts
+export function createMockUser(overrides = {}) {
+  return {
+    id: 'user-123',
+    email: 'test@example.com',
+    name: 'Test User',
+    role: 'AGENT',
+    isVerified: true,
+    ...overrides,
+  }
+}
+
+export function createMockMission(overrides = {}) {
+  return {
+    id: 'mission-123',
+    title: 'Test Mission',
+    status: 'PENDING',
+    ...overrides,
+  }
+}
+```
+
+---
+
+## 6. Running Tests
+
+### Commands
+```bash
+# Run all tests
+npm run test
+
+# Run specific file
+npm run test auth.test.ts
+
+# Run with coverage
+npm run test:coverage
+
+# Run E2E tests
+npm run test:e2e
+
+# Watch mode (dev)
+npm run test:watch
+```
+
+### CI/CD Integration
 ```yaml
 # .github/workflows/test.yml
 name: Tests
-
 on: [push, pull_request]
-
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run type check
-        run: npm run type-check
-
-      - name: Run unit tests
-        run: npm run test:unit
-
-      - name: Run E2E tests
-        run: npm run test:e2e
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/coverage-final.json
+      - run: npm install
+      - run: npm run test
+      - run: npm run test:e2e
 ```
 
 ---
 
-## 7. COVERAGE GATES (package.json)
+## 7. Best Practices
 
+### DO ✅
+- Write tests BEFORE code (TDD)
+- Test behavior, not implementation
+- Use descriptive test names (`it('should X when Y')`)
+- Mock external dependencies
+- Test happy path + 3 error scenarios minimum
+- Keep tests isolated (no shared state)
+
+### DON'T ❌
+- Test implementation details
+- Write flaky tests (timing-dependent)
+- Skip edge cases
+- Use real database in unit tests
+- Leave commented test code
+
+---
+
+## 8. Debugging Tests
+
+### VSCode Debug Configuration
 ```json
 {
-  "scripts": {
-    "test": "vitest",
-    "test:unit": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test:ci": "npm run test:unit && npm run test:e2e"
-  },
-  "vitest": {
-    "coverage": {
-      "reporter": ["text", "json", "html"],
-      "statements": 85,
-      "branches": 80,
-      "functions": 85,
-      "lines": 85
-    }
-  }
+  "type": "node",
+  "request": "launch",
+  "name": "Debug Vitest",
+  "runtimeExecutable": "npm",
+  "runtimeArgs": ["run", "test", "--", "--run"],
+  "console": "integratedTerminal"
 }
 ```
 
-**If coverage drops below threshold → CI fails**
+### Useful Vitest APIs
+```typescript
+// Only run this test
+it.only('focused test', () => { ... })
 
----
+// Skip this test
+it.skip('skipped test', () => { ... })
 
-## 8. TDD WORKFLOW (ARCHITECT MODE)
-
-```
-1. Write the test (RED)
-   → Describe expected behavior
-   
-2. Run test (it fails)
-   → Confirms test works
-   
-3. Write minimal code to pass (GREEN)
-   → Focus on passing, not perfection
-   
-4. Refactor (REFACTOR)
-   → Clean up, optimize
-   
-5. Repeat
+// Run test multiple times with different inputs
+it.each([
+  [input1, expected1],
+  [input2, expected2],
+])('handles %s correctly', (input, expected) => {
+  expect(fn(input)).toBe(expected)
+})
 ```
 
 ---
 
-**Last Updated:** 2025-12-29  
-**Test before you ship. Always.**
+## 9. Coverage Reports
+
+### Viewing Coverage
+```bash
+npm run test:coverage
+open coverage/index.html
+```
+
+### Coverage Thresholds (`vitest.config.ts`)
+```typescript
+export default defineConfig({
+  test: {
+    coverage: {
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
+    },
+  },
+})
+```
+
+---
+
+## 10. References
+
+- [Vitest Docs](https://vitest.dev)
+- [Playwright Docs](https://playwright.dev)
+- [Testing Library](https://testing-library.com)
+- [OMEGA Protocol Section 7](/.cursor rules#L455)
+
+---
+
+*Last Updated: 2025-12-31 - Phase 2 Completion*

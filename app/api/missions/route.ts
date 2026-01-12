@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { findNearbyAgents } from '@/lib/redis-geo'
+import { checkApiRateLimit } from '@/lib/rate-limit'
 
 const createMissionSchema = z.object({
     title: z.string().min(5),
@@ -29,7 +30,21 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Compte non vérifié' }, { status: 403 })
         }
 
+        // Rate limiting (20 req/min)
+        const rateLimit = await checkApiRateLimit('mission', session.user.id)
+
+        if (!rateLimit.success) {
+            return NextResponse.json(
+                {
+                    error: 'Trop de requêtes',
+                    message: 'Limite: 20 créations de missions par minute'
+                },
+                { status: 429 }
+            )
+        }
+
         const body = await req.json()
+
         const validated = createMissionSchema.safeParse(body)
 
         if (!validated.success) {
@@ -74,32 +89,33 @@ export async function POST(req: Request) {
 
         // 3. Find Nearby Agents (Matching Engine)
         // Radius: 10km default
-        const nearbyAgentIds = await findNearbyAgents(latitude, longitude, 10)
+        const nearbyUserIds = await findNearbyAgents(latitude, longitude, 10)
 
         // 4. Create Notifications
-        if (nearbyAgentIds.length > 0) {
+        if (nearbyUserIds.length > 0) {
+            // NOTE: MissionNotification.agentId refs User.id in Schema
+            // So we use the User ID directly from Redis.
+
             // SQLite doesn't support skipDuplicates, so we create one by one
-            for (const agentId of nearbyAgentIds) {
+            for (const targetUserId of nearbyUserIds) {
                 try {
                     await db.missionNotification.create({
                         data: {
                             missionId: mission.id,
-                            agentId: agentId,
+                            agentId: targetUserId, // Using UserID as per Schema
                             status: 'SENT',
                         }
                     })
                 } catch (e) {
                     // Skip if already exists (unique constraint)
-
+                    console.error(`[Mission Matching] Failed to notify user ${targetUserId}:`, e)
                 }
             }
 
-
-        } else {
-
+            return NextResponse.json({ mission, notifiedCount: nearbyUserIds.length })
         }
 
-        return NextResponse.json({ mission, notifiedCount: nearbyAgentIds.length })
+        return NextResponse.json({ mission, notifiedCount: 0 })
     } catch (error) {
         console.error('Create Mission Error:', error)
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

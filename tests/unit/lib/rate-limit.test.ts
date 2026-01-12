@@ -78,7 +78,7 @@ describe('🚦 Rate Limiting (OMEGA: Security Critical)', () => {
         beforeEach(async () => {
             // Import dynamically to get mocked version
             const module = await import('@/lib/rate-limit')
-            if ('_testLoginRateLimit' in module && typeof module._testLoginRateLimit === 'object' && 'clear' in module._testLoginRateLimit) {
+            if ('_testLoginRateLimit' in module && typeof module._testLoginRateLimit === 'object' && module._testLoginRateLimit && 'clear' in module._testLoginRateLimit) {
                 ; (module._testLoginRateLimit as { clear: () => void }).clear()
             }
         })
@@ -147,7 +147,7 @@ describe('🚦 Rate Limiting (OMEGA: Security Critical)', () => {
 
         beforeEach(async () => {
             const module = await import('@/lib/rate-limit')
-            if ('_testRegisterRateLimit' in module && typeof module._testRegisterRateLimit === 'object' && 'clear' in module._testRegisterRateLimit) {
+            if ('_testRegisterRateLimit' in module && typeof module._testRegisterRateLimit === 'object' && module._testRegisterRateLimit && 'clear' in module._testRegisterRateLimit) {
                 ; (module._testRegisterRateLimit as { clear: () => void }).clear()
             }
         })

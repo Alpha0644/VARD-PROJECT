@@ -1,174 +1,206 @@
-# PROJECT STRUCTURE
-*Last auto-updated: 2025-12-29*
+# Project Structure
 
-This file is automatically maintained by the AI following the OMEGA PROTOCOL v2.0
-
----
-
-## 📁 Directory Overview
-
+## Root Directory
 ```
-/
-├── .github/              # GitHub Actions workflows
-│   └── workflows/        # CI/CD pipelines
-├── .husky/               # Git hooks (pre-commit, pre-push)
-├── app/                  # Next.js App Router
-│   ├── (auth)/           # Auth-related routes (grouped)
-│   ├── (marketing)/      # Public pages
-│   ├── (dashboard)/      # Protected dashboard
-│   ├── api/              # API routes
-│   └── layout.tsx        # Root layout
-├── architecture/         # 🧠 THE BRAIN (OMEGA Protocol docs)
-│   ├── CONTEXT.md        # Business logic & rules
-│   ├── STACK.md          # Technology constraints
-│   ├── SECURITY.md       # Security protocols
-│   ├── TESTING.md        # Testing strategy
-│   ├── DEPLOYMENT.md     # DevOps procedures
-│   ├── COMPLIANCE.md     # Legal requirements
-│   ├── PERFORMANCE.md    # Optimization guidelines
-│   └── VALIDATION_SCHEMAS.md  # Zod schemas
-├── components/           # React components
-│   ├── ui/               # Shadcn/UI base components
-│   └── [feature]/        # Feature-specific components
-├── lib/                  # Utilities & business logic
-│   ├── db.ts             # Database client
-│   ├── auth.ts           # Auth helpers
-│   └── utils.ts          # Shared utilities
-├── prisma/               # Database
-│   ├── schema.prisma     # Database schema
-│   └── migrations/       # Migration history
-├── project-docs/         # Generated documentation
-│   ├── CHANGELOG.md      # What changed and when
-│   ├── STRUCTURE.md      # This file
-│   └── blueprints/       # Feature design docs
-├── public/               # Static assets
-├── tests/                # Test files
-│   ├── unit/             # Unit tests
-│   ├── integration/      # API tests
-│   └── e2e/              # Playwright E2E tests
-├── tools/                # Automation scripts
-│   └── check-secrets.sh  # Pre-commit security check
-├── .cursorrules          # OMEGA Protocol rules
-├── .env.example          # Environment template
-└── package.json          # Dependencies
+IATRAVAIL/
+├── app/                    # Next.js App Router
+├── components/             # React Components
+├── lib/                    # Core Business Logic
+├── features/               # Feature Modules
+├── architecture/           # Architecture Documentation
+├── project-docs/           # Project Documentation
+├── tests/                  # Test Suites
+├── prisma/                 # Database Schema & Migrations
+├── scripts/                # Utility Scripts
+└── tools/                  # Development Tools
 ```
 
 ---
 
-## 🗂️ Key Files
+## `/app` - Next.js Routes
 
-### Configuration
-- `.cursorrules` - AI behavior rules (OMEGA Protocol v2.0)
-- `next.config.js` - Next.js configuration
-- `tailwind.config.js` - Design tokens
-- `tsconfig.json` - TypeScript settings
-- `.eslintrc.json` - Linting rules
-- `vitest.config.ts` - Test configuration
+### Authentication Routes
+- `app/(auth)/login/` - Login page
+- `app/(auth)/register/` - Registration page
+- `app/(auth)/verify-email/` - Email verification handler
 
-### Architecture (THE BRAIN)
-All files in `/architecture/` define how the AI should behave:
-- `CONTEXT.md` - Business rules
-- `STACK.md` - Tech stack constraints
-- `SECURITY.md` - Security protocols
-- Others listed above
+### Role-Specific Dashboards
+- `app/agent/dashboard/` - Agent dashboard (missions, proposals, location)
+- `app/agent/history/` - Agent mission history
+- `app/company/dashboard/` - Company dashboard (create missions, upload docs)
+- `app/company/history/` - Company mission archives
+- `app/admin/` - Admin panel (document validation, mission oversight)
+
+### Public Pages
+- `app/page.tsx` - Landing page (role selection)
+- `app/privacy-policy/` - RGPD Privacy Policy
+
+### API Routes
+- `app/api/auth/[...nextauth]/` - NextAuth.js handler
+- `app/api/auth/register/` - User registration
+- `app/api/missions/` - Mission CRUD
+- `app/api/missions/history/` - Mission history paginated
+- `app/api/missions/[id]/logs/` - Mission audit logs
+- `app/api/agent/notifications/` - Agent mission notifications  
+- `app/api/agent/location/` - Update agent geolocation
+- `app/api/upload/` - Document upload
+- `app/api/admin/documents/` - Admin document validation
+- `app/api/user/export-data/` - RGPD data export
+- `app/api/user/delete-account/` - RGPD account deletion
 
 ---
 
-## 📦 Component Organization (Atomic Design)
+## `/components` - React Components
 
+### By Feature
 ```
 components/
-├── ui/                   # Atoms (Button, Input, Card)
-├── forms/                # Molecules (LoginForm, SearchBar)
-├── sections/             # Organisms (Navbar, Footer)
-└── layouts/              # Templates (DashboardLayout)
-```
-
-**Rule:** Reuse before creating. Check existing components first.
-
----
-
-## 🔄 Data Flow
-
-```
-User Request
-    ↓
-API Route (app/api/)
-    ↓
-Validation (Zod schema from /architecture/VALIDATION_SCHEMAS.md)
-    ↓
-Business Logic (lib/)
-    ↓
-Database (Prisma)
-    ↓
-Response (JSON)
+├── auth/
+│   └── logout-button.tsx          # Logout UI
+├── agent/
+│   ├── active-mission.tsx         # Current mission w/ status controls
+│   ├── mission-proposals.tsx      # Incoming notifications
+│   └── location-simulator.tsx     # Dev tool for geolocation
+├── mission/
+│   ├── create-mission-form.tsx    # Company mission creation
+│   ├── mission-timeline.tsx       # Visual status progression
+│   └── mission-history-list.tsx   # List completed missions
+├── admin/
+│   ├── admin-document-list.tsx    # Document validation UI
+│   └── admin-mission-list.tsx     # Mission oversight
+├── dashboard/
+│   └── document-upload.tsx        # Multi-doc upload (CNAPS, Kbis)
+└── gdpr/
+    └── cookie-banner.tsx          # RGPD cookie consent
 ```
 
 ---
 
-## 🧪 Testing Organization
+## `/lib` - Core Logic
 
+### Files
+- `lib/auth.ts` - NextAuth configuration
+- `lib/db.ts` - Prisma client singleton
+- `lib/documents.ts` - Document validation logic
+- `lib/email.ts` - Resend email service
+- `lib/rate-limit.ts` - Upstash Redis rate limiting
+- `lib/redis-geo.ts` - Geospatial matching (H3 + Redis)
+- `lib/constants.ts` - Application constants (OMEGA compliance)
+
+### `/lib/types`
+- `lib/types/mission.ts` - Mission type definitions
+
+---
+
+## `/features` - Feature Modules
+
+### Auth Feature
+```
+features/auth/
+├── schemas.ts              # Zod validation (login, register)
+└── actions/
+    └── (future server actions)
+```
+
+---
+
+## `/architecture` - Documentation
+
+### Files
+- `CONTEXT.md` - Business context & requirements
+- `STACK.md` - Tech stack constraints
+- `SECURITY.md` - Security guidelines
+- `TESTING.md` - Test templates & standards
+- `VALIDATION_SCHEMAS.md` - Zod schema documentation
+- `PERFORMANCE.md` - Performance benchmarks
+- `DEPLOYMENT.md` - Deployment checklist
+- `COMPLIANCE.md` - RGPD/PCI-DSS compliance
+
+---
+
+## `/project-docs` - Project Docs
+
+### Files
+- `CHANGELOG.md` - Version history
+- `STRUCTURE.md` - This file
+- `blueprints/` - Design documents
+  - `auth-flow.md`
+  - `mission-flow.md`
+  - `admin-workflow.md`
+
+---
+
+## `/tests` - Test Suites
+
+### Structure
 ```
 tests/
 ├── unit/
-│   ├── lib/              # Test utilities
-│   └── components/       # Test UI components
-├── integration/
-│   └── api/              # Test API routes
-└── e2e/
-    └── flows/            # Test user journeys
+│   ├── api/
+│   │   ├── auth/
+│   │   │   └── register.test.ts
+│   │   └── history.test.ts
+│   ├── auth/
+│   │   └── schemas.test.ts
+│   └── lib/
+│       └── rate-limit.test.ts
+├── e2e/
+│   └── auth.spec.ts
+├── utils/
+│   └── mocks.ts                 # Typed mock utilities
+└── setup.ts
 ```
 
 ---
 
-## 📝 Documentation Flow
+## `/prisma` - Database
 
-```
-Code Change
-    ↓
-CI/CD Pipeline
-    ↓
-Update CHANGELOG.md (AI required)
-    ↓
-Update STRUCTURE.md (if files added/moved)
-    ↓
-Update Blueprint (if architecture changed)
-```
+- `schema.prisma` - Data models (User, Agent, Company, Mission, etc.)
+- `seed.js` - Test data seeder
+- `/migrations` - Database migrations (if Postgres)
 
 ---
 
-## 🚫 What NOT to Commit
+## `/scripts` - Utility Scripts
 
-```
-❌ .env (secrets)
-❌ .env.local (local overrides)
-❌ node_modules/
-❌ .next/ (build output)
-❌ coverage/ (test coverage)
-❌ .DS_Store (macOS)
-```
-
-✅ **DO commit:**
-- `.env.example` (template)
-- `package-lock.json` (lock file)
+### Files
+- `approve-docs.js` - Mass-approve pending documents
+- `create-test-history.js` - Generate completed missions
+- `fix-company-role.js` - Fix user roles
+- `force-verified.js` - Bypass verification for testing
+- `debug-routing.js` - Diagnostic routing issues
+- `verify-all.ts` - TypeScript version of approve-docs
 
 ---
 
-## 🎯 File Naming Conventions
+## `/tools` - Dev Tools
 
-```
-✅ GOOD:
-- components/UserProfile.tsx (PascalCase for components)
-- lib/formatCurrency.ts (camelCase for utilities)
-- app/api/users/route.ts (kebab-case for routes)
-
-❌ BAD:
-- components/user_profile.tsx
-- lib/FormatCurrency.ts
-- app/api/Users/route.ts
-```
+- `auto-backup.ps1` - Automated backups (PowerShell)
+- `restore-backup.ps1` - Restore from backup
 
 ---
 
-**Auto-updated by OMEGA PROTOCOL**
-*If this file is outdated, the AI has violated the Knowledge Sync rule.*
+## Key Design Patterns
+
+### Route Protection
+- `middleware.ts` - Centralized auth & RBAC enforcement
+- Auto-redirect `/dashboard` → role-specific dashboards
+
+### Type Safety
+- All `any` usage eliminated (OMEGA compliance)
+- Zod schemas for external inputs
+- Typed mocks in tests
+
+### State Management
+- Server Components by default
+- Client Components (`'use client'`) only when needed
+- No global state library (yet)
+
+### Error Handling
+- Try/catch on all async operations
+- User-friendly error messages
+- Detailed logs for debugging
+
+---
+
+**Last Updated**: 2025-12-31 (Phase 1.4 Complete)

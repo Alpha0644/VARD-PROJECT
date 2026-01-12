@@ -73,9 +73,37 @@ export const registerRateLimit = redis
     })
     : null
 
+// API Rate Limiters
+export const missionRateLimit = redis
+    ? new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(20, '1 m'), // 20 missions per minute
+        analytics: true,
+    })
+    : null
+
+export const uploadRateLimit = redis
+    ? new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(5, '1 m'), // 5 uploads per minute
+        analytics: true,
+    })
+    : null
+
+export const adminRateLimit = redis
+    ? new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(50, '1 m'), // 50 admin actions per minute
+        analytics: true,
+    })
+    : null
+
 // In-memory fallback
 const inMemoryLoginRateLimit = new InMemoryRateLimit()
 const inMemoryRegisterRateLimit = new InMemoryRateLimit()
+const inMemoryMissionRateLimit = new InMemoryRateLimit()
+const inMemoryUploadRateLimit = new InMemoryRateLimit()
+const inMemoryAdminRateLimit = new InMemoryRateLimit()
 
 // Helper function to check rate limit
 export async function checkRateLimit(
@@ -97,4 +125,33 @@ export async function checkRateLimit(
     }
 
     throw new Error('Invalid rate limit type')
+}
+
+// API Rate Limit Helper
+export async function checkApiRateLimit(
+    type: 'mission' | 'upload' | 'admin',
+    identifier: string
+) {
+    if (type === 'mission') {
+        if (missionRateLimit) {
+            return await missionRateLimit.limit(identifier)
+        }
+        return await inMemoryMissionRateLimit.limit(identifier, 20, 60_000)
+    }
+
+    if (type === 'upload') {
+        if (uploadRateLimit) {
+            return await uploadRateLimit.limit(identifier)
+        }
+        return await inMemoryUploadRateLimit.limit(identifier, 5, 60_000)
+    }
+
+    if (type === 'admin') {
+        if (adminRateLimit) {
+            return await adminRateLimit.limit(identifier)
+        }
+        return await inMemoryAdminRateLimit.limit(identifier, 50, 60_000)
+    }
+
+    throw new Error('Invalid API rate limit type')
 }

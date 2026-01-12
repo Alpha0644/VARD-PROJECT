@@ -1,17 +1,15 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { getUserDocuments, checkUserVerificationStatus, DocumentType, DocumentStatus } from '@/lib/documents'
 import { DocumentUpload } from '@/components/dashboard/document-upload'
 import { CreateMissionForm } from '@/components/mission/create-mission-form'
-import { LocationSimulator } from '@/components/agent/location-simulator'
-import { MissionProposals } from '@/components/agent/mission-proposals'
-import { ActiveMission } from '@/components/agent/active-mission'
-import { db } from '@/lib/db'
+import { LogoutButton } from '@/components/auth/logout-button'
 
-export default async function DashboardPage() {
+export default async function CompanyDashboardPage() {
     const session = await auth()
 
-    if (!session) {
+    if (!session || session.user.role !== 'COMPANY') {
         redirect('/login')
     }
 
@@ -19,41 +17,15 @@ export default async function DashboardPage() {
     const documents = await getUserDocuments(user.id)
     const isVerified = await checkUserVerificationStatus(user.id, user.role)
 
-    // Determine needed documents based on role
-    const neededDocs = []
-    if (user.role === 'AGENT') {
-        neededDocs.push({ type: DocumentType.CNAPS, label: 'Carte Professionnelle (CNAPS)' })
-        neededDocs.push({ type: DocumentType.ID_CARD, label: "Carte d'Identité / Passeport" })
-    } else if (user.role === 'COMPANY') {
-        neededDocs.push({ type: DocumentType.SIREN_FIRM, label: 'Kbis / Avis SIRENE' })
-    }
+    // Documents nécessaires pour Company
+    const neededDocs = [
+        { type: DocumentType.SIREN_FIRM, label: 'Kbis / Avis SIRENE' }
+    ]
 
-    // Check status for each needed doc
     const docStatus = neededDocs.map(doc => {
         const uploaded = documents.find((d) => d.type === doc.type)
-        return {
-            ...doc,
-            uploaded,
-        }
+        return { ...doc, uploaded }
     })
-
-    // Fetch Active Mission (if Agent)
-    let activeMission = null
-    if (user.role === 'AGENT') {
-        // Need to find agent profile first
-        const agent = await db.agent.findUnique({ where: { userId: user.id } })
-        if (agent) {
-            activeMission = await db.mission.findFirst({
-                where: {
-                    agentId: agent.id,
-                    status: {
-                        in: ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS']
-                    }
-                },
-                include: { company: true }
-            })
-        }
-    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-8">
@@ -61,8 +33,21 @@ export default async function DashboardPage() {
 
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord</h1>
-                    <p className="text-gray-600">Bienvenue, {user.name}</p>
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">🏢 Dashboard Entreprise</h1>
+                            <p className="text-gray-600">Bienvenue, {user.name}</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <Link
+                                href="/company/history"
+                                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                                📂 Archives Missions
+                            </Link>
+                            <LogoutButton />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Verification Status Banner */}
@@ -76,7 +61,7 @@ export default async function DashboardPage() {
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm text-yellow-700">
-                                    Votre compte n'est pas encore vérifié. Veuillez fournir les documents requis pour accéder aux missions.
+                                    Votre compte n'est pas encore vérifié. Veuillez fournir les documents requis pour créer des missions.
                                 </p>
                             </div>
                         </div>
@@ -93,45 +78,24 @@ export default async function DashboardPage() {
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm text-green-700">
-                                    Compte vérifié. Vous pouvez maintenant accéder aux missions.
+                                    Compte vérifié. Vous pouvez créer des missions.
                                 </p>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Mission & Matching Engine Section (Phase 1.3) */}
+                {/* Mission Creation Section */}
                 {isVerified && (
                     <div className="mt-8 border-t pt-8">
-                        <h2 className="text-2xl font-bold mb-4">Espace Opérationnel</h2>
-
-                        {user.role === 'COMPANY' && (
-                            <div>
-                                <p className="mb-4 text-gray-600">Postez une mission pour trouver des agents disponibles immédiatement.</p>
-                                <CreateMissionForm />
-                            </div>
-                        )}
-
-                        {user.role === 'AGENT' && (
-                            <div>
-                                {activeMission ? (
-                                    <ActiveMission mission={activeMission} />
-                                ) : (
-                                    <>
-                                        <p className="mb-4 text-gray-600">Activez votre géolocalisation pour recevoir des missions.</p>
-                                        <LocationSimulator />
-                                        <div className="mt-6">
-                                            <MissionProposals />
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        )}
+                        <h2 className="text-2xl font-bold mb-4">Créer une Mission</h2>
+                        <p className="mb-4 text-gray-600">Postez une mission pour trouver des agents disponibles immédiatement.</p>
+                        <CreateMissionForm />
                     </div>
                 )}
 
                 {/* Document Upload Section */}
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-1">
                     {docStatus.map((doc, idx) => (
                         <div key={idx} className="bg-white rounded-lg shadow p-6">
                             <h3 className="font-semibold mb-4 flex items-center justify-between">

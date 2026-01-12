@@ -43,6 +43,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   documents     Document[]
   notifications MissionNotification[]
+  logs          MissionLog[]
 
   // Relations
   companyProfile Company?
@@ -122,7 +123,31 @@ model Mission {
   @@index([status])
   @@index([startTime])
 
-  notifications MissionNotification[]
+    notifications MissionNotification[]
+    logs          MissionLog[]
+}
+
+model MissionLog {
+    id        String   @id @default(cuid())
+    missionId String
+    mission   Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+    
+    // Who triggered the change?
+    userId    String?
+    user      User?    @relation(fields: [userId], references: [id])
+    
+    // Status change
+    previousStatus String?
+    newStatus      String
+    
+    // Context
+    comment   String?
+    latitude  Float?
+    longitude Float?
+    
+    createdAt DateTime @default(now())
+    
+    @@index([missionId])
 }
 
 model MissionNotification {

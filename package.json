@@ -10,6 +10,7 @@
     "test": "vitest",
     "test:unit": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "seed:e2e": "tsx prisma/seed-e2e.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "@upstash/ratelimit": "^2.0.7",
     "@upstash/redis": "^1.36.0",
     "bcryptjs": "^3.0.3",
+    "date-fns": "^4.1.0",
     "next": "^15.1.0",
     "next-auth": "^5.0.0-beta.30",
     "react": "^19.0.0",
@@ -38,5 +40,8 @@
     "tailwindcss": "^3.4.19",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }

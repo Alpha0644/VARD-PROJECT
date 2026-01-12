@@ -7,7 +7,7 @@ const responseSchema = z.object({
     status: z.enum(['ACCEPTED', 'REJECTED'])
 })
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request) {
     try {
         const session = await auth()
         if (!session || session.user.role !== 'AGENT') {
@@ -46,16 +46,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         // If Accepted, assign Agent to Mission?
         // For MVP 1.3, let's just mark it accepted. Phase 1.4 can handle the "Contract".
         if (status === 'ACCEPTED') {
-            await db.mission.update({
-                where: { id: notification.missionId },
-                data: {
-                    status: 'ACCEPTED', // Or keep PENDING until company validates? Let's say First come First served for now.
-                    agentId: db.agent.findUnique({ where: { userId: session.user.id } }).then(a => a?.id), // This is messy async in write.
-                    // Let's keep it simple: Just update status.
-                }
-            })
-
-            // Correct way:
+            // Assign Agent to Mission
             const agent = await db.agent.findUnique({ where: { userId: session.user.id } })
             if (agent) {
                 await db.mission.update({

@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
 
     // Public routes (no auth required)
-    const publicRoutes = ['/login', '/register', '/']
+    const publicRoutes = ['/login', '/register', '/', '/privacy-policy', '/api/auth', '/api/upload']
     if (publicRoutes.includes(pathname)) {
         return NextResponse.next()
     }
@@ -21,6 +21,19 @@ export async function middleware(request: NextRequest) {
 
     // Role-based access control
     const role = session.user.role
+
+    // Auto-redirect /dashboard to role-specific dashboard
+    if (pathname === '/dashboard') {
+        if (role === 'AGENT') {
+            return NextResponse.redirect(new URL('/agent/dashboard', request.url))
+        }
+        if (role === 'COMPANY') {
+            return NextResponse.redirect(new URL('/company/dashboard', request.url))
+        }
+        if (role === 'ADMIN') {
+            return NextResponse.redirect(new URL('/admin', request.url))
+        }
+    }
 
     // Agent-only routes
     if (pathname.startsWith('/agent') && role !== 'AGENT') {
@@ -38,15 +51,25 @@ export async function middleware(request: NextRequest) {
     }
 
     // Check if user is verified (Gatekeeper)
-    // If not verified, they can ONLY access:
-    // - /dashboard (to upload docs)
-    // - /api/upload (to perform upload)
-    // - /api/auth (for session/logout)
+    // Allow verified paths for each role
     if (!session.user.isVerified) {
-        const allowedPaths = ['/dashboard', '/api/upload', '/api/auth']
+        const allowedPaths = [
+            '/agent/dashboard',
+            '/company/dashboard',
+            '/dashboard',
+            '/api/upload',
+            '/api/auth'
+        ]
         const isAllowed = allowedPaths.some(path => pathname.startsWith(path))
 
         if (!isAllowed) {
+            // Redirect to role-specific dashboard for document upload
+            if (role === 'AGENT') {
+                return NextResponse.redirect(new URL('/agent/dashboard', request.url))
+            }
+            if (role === 'COMPANY') {
+                return NextResponse.redirect(new URL('/company/dashboard', request.url))
+            }
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }
     }

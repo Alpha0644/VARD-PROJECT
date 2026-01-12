@@ -1,15 +1,18 @@
 import NextAuth from 'next-auth'
+import type { Adapter } from 'next-auth/adapters'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import Credentials from 'next-auth/providers/credentials'
 import { compare } from 'bcryptjs'
 import { db } from '@/lib/db'
 import { loginSchema } from '@/features/auth/schemas'
+import { AUTH_CONSTANTS } from '@/lib/constants'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-    adapter: PrismaAdapter(db),
+    trustHost: true,
+    adapter: PrismaAdapter(db) as Adapter,
     session: {
         strategy: 'jwt',
-        maxAge: 7 * 24 * 60 * 60, // 7 days
+        maxAge: AUTH_CONSTANTS.SESSION_MAX_AGE_DAYS * 24 * 60 * 60,
     },
     pages: {
         signIn: '/login',
@@ -45,12 +48,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     },
                 })
 
-                if (!user || !user.passwordHash) {
+                console.log('[Auth Debug] Attempting login for:', email)
+                if (!user) {
+                    console.log('[Auth Debug] User not found')
+                    return null
+                }
+                if (!user.passwordHash) {
+                    console.log('[Auth Debug] No password hash for user')
                     return null
                 }
 
                 // Verify password
                 const isPasswordValid = await compare(password, user.passwordHash)
+                console.log('[Auth Debug] Password valid:', isPasswordValid)
 
                 if (!isPasswordValid) {
                     return null
@@ -68,6 +78,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }),
     ],
     callbacks: {
+        async redirect({ url, baseUrl }) {
+            // After login, redirect to role-specific dashboard
+            // The middleware will then handle the /dashboard → /role/dashboard routing
+            if (url.startsWith(baseUrl)) return url
+            if (url.startsWith('/')) return `${baseUrl}${url}`
+            return baseUrl + '/dashboard'
+        },
         async jwt({ token, user }) {
             // Initial sign in
             if (user) {

@@ -23,10 +23,12 @@ export default defineConfig({
                 '**/mockData',
             ],
             // OMEGA Protocol Coverage Gates
-            lines: 85,
-            functions: 85,
-            branches: 80,
-            statements: 85,
+            thresholds: {
+                lines: 85,
+                functions: 85,
+                branches: 80,
+                statements: 85,
+            },
         },
     },
     resolve: {

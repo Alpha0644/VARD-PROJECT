@@ -13,8 +13,9 @@ const statusUpdateSchema = z.object({
     longitude: z.number().optional()
 })
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
     try {
+        const params = await props.params
         const session = await auth()
         if (!session || session.user.role !== 'AGENT') {
             return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })

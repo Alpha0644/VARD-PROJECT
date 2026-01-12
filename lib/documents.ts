@@ -21,6 +21,11 @@ export async function getUserDocuments(userId: string) {
 }
 
 export async function checkUserVerificationStatus(userId: string, role: string) {
+  // ADMIN users don't need document verification
+  if (role === 'ADMIN') {
+    return true
+  }
+
   const documents = await getUserDocuments(userId)
 
   if (role === 'AGENT') {

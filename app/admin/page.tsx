@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { AdminDocumentList } from '@/components/admin/admin-document-list'
 import { AdminMissionList } from '@/components/admin/admin-mission-list'
 import { MissionWithCompany } from '@/lib/types/mission'
+import { LogoutButton } from '@/components/auth/logout-button'
 
 export default async function AdminPage() {
     const session = await auth()
@@ -33,9 +34,12 @@ export default async function AdminPage() {
     return (
         <div className="min-h-screen bg-gray-50 p-8">
             <div className="max-w-6xl mx-auto space-y-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Administration 👮‍♂️</h1>
-                    <p className="text-gray-600">Gérez les validations et supervisez les missions.</p>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Administration 👮‍♂️</h1>
+                        <p className="text-gray-600">Gérez les validations et supervisez les missions.</p>
+                    </div>
+                    <LogoutButton />
                 </div>
 
                 <div className="grid gap-8 lg:grid-cols-2">

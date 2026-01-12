@@ -41,22 +41,21 @@ export async function updateAgentLocation(userId: string, lat: number, long: num
 
 export async function findNearbyAgents(lat: number, long: number, radiusKm: number): Promise<string[]> {
     if (redis) {
-        // GEORADIUS returns members with distance
-        // Using geosearch which is the modern command
-        // Use GEORADIUS which is simpler for the wrapper
-        // georadius(key, longitude, latitude, radius, unit)
-        const result = await redis.georadius(GEO_KEY, long, lat, radiusKm, 'km')
-        return result as string[]
+        // GEORADIUS: Returns members within radius
+        // Using unknown cast as georadius is not in @upstash/redis types but exists at runtime
+        const result = await (redis as unknown as { georadius: (key: string, lng: number, lat: number, radius: number, unit: string) => Promise<string[]> })
+            .georadius(GEO_KEY, long, lat, radiusKm, 'km')
+        return result
     } else {
-        // Mock Logic: Calculate distance (Haversine simple version)
+        // Mock Logic: Calculate distance using Haversine formula
         const agents: string[] = []
+
         for (const [userId, pos] of redisMock.entries()) {
             const dist = getDistanceFromLatLonInKm(lat, long, pos.lat, pos.long)
             if (dist <= radiusKm) {
                 agents.push(userId)
             }
         }
-        console.log(`[MockRedis] Found ${agents.length} agents near ${lat}, ${long} (radius ${radiusKm}km)`)
         return agents
     }
 }

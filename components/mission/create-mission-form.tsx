@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { MISSION_DEFAULTS } from '@/lib/constants'
 
 export function CreateMissionForm() {
     const [loading, setLoading] = useState(false)
@@ -14,10 +15,11 @@ export function CreateMissionForm() {
 
         const data = {
             title: formData.get('title'),
+            description: formData.get('description') || undefined,
             location: formData.get('location'),
             // Hardcoded dates for MVP demo
             startTime: new Date().toISOString(),
-            endTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+            endTime: new Date(Date.now() + MISSION_DEFAULTS.DURATION_HOURS * 60 * 60 * 1000).toISOString(),
             // Hardcoded Location (Paris Center) for MVP Matching Test
             latitude: 48.8566,
             longitude: 2.3522,
@@ -32,13 +34,28 @@ export function CreateMissionForm() {
 
             if (res.ok) {
                 alert('Mission créée ! Les agents alentours ont été notifiés.')
+                // Reset form (safely)
+                const form = e.currentTarget
+                if (form) form.reset()
                 router.refresh()
             } else {
-                const err = await res.json()
-                alert('Erreur: ' + err.error)
+                type ErrorResponse = {
+                    error: string
+                    details?: Record<string, unknown> | string
+                }
+
+                let err: ErrorResponse = { error: 'Erreur inconnue' }
+                try {
+                    err = await res.json()
+                } catch (parseError) {
+                    // If JSON parsing fails, use status text
+                    err = { error: res.statusText || 'Erreur serveur' }
+                }
+                console.error('[CreateMission] Error response:', err)
+                alert('Erreur: ' + (err.details ? JSON.stringify(err.details) : err.error))
             }
         } catch (e) {
-            console.error(e)
+            console.error('[CreateMission] Network error:', e)
             alert('Erreur réseau')
         } finally {
             setLoading(false)

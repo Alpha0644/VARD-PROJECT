@@ -1,38 +1,43 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { MISSION_DEFAULTS } from '@/lib/constants'
 
-type Notification = {
+interface Notification {
     id: string
     mission: {
         id: string
         title: string
         location: string
         startTime: string
-        company: { companyName: string }
+        company: {
+            companyName: string
+        }
     }
 }
 
 export function MissionProposals() {
     const [notifications, setNotifications] = useState<Notification[]>([])
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
 
     const fetchNotifications = async () => {
         try {
             const res = await fetch('/api/agent/notifications')
             if (res.ok) {
                 const data = await res.json()
-                setNotifications(data)
+                // API returns array directly
+                setNotifications(Array.isArray(data) ? data : [])
             }
-        } catch (e) {
-            console.error(e)
+        } catch (error) {
+            console.error('Failed to fetch notifications', error)
+        } finally {
+            setLoading(false)
         }
     }
 
     useEffect(() => {
         fetchNotifications()
-        // Poll every 5 seconds for new missions
-        const interval = setInterval(fetchNotifications, 5000)
+        const interval = setInterval(fetchNotifications, MISSION_DEFAULTS.POLLING_INTERVAL_MS)
         return () => clearInterval(interval)
     }, [])
 

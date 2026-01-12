@@ -42,6 +42,7 @@ export function DocumentUpload({ type, label, description }: DocumentUploadProps
             const res = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
+                credentials: 'include', // Force cookie sending
             })
 
             if (!res.ok) {
@@ -52,8 +53,9 @@ export function DocumentUpload({ type, label, description }: DocumentUploadProps
             setSuccess(true)
             setFile(null)
             router.refresh()
-        } catch (err: any) {
-            setError(err.message)
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue'
+            setError(errorMessage)
         } finally {
             setUploading(false)
         }
@@ -78,6 +80,7 @@ export function DocumentUpload({ type, label, description }: DocumentUploadProps
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
                     onChange={handleFileChange}
+                    aria-label={`Sélectionner un fichier pour ${label}`}
                     className="block w-full text-sm text-gray-500
             file:mr-4 file:py-2 file:px-4
             file:rounded-full file:border-0
@@ -87,12 +90,13 @@ export function DocumentUpload({ type, label, description }: DocumentUploadProps
                     disabled={uploading || success}
                 />
 
-                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {error && <p className="text-red-500 text-sm" role="alert">{error}</p>}
 
                 {file && !success && (
                     <button
                         onClick={handleUpload}
                         disabled={uploading}
+                        aria-label={`Envoyer le document ${label}`}
                         className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
                     >
                         {uploading ? 'Envoi en cours...' : 'Envoyer le document'}

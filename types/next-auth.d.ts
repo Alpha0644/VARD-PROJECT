@@ -15,6 +15,13 @@ declare module 'next-auth' {
     }
 }
 
+declare module 'next-auth/adapters' {
+    interface AdapterUser {
+        role: string
+        isVerified: boolean
+    }
+}
+
 declare module 'next-auth/jwt' {
     interface JWT {
         id: string

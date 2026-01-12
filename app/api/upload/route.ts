@@ -4,12 +4,28 @@ import { db } from '@/lib/db'
 import { writeFile } from 'fs/promises'
 import path from 'path'
 import { randomUUID } from 'crypto'
+import { checkApiRateLimit } from '@/lib/rate-limit'
+import { UPLOAD_CONSTRAINTS } from '@/lib/constants'
 
 export async function POST(req: Request) {
   try {
     const session = await auth()
+    console.log('[API Upload Debug] Session:', session ? `User ${session.user?.email}` : 'NULL')
+    console.log('[API Upload Debug] Headers:', Object.fromEntries(req.headers))
+
     if (!session) {
+      console.log('[API Upload Debug] 401 returned - No session')
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+
+    // Rate limiting (5 uploads/min)
+    const rateLimit = await checkApiRateLimit('upload', session.user.id)
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Trop de requêtes', message: 'Limite: 5 uploads par minute' },
+        { status: 429 }
+      )
     }
 
     const formData = await req.formData()
@@ -24,14 +40,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Type de document manquant' }, { status: 400 })
     }
 
-    // Validate size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'Fichier trop volumineux (max 5MB)' }, { status: 400 })
+    // Validate size
+    if (file.size > UPLOAD_CONSTRAINTS.MAX_SIZE_BYTES) {
+      return NextResponse.json(
+        { error: `Fichier trop volumineux (max ${UPLOAD_CONSTRAINTS.MAX_SIZE_BYTES / 1024 / 1024}MB)` },
+        { status: 400 }
+      )
     }
 
-    // Validate type
-    const acceptedTypes = ['application/pdf', 'image/jpeg', 'image/png']
-    if (!acceptedTypes.includes(file.type)) {
+    // Validate MIME type
+    if (!UPLOAD_CONSTRAINTS.ALLOWED_MIMES.includes(file.type as any)) {
       return NextResponse.json({ error: 'Format invalide (PDF, JPG, PNG uniquement)' }, { status: 400 })
     }
 
