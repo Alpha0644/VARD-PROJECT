@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-01-14 - Phase 2: Production Infrastructure 🚀
+
+### Added
+- 🗄️ **Supabase PostgreSQL Migration**:
+  - Migrated from SQLite to cloud PostgreSQL
+  - Configured `directUrl` for Prisma migrations (PgBouncer compatibility)
+  - Seeded production database with test accounts
+  - Created blueprint: `project-docs/blueprints/supabase-migration.md`
+
+- ⚡ **Upstash Redis Integration**:
+  - Configured production Redis for rate limiting
+  - Implemented persistent geolocation storage
+  - Created `/api/agent/location/status` endpoint
+  - Fixed Upstash `geopos` response format (object vs array)
+
+- 🎯 **Location Persistence**:
+  - Agent location now persists across server restarts
+  - UI displays correct status after page refresh
+  - Added location check on component mount
+
+### Changed
+- `prisma/schema.prisma`: Provider changed from `sqlite` to `postgresql`
+- `lib/redis-geo.ts`: Added `getAgentLocation()` function
+- `components/agent/location-simulator.tsx`: Added useEffect for status check
+
+### Tags
+- `phase2-complete` - Full infrastructure ready for Vercel deployment
+
+---
+
 ## 2026-01-05 - Phase 1.6: OMEGA 100% Compliance ✅
 
 ### Fixed
