@@ -1,10 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export function LocationSimulator() {
     const [loading, setLoading] = useState(false)
-    const [status, setStatus] = useState<'IDLE' | 'ACTIVE'>('IDLE')
+    const [status, setStatus] = useState<'IDLE' | 'ACTIVE' | 'CHECKING'>('CHECKING')
+
+    // Check if location already exists on mount
+    useEffect(() => {
+        async function checkStatus() {
+            try {
+                const res = await fetch('/api/agent/location/status')
+                if (res.ok) {
+                    const data = await res.json()
+                    setStatus(data.active ? 'ACTIVE' : 'IDLE')
+                } else {
+                    setStatus('IDLE')
+                }
+            } catch {
+                setStatus('IDLE')
+            }
+        }
+        checkStatus()
+    }, [])
 
     const simulateLocation = async () => {
         setLoading(true)
@@ -51,14 +69,16 @@ export function LocationSimulator() {
 
             <button
                 onClick={simulateLocation}
-                disabled={loading || status === 'ACTIVE'}
+                disabled={loading || status === 'ACTIVE' || status === 'CHECKING'}
                 aria-label="Activer la simulation de géolocalisation à Paris"
                 className={`w-full py-2 rounded transition font-medium ${status === 'ACTIVE'
                     ? 'bg-green-600 text-white cursor-default'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : status === 'CHECKING'
+                        ? 'bg-gray-400 text-white cursor-wait'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
                     }`}
             >
-                {loading ? 'Activation...' : status === 'ACTIVE' ? '✅ Localisation Active' : '📍 Je suis à Paris (Activer Matching)'}
+                {loading ? 'Activation...' : status === 'CHECKING' ? 'Vérification...' : status === 'ACTIVE' ? '✅ Localisation Active' : '📍 Je suis à Paris (Activer Matching)'}
             </button>
 
             {status === 'ACTIVE' && (

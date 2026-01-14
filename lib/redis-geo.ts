@@ -29,9 +29,6 @@ export async function updateAgentLocation(userId: string, lat: number, long: num
             longitude: long,
             latitude: lat,
         })
-        // Set expiry for active status (e.g., 1 hour) implies we might want to clean up
-        // But GEOADD doesn't support EX directly on members, we'd need a separate key or just let it be.
-        // For MVP, we keep it simple.
     } else {
         // Mock
         redisMock.set(userId, { lat, long })
@@ -57,6 +54,30 @@ export async function findNearbyAgents(lat: number, long: number, radiusKm: numb
             }
         }
         return agents
+    }
+}
+
+// Check if agent has active location
+export async function getAgentLocation(userId: string): Promise<{ lat: number; long: number } | null> {
+    if (redis) {
+        try {
+            const result = await (redis as unknown as { geopos: (key: string, member: string) => Promise<unknown> })
+                .geopos(GEO_KEY, userId)
+
+            // Upstash returns [{lng, lat}] or [null] if not found
+            if (result && Array.isArray(result) && result[0]) {
+                const pos = result[0] as { lng?: number; lat?: number }
+                if (pos && typeof pos.lng === 'number' && typeof pos.lat === 'number') {
+                    return { lat: pos.lat, long: pos.lng }
+                }
+            }
+            return null
+        } catch (e) {
+            console.error('[Redis geopos error]:', e)
+            return null
+        }
+    } else {
+        return redisMock.get(userId) || null
     }
 }
 
