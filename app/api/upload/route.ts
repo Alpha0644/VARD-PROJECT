@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     }
 
     // Validate MIME type
-    if (!UPLOAD_CONSTRAINTS.ALLOWED_MIMES.includes(file.type as any)) {
+    if (!(UPLOAD_CONSTRAINTS.ALLOWED_MIMES as readonly string[]).includes(file.type)) {
       return NextResponse.json({ error: 'Format invalide (PDF, JPG, PNG uniquement)' }, { status: 400 })
     }
 

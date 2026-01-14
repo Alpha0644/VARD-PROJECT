@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { DocumentType } from '@/lib/documents'
 
 interface DocumentUploadProps {
-    type: 'CNAPS' | 'ID_CARD' | 'SIREN_FIRM' | 'INSURANCE'
+    type: DocumentType
     label: string
     description?: string
 }

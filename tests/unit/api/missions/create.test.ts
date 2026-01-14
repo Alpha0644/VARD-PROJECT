@@ -145,7 +145,7 @@ describe('POST /api/missions', () => {
 
     describe('❌ Error Handling', () => {
         it('returns 401 if not authenticated', async () => {
-            vi.mocked(auth).mockResolvedValue(null)
+            vi.mocked(auth).mockResolvedValue(null as any)
 
             const request = new Request('http://localhost:3000/api/missions', {
                 method: 'POST',

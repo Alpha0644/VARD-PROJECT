@@ -145,7 +145,7 @@ describe('PATCH /api/missions/[id]/status', () => {
 
     describe('❌ Error Handling', () => {
         it('returns 401 if not authenticated', async () => {
-            vi.mocked(auth).mockResolvedValue(null)
+            vi.mocked(auth).mockResolvedValue(null as any)
 
             const request = new Request('http://localhost:3000/api/missions/mission-123/status', {
                 method: 'PATCH',

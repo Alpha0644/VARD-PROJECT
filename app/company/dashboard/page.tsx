@@ -112,7 +112,7 @@ export default async function CompanyDashboardPage() {
                             </h3>
 
                             {!doc.uploaded || doc.uploaded.status === 'REJECTED' ? (
-                                <DocumentUpload type={doc.type as any} label={doc.label} />
+                                <DocumentUpload type={doc.type} label={doc.label} />
                             ) : (
                                 <div className="text-sm text-gray-500">
                                     <p>Fichier envoyé : {doc.uploaded.name}</p>
