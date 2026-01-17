@@ -44,7 +44,7 @@ export async function findNearbyAgents(lat: number, long: number, radiusKm: numb
             const result = await redis.geosearch(
                 GEO_KEY,
                 { type: 'FROMLONLAT', coordinate: { lon: long, lat: lat } },
-                { type: 'BYRADIUS', radius: radiusKm, unit: 'km' },
+                { type: 'BYRADIUS', radius: radiusKm, radiusType: 'KM' },
                 'ASC'
             )
             // Result is array of objects with member property or strings
