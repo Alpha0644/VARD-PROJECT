@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { findNearbyAgents } from '@/lib/redis-geo'
 import { checkApiRateLimit } from '@/lib/rate-limit'
 import { sendMissionNotificationEmail } from '@/lib/email'
+import { pusherServer } from '@/lib/pusher'
 
 const createMissionSchema = z.object({
     title: z.string().min(5),
@@ -122,6 +123,21 @@ export async function POST(req: Request) {
                             company.companyName
                         )
                     }
+
+                    // Trigger Pusher Real-time Event
+                    await pusherServer.trigger(
+                        `private-user-${targetUserId}`,
+                        'mission:new',
+                        {
+                            id: mission.id,
+                            title: mission.title,
+                            location: mission.location,
+                            companyName: company.companyName,
+                            startTime: startTime.toISOString(),
+                            link: `/agent/missions/${mission.id}`
+                        }
+                    )
+
                 } catch (e) {
                     // Skip if already exists (unique constraint)
                     console.error(`[Mission Matching] Failed to notify user ${targetUserId}:`, e)

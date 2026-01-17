@@ -8,6 +8,7 @@ import { MissionProposals } from '@/components/agent/mission-proposals'
 import { ActiveMission } from '@/components/agent/active-mission'
 import { LogoutButton } from '@/components/auth/logout-button'
 import { db } from '@/lib/db'
+import { MissionNotifications } from '@/components/mission/mission-notifications'
 
 export default async function AgentDashboardPage() {
     const session = await auth()
@@ -48,6 +49,7 @@ export default async function AgentDashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 p-8">
+            <MissionNotifications userId={user.id} />
             <div className="max-w-4xl mx-auto space-y-8">
 
                 {/* Header */}

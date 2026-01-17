@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/react'
 import type { Metadata } from 'next'
 import './globals.css'
 import { CookieBanner } from '@/components/gdpr/cookie-banner'
+import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
     title: 'OMEGA - Uber for Security',
@@ -19,6 +20,7 @@ export default function RootLayout({
                 {children}
                 <CookieBanner />
                 <Analytics />
+                <Toaster />
             </body>
         </html>
     )
