@@ -38,11 +38,30 @@ export async function updateAgentLocation(userId: string, lat: number, long: num
 
 export async function findNearbyAgents(lat: number, long: number, radiusKm: number): Promise<string[]> {
     if (redis) {
-        // GEORADIUS: Returns members within radius
-        // Using unknown cast as georadius is not in @upstash/redis types but exists at runtime
-        const result = await (redis as unknown as { georadius: (key: string, lng: number, lat: number, radius: number, unit: string) => Promise<string[]> })
-            .georadius(GEO_KEY, long, lat, radiusKm, 'km')
-        return result
+        try {
+            // GEOSEARCH: Returns members within radius (Upstash compatible)
+            // Using raw command for maximum compatibility
+            const result = await redis.geosearch(
+                GEO_KEY,
+                { type: 'FROMLONLAT', coordinate: { lon: long, lat: lat } },
+                { type: 'BYRADIUS', radius: radiusKm, unit: 'km' },
+                'ASC'
+            )
+            // Result is array of objects with member property or strings
+            if (Array.isArray(result)) {
+                return result.map((item: unknown) => {
+                    if (typeof item === 'string') return item
+                    if (typeof item === 'object' && item !== null && 'member' in item) {
+                        return String((item as { member: unknown }).member)
+                    }
+                    return ''
+                }).filter(Boolean)
+            }
+            return []
+        } catch (error) {
+            console.error('[Redis geosearch error]:', error)
+            return []
+        }
     } else {
         // Mock Logic: Calculate distance using Haversine formula
         const agents: string[] = []
