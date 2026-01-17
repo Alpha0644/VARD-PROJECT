@@ -21,9 +21,20 @@ export function useMissionNotifications(userId: string) {
         if (!userId) return
 
         const channelName = `private-user-${userId}`
+        console.log('[Pusher Debug] Subscribing to:', channelName)
+
         const channel = pusherClient.subscribe(channelName)
 
+        channel.bind('pusher:subscription_succeeded', () => {
+            console.log('[Pusher Debug] Subscription SUCCEEDED to', channelName)
+        })
+
+        channel.bind('pusher:subscription_error', (err: any) => {
+            console.error('[Pusher Debug] Subscription ERROR:', err)
+        })
+
         channel.bind('mission:new', (data: MissionEvent) => {
+            console.log('[Pusher Debug] Event RECEIVED:', data)
             // Simple 'Beep' sound (Base 64 to avoid file issues)
             const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU')
             audio.play().catch(e => console.log('Audio autoplay blocked', e))
