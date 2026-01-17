@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react'
 import type { Metadata } from 'next'
 import './globals.css'
 import { CookieBanner } from '@/components/gdpr/cookie-banner'
@@ -17,6 +18,7 @@ export default function RootLayout({
             <body>
                 {children}
                 <CookieBanner />
+                <Analytics />
             </body>
         </html>
     )
