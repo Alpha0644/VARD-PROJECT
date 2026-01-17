@@ -3,6 +3,9 @@ import { signIn } from 'next-auth/react'
 import { db } from '@/lib/db'
 import { compare } from 'bcryptjs'
 
+// Type helper for mock functions
+type MockFn = ReturnType<typeof vi.fn>
+
 // Mock dependencies
 vi.mock('@/lib/db')
 vi.mock('bcryptjs')
@@ -25,8 +28,8 @@ describe('Login Flow Tests', () => {
                 isVerified: true,
             }
 
-            vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as any)
-            vi.mocked(compare).mockResolvedValue(true as never)
+                ; (db.user.findUnique as MockFn).mockResolvedValue(mockUser)
+                ; (compare as MockFn).mockResolvedValue(true)
 
             const result = await signIn('credentials', {
                 email: 'test@example.com',
@@ -49,8 +52,8 @@ describe('Login Flow Tests', () => {
                 isVerified: true,
             }
 
-            vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as any)
-            vi.mocked(compare).mockResolvedValue(true as never)
+                ; (db.user.findUnique as MockFn).mockResolvedValue(mockUser)
+                ; (compare as MockFn).mockResolvedValue(true)
 
             const result = await signIn('credentials', {
                 email: 'company@example.com',
@@ -71,8 +74,8 @@ describe('Login Flow Tests', () => {
                 passwordHash: '$2a$12$hashedpassword',
             }
 
-            vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as any)
-            vi.mocked(compare).mockResolvedValue(false as never)
+                ; (db.user.findUnique as MockFn).mockResolvedValue(mockUser)
+                ; (compare as MockFn).mockResolvedValue(false)
 
             const result = await signIn('credentials', {
                 email: 'test@example.com',
@@ -85,7 +88,7 @@ describe('Login Flow Tests', () => {
         })
 
         it('should return error on non-existent user', async () => {
-            vi.mocked(db.user.findUnique).mockResolvedValue(null)
+            ; (db.user.findUnique as MockFn).mockResolvedValue(null)
 
             const result = await signIn('credentials', {
                 email: 'nonexistent@example.com',
@@ -102,11 +105,11 @@ describe('Login Flow Tests', () => {
         it('should block after 5 failed attempts', async () => {
             const { checkRateLimit } = await import('@/lib/rate-limit')
 
-            // Mock rate limit exceeded
-            vi.mocked(checkRateLimit).mockResolvedValue({
-                success: false,
-                remaining: 0,
-            } as any)
+                // Mock rate limit exceeded
+                ; (checkRateLimit as MockFn).mockResolvedValue({
+                    success: false,
+                    remaining: 0,
+                })
 
             const result = await signIn('credentials', {
                 email: 'test@example.com',
@@ -129,8 +132,8 @@ describe('Login Flow Tests', () => {
                 isVerified: true,
             }
 
-            vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as any)
-            vi.mocked(compare).mockResolvedValue(true as never)
+                ; (db.user.findUnique as MockFn).mockResolvedValue(mockUser)
+                ; (compare as MockFn).mockResolvedValue(true)
 
             const result = await signIn('credentials', {
                 email: 'test@example.com',

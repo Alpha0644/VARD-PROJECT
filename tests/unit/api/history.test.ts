@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET } from '@/app/api/missions/history/route'
 import { db } from '@/lib/db'
 
+// Type helper for mock functions
+type MockFn = ReturnType<typeof vi.fn>
+
 // Mock dependencies
 vi.mock('@/lib/auth', () => ({
     auth: vi.fn()
@@ -30,7 +33,7 @@ describe('GET /api/missions/history', () => {
     })
 
     it('returns 401 if not authenticated', async () => {
-        (auth as any).mockResolvedValue(null)
+        ; (auth as MockFn).mockResolvedValue(null)
         const req = new Request('http://localhost/api/missions/history')
         const res = await GET(req)
 
@@ -39,18 +42,18 @@ describe('GET /api/missions/history', () => {
 
     it('returns missions for AGENT', async () => {
         // Mock Auth
-        (auth as any).mockResolvedValue({
+        ; (auth as MockFn).mockResolvedValue({
             user: { id: 'user-agent-123', role: 'AGENT' }
         })
 
         // Mock Agent Profile
         const mockAgent = { id: 'agent-profile-123' }
-            ; (db.agent.findUnique as any).mockResolvedValue(mockAgent)
+            ; (db.agent.findUnique as MockFn).mockResolvedValue(mockAgent)
 
         // Mock Missions
         const mockMissions = [{ id: 'mission-1', title: 'Mission Test' }]
-            ; (db.mission.findMany as any).mockResolvedValue(mockMissions)
-            ; (db.mission.count as any).mockResolvedValue(1)
+            ; (db.mission.findMany as MockFn).mockResolvedValue(mockMissions)
+            ; (db.mission.count as MockFn).mockResolvedValue(1)
 
         const req = new Request('http://localhost/api/missions/history?limit=10')
         const res = await GET(req)
@@ -70,17 +73,17 @@ describe('GET /api/missions/history', () => {
 
     it('returns missions for COMPANY', async () => {
         // Mock Auth
-        (auth as any).mockResolvedValue({
+        ; (auth as MockFn).mockResolvedValue({
             user: { id: 'user-company-123', role: 'COMPANY' }
         })
 
         // Mock Company Profile
         const mockCompany = { id: 'company-profile-123' }
-            ; (db.company.findUnique as any).mockResolvedValue(mockCompany)
+            ; (db.company.findUnique as MockFn).mockResolvedValue(mockCompany)
 
             // Mock Missions
-            ; (db.mission.findMany as any).mockResolvedValue([])
-            ; (db.mission.count as any).mockResolvedValue(0)
+            ; (db.mission.findMany as MockFn).mockResolvedValue([])
+            ; (db.mission.count as MockFn).mockResolvedValue(0)
 
         const req = new Request('http://localhost/api/missions/history')
         await GET(req)
@@ -94,7 +97,7 @@ describe('GET /api/missions/history', () => {
     })
 
     it('validates pagination params', async () => {
-        (auth as any).mockResolvedValue({ user: { role: 'AGENT' } })
+        ; (auth as MockFn).mockResolvedValue({ user: { role: 'AGENT' } })
 
         const req = new Request('http://localhost/api/missions/history?limit=999') // Too high
         const res = await GET(req)
