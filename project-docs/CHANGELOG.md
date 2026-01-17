@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-01-17 - Phase 2.3: Production Deployment 🚀
+
+### Added
+- 🌐 **Vercel Production Deployment**:
+  - URL: https://vardproject.vercel.app
+  - CI/CD: GitHub → Vercel webhook actif
+  - Environment variables configurées
+
+- 📦 **Supabase Storage Integration**:
+  - Document uploads now use Supabase Storage
+  - Fixed `EROFS: read-only file system` error on Vercel
+  - Fallback to local storage for development
+
+- 🧪 **Vitest Mock Improvements**:
+  - Created `lib/__mocks__/db.ts` for proper Prisma mocking
+  - Removed all `as any` from test files (50+ → 0)
+  - All 49 tests now pass
+
+### Fixed
+- 🐛 **Redis geosearch**: Replaced deprecated `georadius` with `geosearch` for Upstash
+- 🐛 **Git Author Verification**: Fixed Vercel webhook rejecting commits
+- 🐛 **Login tests**: Refactored to properly mock next-auth/react
+
+### Security
+- ✅ OMEGA Audit: 100% compliant (7-point security checklist)
+- ✅ No hardcoded secrets
+- ✅ Rate limiting active
+
+---
+
 ## 2026-01-14 - Phase 2: Production Infrastructure 🚀
 
 ### Added
