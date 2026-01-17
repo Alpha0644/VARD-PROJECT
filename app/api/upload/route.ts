@@ -8,7 +8,7 @@ import { checkApiRateLimit } from '@/lib/rate-limit'
 import { UPLOAD_CONSTRAINTS } from '@/lib/constants'
 import { createClient } from '@supabase/supabase-js'
 
-// Force rebuild: 2026-01-17T11:36:00
+// Force rebuild: 2026-01-17T13:56:00 - geosearch fix
 
 export async function POST(req: Request) {
   try {
