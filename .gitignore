@@ -70,3 +70,4 @@ tests/visual/reference/
 # Personal notes (optional)
 TODO.md
 NOTES.md
+.env*.local
