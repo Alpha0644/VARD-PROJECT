@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { z } from 'zod'
 import { findNearbyAgents } from '@/lib/redis-geo'
 import { checkApiRateLimit } from '@/lib/rate-limit'
+import { sendMissionNotificationEmail } from '@/lib/email'
 
 const createMissionSchema = z.object({
     title: z.string().min(5),
@@ -91,21 +92,36 @@ export async function POST(req: Request) {
         // Radius: 10km default
         const nearbyUserIds = await findNearbyAgents(latitude, longitude, 10)
 
-        // 4. Create Notifications
+        // 4. Create Notifications and Send Emails
         if (nearbyUserIds.length > 0) {
-            // NOTE: MissionNotification.agentId refs User.id in Schema
-            // So we use the User ID directly from Redis.
+            // Get agent emails for email notifications
+            const agentUsers = await db.user.findMany({
+                where: { id: { in: nearbyUserIds } },
+                select: { id: true, email: true }
+            })
 
-            // SQLite doesn't support skipDuplicates, so we create one by one
             for (const targetUserId of nearbyUserIds) {
                 try {
+                    // Create in-app notification
                     await db.missionNotification.create({
                         data: {
                             missionId: mission.id,
-                            agentId: targetUserId, // Using UserID as per Schema
+                            agentId: targetUserId,
                             status: 'SENT',
                         }
                     })
+
+                    // Send email notification
+                    const agentUser = agentUsers.find(u => u.id === targetUserId)
+                    if (agentUser?.email) {
+                        await sendMissionNotificationEmail(
+                            agentUser.email,
+                            title,
+                            location,
+                            startTime,
+                            company.companyName
+                        )
+                    }
                 } catch (e) {
                     // Skip if already exists (unique constraint)
                     console.error(`[Mission Matching] Failed to notify user ${targetUserId}:`, e)

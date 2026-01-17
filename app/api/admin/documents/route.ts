@@ -3,11 +3,13 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { sendDocumentApprovedEmail, sendDocumentRejectedEmail } from '@/lib/email'
 
 // Schema for status update
 const updateDocumentSchema = z.object({
     id: z.string(),
     status: z.enum(['VERIFIED', 'REJECTED']),
+    reason: z.string().optional(), // Rejection reason
 })
 
 export async function GET(req: Request) {
@@ -62,15 +64,29 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: 'Données invalides' }, { status: 400 })
         }
 
-        const { id, status } = validated.data
+        const { id, status, reason } = validated.data
 
-        // 3. Update Database
+        // 3. Update Database with user email
         const document = await db.document.update({
             where: { id },
-            data: { status }
+            data: { status },
+            include: {
+                user: {
+                    select: { email: true }
+                }
+            }
         })
 
-        // 4. Post-Update Logic: Check if user is fully verified
+        // 4. Send email notification
+        if (document.user?.email) {
+            if (status === 'VERIFIED') {
+                await sendDocumentApprovedEmail(document.user.email, document.type)
+            } else if (status === 'REJECTED') {
+                await sendDocumentRejectedEmail(document.user.email, document.type, reason)
+            }
+        }
+
+        // 5. Post-Update Logic: Check if user is fully verified
         // If the user has all required documents verified, update user.isVerified
         const userDocs = await db.document.findMany({
             where: { userId: document.userId }
