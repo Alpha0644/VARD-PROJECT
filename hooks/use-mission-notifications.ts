@@ -24,17 +24,23 @@ export function useMissionNotifications(userId: string) {
         const channel = pusherClient.subscribe(channelName)
 
         channel.bind('mission:new', (data: MissionEvent) => {
-            // Play sound (optional)
-            const audio = new Audio('/sounds/notification.mp3') // We need to add this file or remove this line
-            audio.play().catch(e => console.log('Audio play failed', e))
+            // Simple 'Beep' sound (Base 64 to avoid file issues)
+            const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU')
+            audio.play().catch(e => console.log('Audio autoplay blocked', e))
 
-            toast.message('Nouvelle mission disponible !', {
+            toast.success('Nouvelle mission disponible !', {
                 description: `${data.companyName} à ${data.location}`,
+                position: 'top-center', // Force visibility at top
+                duration: 8000,
                 action: {
                     label: 'Voir',
                     onClick: () => router.push(data.link)
                 },
-                duration: 10000, // 10 seconds
+                style: {
+                    background: '#10B981', // Green background
+                    color: 'white',
+                    border: 'none'
+                }
             })
 
             // Refresh the page data to show the new mission in the list
