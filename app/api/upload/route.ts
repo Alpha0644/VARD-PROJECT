@@ -8,6 +8,8 @@ import { checkApiRateLimit } from '@/lib/rate-limit'
 import { UPLOAD_CONSTRAINTS } from '@/lib/constants'
 import { createClient } from '@supabase/supabase-js'
 
+// Force rebuild: 2026-01-17T11:36:00
+
 export async function POST(req: Request) {
   try {
     const session = await auth()
