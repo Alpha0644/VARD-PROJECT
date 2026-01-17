@@ -23,9 +23,10 @@ describe('POST /api/auth/register', () => {
             role: 'AGENT',
         }
 
-        vi.mocked(db.user.findUnique).mockResolvedValue(null)
-        vi.mocked(db.user.create).mockResolvedValue(mockUser as any)
-        vi.mocked(hash).mockResolvedValue('hashed_password' as never)
+            // Use direct mock on the imported db object
+            ; (db.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(null)
+            ; (db.user.create as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser)
+            ; (hash as ReturnType<typeof vi.fn>).mockResolvedValue('hashed_password')
 
         const request = new Request('http://localhost:3000/api/auth/register', {
             method: 'POST',
@@ -47,7 +48,7 @@ describe('POST /api/auth/register', () => {
     })
 
     it('should return 409 if email already exists', async () => {
-        vi.mocked(db.user.findUnique).mockResolvedValue({ id: 'existing' } as any)
+        ; (db.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'existing' })
 
         const request = new Request('http://localhost:3000/api/auth/register', {
             method: 'POST',
