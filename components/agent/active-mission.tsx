@@ -26,14 +26,13 @@ export function ActiveMission({ mission }: ActiveMissionProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     status: newStatus,
-                    // Optional: Send current location if we had it
                 })
             })
 
             if (!res.ok) throw new Error('Update failed')
 
             setCurrentStatus(newStatus)
-            router.refresh()
+            // Note: Removed router.refresh() to prevent state reset on Vercel
         } catch (error) {
             console.error('Failed to update status:', error)
             alert('Erreur lors de la mise à jour du statut')
