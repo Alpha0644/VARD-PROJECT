@@ -103,8 +103,8 @@ export function ActiveMission({ mission }: ActiveMissionProps) {
                 )}
 
                 {/* GPS Live Tracking */}
-                {(currentStatus === 'EN_ROUTE' || currentStatus === 'ARRIVED' || currentStatus === 'IN_PROGRESS') && (
-                    <LiveTrackingToggle missionId={mission.id} />
+                {['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(currentStatus) && (
+                    <LiveTrackingToggle key={`tracker-${currentStatus}`} missionId={mission.id} />
                 )}
 
                 {/* Progress Bar */}
