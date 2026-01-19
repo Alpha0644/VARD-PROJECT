@@ -1,10 +1,11 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { getUserDocuments, checkUserVerificationStatus, DocumentType, DocumentStatus } from '@/lib/documents'
+import { getUserDocuments, checkUserVerificationStatus, DocumentType } from '@/lib/documents'
 import { DocumentUpload } from '@/components/dashboard/document-upload'
 import { CreateMissionForm } from '@/components/mission/create-mission-form'
 import { LogoutButton } from '@/components/auth/logout-button'
+import { db } from '@/lib/db'
 
 export default async function CompanyDashboardPage() {
     const session = await auth()
@@ -16,6 +17,17 @@ export default async function CompanyDashboardPage() {
     const user = session.user
     const documents = await getUserDocuments(user.id)
     const isVerified = await checkUserVerificationStatus(user.id, user.role)
+
+    // Fetch company's active missions
+    const company = await db.company.findUnique({ where: { userId: user.id } })
+    const activeMissions = company ? await db.mission.findMany({
+        where: {
+            companyId: company.id,
+            status: { in: ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'] }
+        },
+        include: { agent: { include: { user: true } } },
+        orderBy: { createdAt: 'desc' }
+    }) : []
 
     // Documents nécessaires pour Company
     const neededDocs = [
@@ -61,7 +73,7 @@ export default async function CompanyDashboardPage() {
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm text-yellow-700">
-                                    Votre compte n'est pas encore vérifié. Veuillez fournir les documents requis pour créer des missions.
+                                    Votre compte n&apos;est pas encore vérifié. Veuillez fournir les documents requis pour créer des missions.
                                 </p>
                             </div>
                         </div>
@@ -81,6 +93,31 @@ export default async function CompanyDashboardPage() {
                                     Compte vérifié. Vous pouvez créer des missions.
                                 </p>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Active Missions Section */}
+                {activeMissions.length > 0 && (
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-xl font-bold mb-4">📍 Missions en cours</h2>
+                        <div className="space-y-3">
+                            {activeMissions.map(mission => (
+                                <div key={mission.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p className="font-semibold">{mission.title}</p>
+                                        <p className="text-sm text-gray-500">
+                                            {mission.agent?.user.name || 'En attente d\'agent'} • {mission.status}
+                                        </p>
+                                    </div>
+                                    <Link
+                                        href={`/company/missions/${mission.id}`}
+                                        className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                                    >
+                                        📍 Voir sur carte
+                                    </Link>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
@@ -127,3 +164,4 @@ export default async function CompanyDashboardPage() {
         </div>
     )
 }
+
