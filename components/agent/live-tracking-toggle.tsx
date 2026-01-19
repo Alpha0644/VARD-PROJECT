@@ -1,22 +1,39 @@
 "use client"
 
 import { useGeolocationTracker } from '@/hooks/use-geolocation-tracker'
+import { useEffect, useRef } from 'react'
 
 interface LiveTrackingToggleProps {
     missionId: string
+    isActive?: boolean
+    onActiveChange?: (active: boolean) => void
 }
 
-export function LiveTrackingToggle({ missionId }: LiveTrackingToggleProps) {
+export function LiveTrackingToggle({ missionId, isActive, onActiveChange }: LiveTrackingToggleProps) {
     const { isTracking, latitude, longitude, accuracy, error, startTracking, stopTracking } = useGeolocationTracker({
         missionId,
-        enabled: false, // Start disabled, user must opt-in
+        enabled: false, // Always start disabled, control via effect
     })
+
+    const hasStartedRef = useRef(false)
+
+    // Sync with parent's isActive state
+    useEffect(() => {
+        if (isActive && !isTracking && !hasStartedRef.current) {
+            hasStartedRef.current = true
+            startTracking()
+        }
+    }, [isActive, isTracking, startTracking])
 
     const handleToggle = () => {
         if (isTracking) {
             stopTracking()
+            hasStartedRef.current = false
+            onActiveChange?.(false)
         } else {
             startTracking()
+            hasStartedRef.current = true
+            onActiveChange?.(true)
         }
     }
 
@@ -32,8 +49,8 @@ export function LiveTrackingToggle({ missionId }: LiveTrackingToggleProps) {
                 <button
                     onClick={handleToggle}
                     className={`px-4 py-2 rounded-full font-medium transition-colors ${isTracking
-                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                        : 'bg-green-100 text-green-700 hover:bg-green-200'
                         }`}
                 >
                     {isTracking ? '⏹ Arrêter' : '▶ Activer'}
@@ -55,3 +72,4 @@ export function LiveTrackingToggle({ missionId }: LiveTrackingToggleProps) {
         </div>
     )
 }
+

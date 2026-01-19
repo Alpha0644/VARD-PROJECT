@@ -15,6 +15,7 @@ const STATUS_FLOW = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'COMPLETE
 export function ActiveMission({ mission }: ActiveMissionProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [currentStatus, setCurrentStatus] = useState(mission.status)
+    const [trackingActive, setTrackingActive] = useState(false) // Persist tracking state
     const router = useRouter()
 
     const handleStatusUpdate = async (newStatus: string) => {
@@ -104,7 +105,11 @@ export function ActiveMission({ mission }: ActiveMissionProps) {
 
                 {/* GPS Live Tracking */}
                 {['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(currentStatus) && (
-                    <LiveTrackingToggle key={`tracker-${currentStatus}`} missionId={mission.id} />
+                    <LiveTrackingToggle
+                        missionId={mission.id}
+                        isActive={trackingActive}
+                        onActiveChange={setTrackingActive}
+                    />
                 )}
 
                 {/* Progress Bar */}
