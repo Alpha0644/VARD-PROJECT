@@ -59,8 +59,8 @@ export function MissionProposals() {
             setNotifications(prev => prev.filter(n => n.id !== id))
 
             if (status === 'ACCEPTED') {
-                // Force server component refresh to show ActiveMission
-                router.refresh()
+                // Force full page reload to ensure Server Component updates completely
+                window.location.reload()
             }
         } catch (e) {
             console.error(e)
