@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { MISSION_DEFAULTS } from '@/lib/constants'
 
 interface Notification {
@@ -41,19 +42,29 @@ export function MissionProposals() {
         return () => clearInterval(interval)
     }, [])
 
+    const router = useRouter() // Import from next/navigation
+
     const handleRespond = async (id: string, status: 'ACCEPTED' | 'REJECTED') => {
         setLoading(true)
         try {
-            await fetch('/api/agent/notifications/respond', {
+            const response = await fetch('/api/agent/notifications/respond', {
                 method: 'POST',
                 body: JSON.stringify({ notificationId: id, status }),
                 headers: { 'Content-Type': 'application/json' }
             })
+
+            if (!response.ok) throw new Error('Action failed')
+
             // Remove from list locally
             setNotifications(prev => prev.filter(n => n.id !== id))
-            alert(status === 'ACCEPTED' ? 'Mission acceptée ! 🚀' : 'Mission refusée.')
+
+            if (status === 'ACCEPTED') {
+                // Force server component refresh to show ActiveMission
+                router.refresh()
+            }
         } catch (e) {
-            alert('Erreur action')
+            console.error(e)
+            alert('Erreur lors de l\'action')
         } finally {
             setLoading(false)
         }
