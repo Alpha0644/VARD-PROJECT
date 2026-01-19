@@ -103,7 +103,7 @@ export function ActiveMission({ mission }: ActiveMissionProps) {
                 )}
 
                 {/* GPS Live Tracking */}
-                {['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(currentStatus) && (
+                {['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(currentStatus) && (
                     <LiveTrackingToggle
                         missionId={mission.id}
                         isActive={trackingActive}
