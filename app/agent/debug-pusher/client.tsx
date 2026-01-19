@@ -13,7 +13,7 @@ export function DebugPusherClient({ userId, userName }: { userId: string, userNa
     const addLog = (msg: string) => setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev])
 
     useEffect(() => {
-        pusherClient.connection.bind('state_change', (states: any) => {
+        pusherClient.connection.bind('state_change', (states: { current: string }) => {
             setStatus(states.current)
             addLog(`Connection state changed: ${states.current}`)
         })
@@ -23,7 +23,7 @@ export function DebugPusherClient({ userId, userName }: { userId: string, userNa
             addLog(`Connected with Socket ID: ${pusherClient.connection.socket_id}`)
         })
 
-        pusherClient.connection.bind('error', (err: any) => {
+        pusherClient.connection.bind('error', (err: unknown) => {
             addLog(`Connection ERROR: ${JSON.stringify(err)}`)
         })
     }, [])
@@ -39,12 +39,12 @@ export function DebugPusherClient({ userId, userName }: { userId: string, userNa
             addLog(`READY TO RECEIVE EVENTS!`)
         })
 
-        channel.bind('pusher:subscription_error', (status: any) => {
+        channel.bind('pusher:subscription_error', (status: { status?: number }) => {
             addLog(`❌ SUBSCRIPTION ERROR: ${JSON.stringify(status)}`)
             if (status?.status === 403) addLog(`⛔ 403 Forbidden: You are logged in as ${userId} but trying to access ${channelName}. Channel name MUST match 'private-user-${userId}'`)
         })
 
-        channel.bind('mission:new', (data: any) => {
+        channel.bind('mission:new', (data: { id: string; title: string }) => {
             addLog(`🎉 EVENT RECEIVED: ${JSON.stringify(data)}`)
             const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU')
             audio.play()

@@ -29,7 +29,7 @@ export function useMissionNotifications(userId: string) {
             console.log('[Pusher Debug] Subscription SUCCEEDED to', channelName)
         })
 
-        channel.bind('pusher:subscription_error', (err: any) => {
+        channel.bind('pusher:subscription_error', (err: unknown) => {
             console.error('[Pusher Debug] Subscription ERROR:', err)
         })
 

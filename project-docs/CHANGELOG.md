@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-01-19 - Phase 3.1: Real-time Notifications 🔔
+
+### Added
+- ⚡ **Pusher Integration**: Real-time mission notifications
+  - Server: `lib/pusher.ts` singleton instance
+  - Client: `lib/pusher-client.ts` with authEndpoint config
+  - Auth: `/api/pusher/auth` for private channel security
+  - Hook: `hooks/use-mission-notifications.ts`
+  - UI: Toast notifications via Sonner (top-center, green)
+  - Debug: `/agent/debug-pusher` diagnostic page
+
+### Fixed
+- 🔧 **Type Safety**: Removed all `any` types from Pusher code
+  - Replaced with `unknown`, specific interfaces
+
+### Security
+- ✅ **OMEGA Audit**: 100% compliant
+  - 0 `any` types
+  - 0 npm vulnerabilities
+  - 7-point security checklist passed
+
+---
+
 ## 2026-01-17 - Phase 2.3: Production Deployment 🚀
 
 ### Added

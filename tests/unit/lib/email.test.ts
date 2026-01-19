@@ -12,7 +12,7 @@ vi.mock('resend', () => ({
 
 describe('Email Templates', () => {
     // Variable pour stocker les fonctions importées dynamiquement
-    let emailLib: any
+    let emailLib: typeof import('@/lib/email')
 
     beforeEach(async () => {
         vi.clearAllMocks()
