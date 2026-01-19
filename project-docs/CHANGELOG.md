@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-01-19 - Phase 3.2: GPS Live Tracking 📍
+
+### Added
+- 📍 **Live GPS Tracking**: Real-time agent position during missions
+  - Backend: `POST /api/agent/location/live` (rate-limited, auth)
+  - Redis: `updateAgentLiveLocation()`, `getAgentLiveLocation()`
+  - Frontend (Agent): `useGeolocationTracker` hook + `LiveTrackingToggle`
+  - Frontend (Company): `AgentMap` component with Leaflet
+  - Page: `/company/missions/[id]` shows live agent position
+
+### Modified  
+- Pusher auth: Now supports `presence-mission-{id}` channels
+- Rate limiter: Added `location` type (12 req/min)
+
+### Dependencies
+- Added: `leaflet`, `react-leaflet`, `@types/leaflet`
+
+---
+
 ## 2026-01-19 - Phase 3.1: Real-time Notifications 🔔
 
 ### Added

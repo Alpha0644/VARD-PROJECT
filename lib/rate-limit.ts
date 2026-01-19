@@ -98,12 +98,21 @@ export const adminRateLimit = redis
     })
     : null
 
+export const locationRateLimit = redis
+    ? new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(12, '1 m'), // 12 per minute = 1 per 5s
+        analytics: true,
+    })
+    : null
+
 // In-memory fallback
 const inMemoryLoginRateLimit = new InMemoryRateLimit()
 const inMemoryRegisterRateLimit = new InMemoryRateLimit()
 const inMemoryMissionRateLimit = new InMemoryRateLimit()
 const inMemoryUploadRateLimit = new InMemoryRateLimit()
 const inMemoryAdminRateLimit = new InMemoryRateLimit()
+const inMemoryLocationRateLimit = new InMemoryRateLimit()
 
 // Helper function to check rate limit
 export async function checkRateLimit(
@@ -129,7 +138,7 @@ export async function checkRateLimit(
 
 // API Rate Limit Helper
 export async function checkApiRateLimit(
-    type: 'mission' | 'upload' | 'admin',
+    type: 'mission' | 'upload' | 'admin' | 'location',
     identifier: string
 ) {
     if (type === 'mission') {
@@ -151,6 +160,13 @@ export async function checkApiRateLimit(
             return await adminRateLimit.limit(identifier)
         }
         return await inMemoryAdminRateLimit.limit(identifier, 50, 60_000)
+    }
+
+    if (type === 'location') {
+        if (locationRateLimit) {
+            return await locationRateLimit.limit(identifier)
+        }
+        return await inMemoryLocationRateLimit.limit(identifier, 12, 60_000)
     }
 
     throw new Error('Invalid API rate limit type')

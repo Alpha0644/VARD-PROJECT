@@ -116,3 +116,51 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
 function deg2rad(deg: number) {
     return deg * (Math.PI / 180)
 }
+
+const LIVE_GEO_KEY = 'live:agents:locations'
+const LIVE_LOCATION_TTL = 300 // 5 minutes
+
+// Store live location for active mission tracking
+export async function updateAgentLiveLocation(agentId: string, missionId: string, lat: number, long: number) {
+    const member = `${missionId}:${agentId}`
+
+    if (redis) {
+        await redis.geoadd(LIVE_GEO_KEY, {
+            member,
+            longitude: long,
+            latitude: lat,
+        })
+        // Set expiry on the key (approximate - Redis GEO doesn't support per-member TTL)
+        // We'll use a separate hash for the timestamp
+        await redis.hset(`live:location:meta`, { [member]: Date.now() })
+    } else {
+        redisMock.set(member, { lat, long })
+        console.log(`[MockRedis Live] ${member} -> ${lat}, ${long}`)
+    }
+}
+
+// Get live location for a specific mission/agent pair
+export async function getAgentLiveLocation(agentId: string, missionId: string): Promise<{ lat: number; long: number } | null> {
+    const member = `${missionId}:${agentId}`
+
+    if (redis) {
+        try {
+            const result = await (redis as unknown as { geopos: (key: string, member: string) => Promise<unknown> })
+                .geopos(LIVE_GEO_KEY, member)
+
+            if (result && Array.isArray(result) && result[0]) {
+                const pos = result[0] as { lng?: number; lat?: number }
+                if (pos && typeof pos.lng === 'number' && typeof pos.lat === 'number') {
+                    return { lat: pos.lat, long: pos.lng }
+                }
+            }
+            return null
+        } catch (e) {
+            console.error('[Redis live geopos error]:', e)
+            return null
+        }
+    } else {
+        return redisMock.get(member) || null
+    }
+}
+

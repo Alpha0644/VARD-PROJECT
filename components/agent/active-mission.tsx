@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { MissionWithCompany } from '@/lib/types/mission'
+import { LiveTrackingToggle } from './live-tracking-toggle'
 
 interface ActiveMissionProps {
     mission: MissionWithCompany
@@ -99,6 +100,11 @@ export function ActiveMission({ mission }: ActiveMissionProps) {
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                         <p className="text-blue-800 text-sm">{mission.description}</p>
                     </div>
+                )}
+
+                {/* GPS Live Tracking */}
+                {(currentStatus === 'EN_ROUTE' || currentStatus === 'ARRIVED' || currentStatus === 'IN_PROGRESS') && (
+                    <LiveTrackingToggle missionId={mission.id} />
                 )}
 
                 {/* Progress Bar */}
