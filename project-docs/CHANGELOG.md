@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-01-20 - Refactoring: Email Module + Security Audit 🛠️
+
+### Refactored
+- 📧 **lib/email.ts** (517 lignes) → Modularisé en 7 fichiers:
+  - `lib/email/config.ts` - Configuration Resend partagée
+  - `lib/email/index.ts` - Exports barrel (compatibilité)
+  - `lib/email/templates/verification.ts`
+  - `lib/email/templates/password-reset.ts`
+  - `lib/email/templates/welcome.ts`
+  - `lib/email/templates/document-status.ts`
+  - `lib/email/templates/mission-notification.ts`
+  - `lib/email/templates/monthly-recap.ts`
+
+### Security
+- 🛡️ **Audit Avancé Phases 12-15** (Score: 100/100)
+  - Phase 12: ReDoS protégé, pagination max 50
+  - Phase 13: Supply chain secure, 0 shadow APIs
+  - Phase 15: EXIF stripping implémenté (sharp)
+- 🔒 **Headers HTTP renforcés**: HSTS, CSP, X-XSS-Protection
+- 🧹 **Console.log nettoyés**: Supprimés en production
+
+### Commits
+- `ebef58d` - Pre-refactoring backup
+- `29398a7` - Modularize lib/email.ts into 7 modules
+
+---
+
 ## 2026-01-19 - Phase 3.2: GPS Live Tracking 📍
 
 ### Added
