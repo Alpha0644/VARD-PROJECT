@@ -30,9 +30,8 @@ export async function updateAgentLocation(userId: string, lat: number, long: num
             latitude: lat,
         })
     } else {
-        // Mock
+        // Mock fallback for development
         redisMock.set(userId, { lat, long })
-        console.log(`[MockRedis] Updated user ${userId} location to ${lat}, ${long}`)
     }
 }
 
@@ -134,8 +133,8 @@ export async function updateAgentLiveLocation(agentId: string, missionId: string
         // We'll use a separate hash for the timestamp
         await redis.hset(`live:location:meta`, { [member]: Date.now() })
     } else {
+        // Mock fallback for development
         redisMock.set(member, { lat, long })
-        console.log(`[MockRedis Live] ${member} -> ${lat}, ${long}`)
     }
 }
 
