@@ -180,7 +180,20 @@
 
 ---
 
-## [Unreleased] - 2025-12-30
+## [Unreleased]
+### Added
+- **Phase 5: Dashboard Agent**
+  - Initial mobile-first layout (TopBar, BottomNav).
+  - `AgentMap` component with Leaflet in dark mode.
+  - Floating status toggle placeholder.
+- **Phase 4: Landing Page Redesign**
+  - "Uber-like" aesthetic: Black & White theme, massive background imagery.
+  - New sections: Stats, Feature Split, Quality Assurance, Download App.
+  - Fully responsive, component-based architecture.
+
+### Changed
+- Refactored `app/page.tsx` to use new modular sections.
+- Updated `middleware.ts` to allow static image assets. - 2025-12-30
 
 ### Added
 - 🏗️ **MVP Foundation**: Initialized project structure with OMEGA Protocol v3.1.
