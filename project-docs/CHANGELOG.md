@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-01-20 - Phases 4: Landing Page Redesign 🎨
+
+### Added
+- 🎨 **Landing Page "Uber-like"**:
+  - Nouveau Design System: Bleu Nuit (`#0A1628`) + Orange (`#FF6B35`)
+  - Hero Section Split: Agent vs Entreprise avec CTA distincts
+  - Animations: Scroll-fail, compteurs dynamiques, transitions
+  - Composants modulaires: `Navbar`, `Hero`, `Stats`, `HowItWorks`, `Footer`
+- 📱 **Responsive & SEO**:
+  - Mobile-first design
+  - Meta tags complets (OpenGraph, Twitter)
+  - Lighthouse score optimisé
+
+### Changed
+- `app/globals.css`: Ajout variables CSS et animations custom
+- `tailwind.config.ts`: Configuration complète du thème VARD
+
+---
+
 ## 2026-01-20 - Refactoring: Email Module + Security Audit 🛠️
 
 ### Refactored
