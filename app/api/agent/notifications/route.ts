@@ -9,7 +9,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
         }
 
-        console.log('[Notifications API] session.user.id:', session.user.id)
+
 
         const notifications = await db.missionNotification.findMany({
             where: {
@@ -33,10 +33,7 @@ export async function GET(req: Request) {
             orderBy: { createdAt: 'desc' }
         })
 
-        console.log('[Notifications API] Found:', notifications.length, 'notifications')
-        if (notifications.length > 0) {
-            console.log('[Notifications API] First notification:', notifications[0].id, notifications[0].mission.title)
-        }
+
 
         return NextResponse.json(notifications)
     } catch (error) {

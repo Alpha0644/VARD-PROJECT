@@ -7,13 +7,15 @@ import { randomUUID } from 'crypto'
 import { checkApiRateLimit } from '@/lib/rate-limit'
 import { UPLOAD_CONSTRAINTS } from '@/lib/constants'
 import { createClient } from '@supabase/supabase-js'
+import sharp from 'sharp'
 
-// Force rebuild: 2026-01-17T13:56:00 - geosearch fix
+// Image MIME types that should be processed by sharp
+const IMAGE_MIMES = ['image/jpeg', 'image/jpg', 'image/png']
 
 export async function POST(req: Request) {
   try {
     const session = await auth()
-    console.log('[API Upload Debug] Session:', session ? `User ${session.user?.email}` : 'NULL')
+
 
     if (!session) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
@@ -54,7 +56,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Format invalide (PDF, JPG, PNG uniquement)' }, { status: 400 })
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer())
+    let buffer: Buffer = Buffer.from(await file.arrayBuffer())
+
+    // SECURITY: Strip EXIF metadata from images (removes GPS, camera info, etc.)
+    if (IMAGE_MIMES.includes(file.type)) {
+      const cleanedBuffer = await sharp(buffer)
+        .rotate() // Auto-rotate based on EXIF orientation before stripping
+        .toBuffer()
+      buffer = cleanedBuffer as Buffer
+      // sharp automatically strips EXIF when re-encoding
+    }
+
     const filename = `${randomUUID()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
 
     let finalUrl = ''
@@ -63,16 +75,10 @@ export async function POST(req: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    console.log('[Upload Diagnostic] Env Scan:', {
-      hasUrl: !!supabaseUrl,
-      urlPrefix: supabaseUrl ? supabaseUrl.substring(0, 8) + '...' : 'MISSING',
-      hasKey: !!supabaseKey,
-      keyType: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE' : (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'ANON' : 'NONE'),
-      nodeEnv: process.env.NODE_ENV
-    })
+    // Storage provider selection
 
     if (supabaseUrl && supabaseKey) {
-      console.log('[API Upload] Using Supabase Storage')
+      // Supabase Storage (Production)
       const supabase = createClient(supabaseUrl, supabaseKey)
 
       const { data, error } = await supabase.storage

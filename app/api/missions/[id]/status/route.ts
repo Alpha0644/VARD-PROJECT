@@ -66,7 +66,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
             }
         })
 
-        console.log(`[Mission ${missionId}] Status updated to ${status} by Agent ${agent.id}`)
+        // Status update logged via MissionLog model if needed
 
         return NextResponse.json(updatedMission)
 

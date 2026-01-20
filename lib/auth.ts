@@ -48,19 +48,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     },
                 })
 
-                console.log('[Auth Debug] Attempting login for:', email)
+                // Auth validation (no debug logs in production)
                 if (!user) {
-                    console.log('[Auth Debug] User not found')
+
                     return null
                 }
                 if (!user.passwordHash) {
-                    console.log('[Auth Debug] No password hash for user')
+
                     return null
                 }
 
                 // Verify password
                 const isPasswordValid = await compare(password, user.passwordHash)
-                console.log('[Auth Debug] Password valid:', isPasswordValid)
+
 
                 if (!isPasswordValid) {
                     return null

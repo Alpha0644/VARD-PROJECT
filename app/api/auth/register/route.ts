@@ -27,7 +27,7 @@ export async function POST(req: Request) {
         const validatedFields = registerSchema.safeParse(body)
 
         if (!validatedFields.success) {
-            console.log('Registration validation error:', validatedFields.error.flatten())
+            // Validation handled by Zod schema
             return NextResponse.json(
                 { error: 'Données invalides', details: validatedFields.error.flatten() },
                 { status: 400 }
