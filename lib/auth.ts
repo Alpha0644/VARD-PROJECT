@@ -86,12 +86,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return baseUrl + '/dashboard'
         },
         async jwt({ token, user }) {
-            // Initial sign in
+            // Initial sign in - store user data in token
             if (user) {
                 token.id = user.id
                 token.role = user.role
                 token.isVerified = user.isVerified
             }
+
+            // On subsequent requests, refresh isVerified from database
+            // This ensures the session updates after admin validates documents
+            if (token.id) {
+                const dbUser = await db.user.findUnique({
+                    where: { id: token.id as string },
+                    select: { isVerified: true }
+                })
+                if (dbUser) {
+                    token.isVerified = dbUser.isVerified
+                }
+            }
+
             return token
         },
         async session({ session, token }) {
