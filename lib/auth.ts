@@ -92,19 +92,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 token.role = user.role
                 token.isVerified = user.isVerified
             }
-
-            // On subsequent requests, refresh isVerified from database
-            // This ensures the session updates after admin validates documents
-            if (token.id) {
-                const dbUser = await db.user.findUnique({
-                    where: { id: token.id as string },
-                    select: { isVerified: true }
-                })
-                if (dbUser) {
-                    token.isVerified = dbUser.isVerified
-                }
-            }
-
+            // Note: isVerified is only set at login time.
+            // User must re-login after admin validates their documents.
             return token
         },
         async session({ session, token }) {

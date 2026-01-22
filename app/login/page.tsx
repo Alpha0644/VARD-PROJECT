@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { AuthLayout } from '@/components/auth/auth-layout'
 
 export default function LoginPage() {
     const router = useRouter()
@@ -30,7 +31,6 @@ export default function LoginPage() {
                 return
             }
 
-            // Redirect based on role (will be handled by middleware)
             router.push('/dashboard')
             router.refresh()
         } catch (err) {
@@ -40,22 +40,22 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-            <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
-                <h1 className="text-3xl font-bold text-center mb-2">Connexion</h1>
-                <p className="text-gray-600 text-center mb-8">
-                    Connectez-vous à votre compte
+        <AuthLayout>
+            <div>
+                <h1 className="text-3xl font-bold text-black mb-2">Connexion</h1>
+                <p className="text-gray-500 mb-8">
+                    Connectez-vous à votre compte VARD
                 </p>
 
                 {error && (
-                    <div role="alert" className="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+                    <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="email" className="block text-sm font-medium text-black mb-2">
                             Email
                         </label>
                         <input
@@ -65,17 +65,17 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all text-black placeholder:text-gray-400"
                             placeholder="votre@email.com"
                         />
                     </div>
 
                     <div>
                         <div className="flex items-center justify-between mb-2">
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="password" className="block text-sm font-medium text-black">
                                 Mot de passe
                             </label>
-                            <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                            <Link href="/forgot-password" className="text-sm text-gray-500 hover:text-black transition-colors">
                                 Mot de passe oublié ?
                             </Link>
                         </div>
@@ -86,7 +86,7 @@ export default function LoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all text-black placeholder:text-gray-400"
                             placeholder="••••••••"
                         />
                     </div>
@@ -94,21 +94,21 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300 disabled:cursor-not-allowed font-medium"
+                        className="w-full bg-black text-white py-3.5 rounded-lg hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-medium text-base"
                     >
                         {isLoading ? 'Connexion...' : 'Se connecter'}
                     </button>
                 </form>
 
-                <div className="mt-6 text-center">
-                    <p className="text-gray-600">
+                <div className="mt-8 text-center">
+                    <p className="text-gray-500">
                         Pas de compte ?{' '}
-                        <Link href="/register" className="text-blue-600 hover:underline font-medium">
-                            S'inscrire
+                        <Link href="/register" className="text-black hover:underline font-medium">
+                            Créer un compte
                         </Link>
                     </p>
                 </div>
             </div>
-        </div>
+        </AuthLayout>
     )
 }

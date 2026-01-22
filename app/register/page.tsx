@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { AuthLayout } from '@/components/auth/auth-layout'
+import { CheckCircle } from 'lucide-react'
 
 export default function RegisterPage() {
     const router = useRouter()
@@ -48,76 +50,72 @@ export default function RegisterPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 px-4">
-                <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 text-center">
-                    <div className="mb-6">
-                        <svg className="mx-auto h-16 w-16 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <AuthLayout>
+                <div className="text-center py-12">
+                    <CheckCircle className="mx-auto h-16 w-16 text-green-600 mb-6" />
+                    <h2 className="text-2xl font-bold text-black mb-2">
                         Inscription réussie !
                     </h2>
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-gray-500 mb-4">
                         Vérifiez votre email pour activer votre compte.
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-400">
                         Redirection vers la connexion...
                     </p>
                 </div>
-            </div>
+            </AuthLayout>
         )
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12">
-            <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
-                <h1 className="text-3xl font-bold text-center mb-2">Inscription</h1>
-                <p className="text-gray-600 text-center mb-8">
+        <AuthLayout>
+            <div>
+                <h1 className="text-3xl font-bold text-black mb-2">Inscription</h1>
+                <p className="text-gray-500 mb-8">
                     Créez votre compte professionnel
                 </p>
 
                 {error && (
-                    <div role="alert" className="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+                    <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Role Selection */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-black mb-3">
                             Je suis
                         </label>
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 type="button"
-                                value="AGENT"
                                 onClick={() => setFormData({ ...formData, role: 'AGENT' })}
-                                className={`p-4 border-2 rounded-lg transition ${formData.role === 'AGENT'
-                                    ? 'border-blue-600 bg-blue-50'
-                                    : 'border-gray-300 hover:border-gray-400'
+                                className={`p-4 border-2 rounded-lg transition-all ${formData.role === 'AGENT'
+                                    ? 'border-black bg-gray-50'
+                                    : 'border-gray-200 hover:border-gray-300'
                                     }`}
                             >
-                                <div className="font-semibold">Agent</div>
-                                <div className="text-sm text-gray-600">de sécurité</div>
+                                <div className="font-semibold text-black">Agent</div>
+                                <div className="text-sm text-gray-500">de sécurité</div>
                             </button>
                             <button
                                 type="button"
-                                value="COMPANY"
                                 onClick={() => setFormData({ ...formData, role: 'COMPANY' })}
-                                className={`p-4 border-2 rounded-lg transition ${formData.role === 'COMPANY'
-                                    ? 'border-blue-600 bg-blue-50'
-                                    : 'border-gray-300 hover:border-gray-400'
+                                className={`p-4 border-2 rounded-lg transition-all ${formData.role === 'COMPANY'
+                                    ? 'border-black bg-gray-50'
+                                    : 'border-gray-200 hover:border-gray-300'
                                     }`}
                             >
-                                <div className="font-semibold">Entreprise</div>
-                                <div className="text-sm text-gray-600">de sécurité</div>
+                                <div className="font-semibold text-black">Entreprise</div>
+                                <div className="text-sm text-gray-500">de sécurité</div>
                             </button>
                         </div>
                     </div>
 
+                    {/* Name */}
                     <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="name" className="block text-sm font-medium text-black mb-2">
                             Nom complet
                         </label>
                         <input
@@ -127,13 +125,14 @@ export default function RegisterPage() {
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all text-black placeholder:text-gray-400"
                             placeholder="Jean Dupont"
                         />
                     </div>
 
+                    {/* Email */}
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="email" className="block text-sm font-medium text-black mb-2">
                             Email
                         </label>
                         <input
@@ -143,13 +142,14 @@ export default function RegisterPage() {
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all text-black placeholder:text-gray-400"
                             placeholder="votre@email.com"
                         />
                     </div>
 
+                    {/* Password */}
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="password" className="block text-sm font-medium text-black mb-2">
                             Mot de passe
                         </label>
                         <input
@@ -160,10 +160,10 @@ export default function RegisterPage() {
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                             required
                             minLength={8}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all text-black placeholder:text-gray-400"
                             placeholder="••••••••"
                         />
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-gray-400 mt-1">
                             Min. 8 caractères, 1 majuscule, 1 chiffre
                         </p>
                     </div>
@@ -171,21 +171,21 @@ export default function RegisterPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300 disabled:cursor-not-allowed font-medium"
+                        className="w-full bg-black text-white py-3.5 rounded-lg hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-medium text-base"
                     >
-                        {isLoading ? 'Inscription...' : 'S\'inscrire'}
+                        {isLoading ? 'Inscription...' : 'Créer mon compte'}
                     </button>
                 </form>
 
-                <div className="mt-6 text-center">
-                    <p className="text-gray-600">
+                <div className="mt-8 text-center">
+                    <p className="text-gray-500">
                         Déjà un compte ?{' '}
-                        <Link href="/login" className="text-blue-600 hover:underline font-medium">
+                        <Link href="/login" className="text-black hover:underline font-medium">
                             Se connecter
                         </Link>
                     </p>
                 </div>
             </div>
-        </div>
+        </AuthLayout>
     )
 }
