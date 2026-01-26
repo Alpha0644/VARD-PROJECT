@@ -89,6 +89,19 @@ export async function POST(req: Request) {
             },
         })
 
+        // Broadcast to Public Job Board (Live Feed)
+        await pusherServer.trigger('public-missions', 'mission:created', {
+            id: mission.id,
+            title: mission.title,
+            description: mission.description,
+            location: mission.location,
+            startTime: mission.startTime.toISOString(),
+            endTime: mission.endTime.toISOString(),
+            company: {
+                companyName: company.companyName,
+            },
+        })
+
         // 3. Find Nearby Agents (Matching Engine)
         // Radius: 10km default
         const nearbyUserIds = await findNearbyAgents(latitude, longitude, 10)
