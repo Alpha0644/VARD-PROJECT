@@ -16,6 +16,8 @@ interface PendingMission {
     }
 }
 
+import { pusherClient } from '@/lib/pusher-client'
+
 export function MissionProposals() {
     const [missions, setMissions] = useState<PendingMission[]>([])
     const [loading, setLoading] = useState(true)
@@ -23,7 +25,7 @@ export function MissionProposals() {
     const router = useRouter()
 
     useEffect(() => {
-        // Fetch pending missions
+        // Fetch initial missions
         fetch('/api/missions/available')
             .then(res => res.json())
             .then(data => {
@@ -33,6 +35,17 @@ export function MissionProposals() {
             })
             .catch(console.error)
             .finally(() => setLoading(false))
+
+        // Real-time updates
+        const channel = pusherClient.subscribe('public-missions')
+        channel.bind('mission:created', (newMission: PendingMission) => {
+            setMissions(prev => [newMission, ...prev])
+            // Optional: Play a sound or show toast
+        })
+
+        return () => {
+            pusherClient.unsubscribe('public-missions')
+        }
     }, [])
 
     const handleAccept = async (missionId: string) => {

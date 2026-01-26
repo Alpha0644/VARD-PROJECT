@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { MissionWithCompany } from '@/lib/types/mission'
-import { LiveTrackingToggle } from './live-tracking-toggle'
+import { AutoTracker } from './auto-tracker'
 
 interface ActiveMissionProps {
     mission: MissionWithCompany
@@ -102,14 +102,8 @@ export function ActiveMission({ mission }: ActiveMissionProps) {
                     </div>
                 )}
 
-                {/* GPS Live Tracking */}
-                {['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(currentStatus) && (
-                    <LiveTrackingToggle
-                        missionId={mission.id}
-                        isActive={trackingActive}
-                        onActiveChange={setTrackingActive}
-                    />
-                )}
+                {/* Auto-Tracking (Hidden Logic) */}
+                <AutoTracker missionId={mission.id} status={currentStatus} />
 
                 {/* Progress Bar */}
                 <div className="relative pt-4 pb-2">

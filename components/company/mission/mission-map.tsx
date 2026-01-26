@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { MapPin } from 'lucide-react'
@@ -11,9 +11,29 @@ interface MissionMapProps {
     agentLocation?: { lat: number; lng: number }
 }
 
-export function MissionMap({ latitude, longitude, agentLocation }: MissionMapProps) {
+import { pusherClient } from '@/lib/pusher-client'
+
+export function MissionMap({ latitude, longitude, agentLocation: initialAgentLocation, missionId }: MissionMapProps & { missionId?: string }) {
     const mapRef = useRef<HTMLDivElement>(null)
     const mapInstance = useRef<L.Map | null>(null)
+    const [agentLocation, setAgentLocation] = useState(initialAgentLocation)
+    const agentMarkerRef = useRef<L.Marker | null>(null)
+
+    // Real-time Updates via Pusher
+    useEffect(() => {
+        if (!missionId) return
+
+        const channel = pusherClient.subscribe(`private-mission-${missionId}`)
+
+        channel.bind('server-location-update', (data: { lat: number; lng: number }) => {
+            console.log('📍 Live Update:', data)
+            setAgentLocation({ lat: data.lat, lng: data.lng })
+        })
+
+        return () => {
+            pusherClient.unsubscribe(`private-mission-${missionId}`)
+        }
+    }, [missionId])
 
     useEffect(() => {
         if (!mapRef.current) return
