@@ -1,123 +1,142 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
+import { MapPin, Clock, Euro, ArrowRight, Shield } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { MISSION_DEFAULTS } from '@/lib/constants'
 
-interface Notification {
+interface PendingMission {
     id: string
-    mission: {
-        id: string
-        title: string
-        location: string
-        startTime: string
-        company: {
-            companyName: string
-        }
+    title: string
+    description: string
+    location: string
+    startTime: string
+    endTime: string
+    company: {
+        companyName: string
     }
 }
 
 export function MissionProposals() {
-    const [notifications, setNotifications] = useState<Notification[]>([])
+    const [missions, setMissions] = useState<PendingMission[]>([])
     const [loading, setLoading] = useState(true)
-
-    const fetchNotifications = async () => {
-        try {
-            const res = await fetch('/api/agent/notifications')
-            if (res.ok) {
-                const data = await res.json()
-                // API returns array directly
-                setNotifications(Array.isArray(data) ? data : [])
-            }
-        } catch (error) {
-            console.error('Failed to fetch notifications', error)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const [acceptingId, setAcceptingId] = useState<string | null>(null)
+    const router = useRouter()
 
     useEffect(() => {
-        fetchNotifications()
-        const interval = setInterval(fetchNotifications, MISSION_DEFAULTS.POLLING_INTERVAL_MS)
-        return () => clearInterval(interval)
+        // Fetch pending missions
+        fetch('/api/missions/available')
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setMissions(data)
+                }
+            })
+            .catch(console.error)
+            .finally(() => setLoading(false))
     }, [])
 
-    const router = useRouter() // Import from next/navigation
-
-    const handleRespond = async (id: string, status: 'ACCEPTED' | 'REJECTED') => {
-        setLoading(true)
+    const handleAccept = async (missionId: string) => {
+        setAcceptingId(missionId)
         try {
-            const response = await fetch('/api/agent/notifications/respond', {
-                method: 'POST',
-                body: JSON.stringify({ notificationId: id, status }),
-                headers: { 'Content-Type': 'application/json' }
+            const res = await fetch(`/api/missions/${missionId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'ACCEPTED' })
             })
 
-            if (!response.ok) throw new Error('Action failed')
-
-            // Remove from list locally
-            setNotifications(prev => prev.filter(n => n.id !== id))
-
-            if (status === 'ACCEPTED') {
-                // Force full page reload to ensure Server Component updates completely
-                window.location.reload()
+            if (res.ok) {
+                // Refresh to trigger switch to ActiveMission view in parent
+                router.refresh()
+            } else {
+                alert('Erreur lors de l\'acceptation')
             }
-        } catch (e) {
-            console.error(e)
-            alert('Erreur lors de l\'action')
+        } catch (error) {
+            console.error('Accept error:', error)
+            alert('Erreur réseau')
         } finally {
-            setLoading(false)
+            setAcceptingId(null)
         }
     }
 
-    if (notifications.length === 0) {
+    if (loading) {
         return (
-            <div className="text-center p-6 text-gray-500 bg-gray-50 rounded-lg border border-dashed">
-                Aucune nouvelle proposition de mission pour le moment.
+            <div className="p-4 space-y-4">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="h-40 bg-gray-100 rounded-xl animate-pulse" />
+                ))}
+            </div>
+        )
+    }
+
+    if (missions.length === 0) {
+        return (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-gray-50 z-20">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <Shield className="w-8 h-8 text-blue-600" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Aucune mission disponible</h2>
+                <p className="text-gray-500">
+                    Restez connecté, nous vous notifierons dès qu&apos;une mission sera disponible dans votre secteur.
+                </p>
             </div>
         )
     }
 
     return (
-        <div className="space-y-4">
-            <h3 className="font-semibold text-lg flex items-center">
-                📬 Propositions Reçues
-                <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
-                    {notifications.length}
-                </span>
-            </h3>
+        <div className="absolute inset-x-0 bottom-0 top-16 bg-gray-50 z-20 overflow-y-auto p-4 md:p-6 pb-24">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 px-1">Missions disponibles ({missions.length})</h2>
 
-            {notifications.map(notif => (
-                <div key={notif.id} className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <h4 className="font-bold text-lg">{notif.mission.title}</h4>
-                            <p className="text-sm text-gray-600 font-medium">{notif.mission.company.companyName}</p>
-                            <div className="mt-2 text-sm text-gray-500 space-y-1">
-                                <p>📍 {notif.mission.location}</p>
-                                <p>🕒 {new Date(notif.mission.startTime).toLocaleString()}</p>
+            <div className="space-y-4 max-w-2xl mx-auto">
+                {missions.map((mission) => {
+                    const duration = (new Date(mission.endTime).getTime() - new Date(mission.startTime).getTime()) / (1000 * 60 * 60)
+                    const estPrice = Math.round(duration * 25) // Basic estimation
+
+                    return (
+                        <div key={mission.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div className="p-5">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 className="font-bold text-lg text-gray-900">{mission.title}</h3>
+                                        <p className="text-sm text-gray-500">{mission.company.companyName}</p>
+                                    </div>
+                                    <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                        ~{estPrice}€
+                                    </span>
+                                </div>
+
+                                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-gray-400" />
+                                        <span>{mission.location}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="w-4 h-4 text-gray-400" />
+                                        <span>
+                                            {new Date(mission.startTime).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} •
+                                            {new Date(mission.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} -
+                                            {new Date(mission.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => handleAccept(mission.id)}
+                                    disabled={acceptingId === mission.id}
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {acceptingId === mission.id ? (
+                                        'Acceptation...'
+                                    ) : (
+                                        <>
+                                            Accepter la mission <ArrowRight className="w-4 h-4" />
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </div>
-                    </div>
-
-                    <div className="mt-4 flex gap-3">
-                        <button
-                            disabled={loading}
-                            onClick={() => handleRespond(notif.id, 'ACCEPTED')}
-                            className="flex-1 bg-black text-white py-2 rounded font-medium hover:bg-gray-800"
-                        >
-                            ACCEPTER
-                        </button>
-                        <button
-                            disabled={loading}
-                            onClick={() => handleRespond(notif.id, 'REJECTED')}
-                            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 rounded font-medium hover:bg-gray-50"
-                        >
-                            Refuser
-                        </button>
-                    </div>
-                </div>
-            ))}
+                    )
+                })}
+            </div>
         </div>
     )
 }

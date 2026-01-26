@@ -1,14 +1,8 @@
-import { resend, EMAIL_FROM, getBaseUrl, type EmailResult } from '../config'
+import { resend, EMAIL_FROM } from '../config'
 
-/**
- * Send welcome email after registration
- */
-export async function sendWelcomeEmail(
-    email: string,
-    name: string,
-    role: 'AGENT' | 'COMPANY'
-): Promise<EmailResult> {
+export async function sendWelcomeEmail(email: string, name: string, role: 'AGENT' | 'COMPANY') {
     if (!resend) {
+        console.log('[DEV] Welcome email would be sent to:', email)
         return { success: true, dev: true }
     }
 
@@ -50,7 +44,7 @@ export async function sendWelcomeEmail(
                 <h3>📋 Prochaines étapes :</h3>
                 <div class="step">
                     <div class="step-num">1</div>
-                    <span>Uploadez vos documents (${role === 'AGENT' ? "Carte Pro CNAPS, Pièce d'identité" : 'SIREN, Kbis'})</span>
+                    <span>Uploadez vos documents (${role === 'AGENT' ? 'Carte Pro CNAPS, Pièce d\'identité' : 'SIREN, Kbis'})</span>
                 </div>
                 <div class="step">
                     <div class="step-num">2</div>
@@ -62,7 +56,7 @@ export async function sendWelcomeEmail(
                 </div>
             </div>
             
-            <a href="${getBaseUrl()}/dashboard" class="button">Accéder à mon dashboard</a>
+            <a href="${process.env.NEXTAUTH_URL}/dashboard" class="button">Accéder à mon dashboard</a>
         </div>
         <div class="footer">
             <p>Des questions ? Contactez-nous à support@vard.app</p>

@@ -1,23 +1,21 @@
-import { resend, EMAIL_FROM, type EmailResult } from '../config'
+import { resend, EMAIL_FROM } from '../config'
 
-export interface MissionSummary {
+interface MissionSummary {
     title: string
     date: Date
     hours: number
     company: string
 }
 
-/**
- * Send monthly recap email to agents
- */
 export async function sendMonthlyRecapEmail(
     email: string,
     name: string,
     month: string,
     missions: MissionSummary[],
     totalHours: number
-): Promise<EmailResult> {
+) {
     if (!resend) {
+        console.log('[DEV] Monthly recap email would be sent to:', email)
         return { success: true, dev: true }
     }
 

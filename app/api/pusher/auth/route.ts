@@ -28,6 +28,25 @@ export async function POST(req: Request) {
         return NextResponse.json(authResponse)
     }
 
+    // Support for private-company-{userId} channels (Company notifications)
+    if (channel.startsWith('private-company-')) {
+        const expectedChannel = `private-company-${session.user.id}`
+        if (channel !== expectedChannel) {
+            return NextResponse.json({ error: 'Forbidden subscription' }, { status: 403 })
+        }
+
+        // Only COMPANY role can subscribe to company channels
+        if (session.user.role !== 'COMPANY') {
+            return NextResponse.json({ error: 'Only companies can subscribe to company channels' }, { status: 403 })
+        }
+
+        const authResponse = pusherServer.authorizeChannel(socketId, channel, {
+            user_id: session.user.id,
+            user_info: { name: session.user.name, role: session.user.role },
+        })
+        return NextResponse.json(authResponse)
+    }
+
     // Support for presence-mission-{missionId} channels (GPS tracking)
     if (channel.startsWith('presence-mission-')) {
         const missionId = channel.replace('presence-mission-', '')

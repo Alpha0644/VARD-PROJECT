@@ -4,6 +4,7 @@ import './globals.css'
 import { CookieBanner } from '@/components/gdpr/cookie-banner'
 import { Toaster } from '@/components/ui/sonner'
 import { SEO_METADATA } from '@/lib/constants/landing'
+import { Providers } from '@/components/providers'
 
 // ============================================================================
 // SEO Metadata - OMEGA Compliant
@@ -98,7 +99,9 @@ export default function RootLayout({
     return (
         <html lang="fr" className="scroll-smooth">
             <body className="min-h-screen bg-white text-vard-dark antialiased">
-                {children}
+                <Providers>
+                    {children}
+                </Providers>
                 <CookieBanner />
                 <Analytics />
                 <Toaster />

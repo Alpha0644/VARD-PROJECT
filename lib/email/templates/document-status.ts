@@ -1,21 +1,16 @@
-import { resend, EMAIL_FROM, getBaseUrl, type EmailResult } from '../config'
+import { resend, EMAIL_FROM } from '../config'
 
-const DOC_NAMES: Record<string, string> = {
-    'CNAPS': 'Carte Professionnelle CNAPS',
-    'ID': "Pièce d'identité",
-    'SIREN': 'Extrait SIREN',
-    'KBIS': 'Extrait Kbis',
-}
-
-/**
- * Send document approved email
- */
-export async function sendDocumentApprovedEmail(
-    email: string,
-    documentType: string
-): Promise<EmailResult> {
+export async function sendDocumentApprovedEmail(email: string, documentType: string) {
     if (!resend) {
+        console.log('[DEV] Document approved email would be sent to:', email)
         return { success: true, dev: true }
+    }
+
+    const docNames: Record<string, string> = {
+        'CNAPS': 'Carte Professionnelle CNAPS',
+        'ID': 'Pièce d\'identité',
+        'SIREN': 'Extrait SIREN',
+        'KBIS': 'Extrait Kbis',
     }
 
     try {
@@ -44,7 +39,7 @@ export async function sendDocumentApprovedEmail(
         <div class="content">
             <div class="success-box">
                 <h2 style="color: #16a34a; margin: 0;">🎉 Félicitations !</h2>
-                <p style="margin: 10px 0 0 0;">Votre <strong>${DOC_NAMES[documentType] || documentType}</strong> a été validé.</p>
+                <p style="margin: 10px 0 0 0;">Votre <strong>${docNames[documentType] || documentType}</strong> a été validé.</p>
             </div>
             <p>Votre document a été vérifié et approuvé par notre équipe de validation.</p>
             <p>Vous pouvez maintenant accéder à toutes les fonctionnalités de la plateforme.</p>
@@ -64,15 +59,9 @@ export async function sendDocumentApprovedEmail(
     }
 }
 
-/**
- * Send document rejected email
- */
-export async function sendDocumentRejectedEmail(
-    email: string,
-    documentType: string,
-    reason?: string
-): Promise<EmailResult> {
+export async function sendDocumentRejectedEmail(email: string, documentType: string, reason?: string) {
     if (!resend) {
+        console.log('[DEV] Document rejected email would be sent to:', email)
         return { success: true, dev: true }
     }
 
@@ -112,7 +101,7 @@ export async function sendDocumentRejectedEmail(
                 <li>Vérifiez que la date de validité n'est pas dépassée</li>
                 <li>Le fichier doit être en PDF, JPG ou PNG</li>
             </ul>
-            <a href="${getBaseUrl()}/dashboard" class="button">Uploader un nouveau document</a>
+            <a href="${process.env.NEXTAUTH_URL}/dashboard" class="button">Uploader un nouveau document</a>
         </div>
         <div class="footer">
             <p>© 2026 VARD Platform - Sécurité Privée</p>

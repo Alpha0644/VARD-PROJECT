@@ -1,16 +1,14 @@
-import { resend, EMAIL_FROM, getBaseUrl, type EmailResult } from '../config'
+import { resend, EMAIL_FROM } from '../config'
 
-/**
- * Send mission notification email to nearby agents
- */
 export async function sendMissionNotificationEmail(
     email: string,
     missionTitle: string,
     location: string,
     startDate: Date,
     companyName: string
-): Promise<EmailResult> {
+) {
     if (!resend) {
+        console.log('[DEV] Mission notification email would be sent to:', email)
         return { success: true, dev: true }
     }
 
@@ -68,7 +66,7 @@ export async function sendMissionNotificationEmail(
             </div>
             <p style="text-align: center; font-size: 18px;"><strong>Premier arrivé, premier servi !</strong></p>
             <p style="text-align: center;">
-                <a href="${getBaseUrl()}/agent/dashboard" class="button">Voir la mission</a>
+                <a href="${process.env.NEXTAUTH_URL}/agent/dashboard" class="button">Voir la mission</a>
             </p>
         </div>
         <div class="footer">

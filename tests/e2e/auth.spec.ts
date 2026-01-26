@@ -43,8 +43,8 @@ test.describe('🔐 Authentication Flow (OMEGA: Critical)', () => {
 
         // Step 6: Attempt login (will fail if email not verified in backend, but we test UI flow here)
         await page.goto('/login')
-        await page.fill('[name="email"]', testEmail)
-        await page.fill('[name="password"]', testPassword)
+        await page.fill('#agent-identifier', testEmail)
+        await page.fill('#agent-password', testPassword)
         await page.click('button[type="submit"]')
 
         // Verify we're either on dashboard OR asked to verify email
@@ -84,8 +84,8 @@ test.describe('🔐 Authentication Flow (OMEGA: Critical)', () => {
         await page.goto('/login')
 
         // Attempt login with non-existent user
-        await page.fill('[name="email"]', 'nonexistent@omega.test')
-        await page.fill('[name="password"]', 'WrongPassword123')
+        await page.fill('#agent-identifier', 'nonexistent@omega.test')
+        await page.fill('#agent-password', 'WrongPassword123')
         await page.click('button[type="submit"]')
 
         // Should show error message
@@ -100,8 +100,8 @@ test.describe('🔐 Authentication Flow (OMEGA: Critical)', () => {
 
         // Attempt 6 logins with wrong password
         for (let i = 0; i < 6; i++) {
-            await page.fill('[name="email"]', email)
-            await page.fill('[name="password"]', wrongPassword)
+            await page.fill('#agent-identifier', email)
+            await page.fill('#agent-password', wrongPassword)
             await page.click('button[type="submit"]')
 
             // Wait for response

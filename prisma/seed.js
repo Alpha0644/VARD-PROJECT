@@ -24,7 +24,7 @@ async function main() {
             companyProfile: {
                 create: {
                     companyName: 'Vard Security',
-                    siren: '123456789'
+                    siren: '123456782'
                 }
             }
         },

@@ -1,12 +1,11 @@
-import { resend, EMAIL_FROM, getBaseUrl, type EmailResult } from '../config'
+import { resend, EMAIL_FROM } from '../config'
 
-/**
- * Send password reset email
- */
-export async function sendPasswordResetEmail(email: string, token: string): Promise<EmailResult> {
-    const resetUrl = `${getBaseUrl()}/reset-password?token=${token}`
+export async function sendPasswordResetEmail(email: string, token: string) {
+    const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`
 
     if (!resend) {
+        console.log('[DEV] Password reset email would be sent to:', email)
+        console.log('[DEV] Reset URL:', resetUrl)
         return { success: true, dev: true }
     }
 

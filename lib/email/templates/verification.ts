@@ -1,13 +1,11 @@
-import { resend, EMAIL_FROM, getBaseUrl, type EmailResult } from '../config'
+import { resend, EMAIL_FROM } from '../config'
 
-/**
- * Send verification email to new users
- */
-export async function sendVerificationEmail(email: string, token: string): Promise<EmailResult> {
-    const verifyUrl = `${getBaseUrl()}/verify-email?token=${token}`
+export async function sendVerificationEmail(email: string, token: string) {
+    const verifyUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${token}`
 
     if (!resend) {
-        // Development mode - no email sent
+        console.log('[DEV] Verification email would be sent to:', email)
+        console.log('[DEV] Verification URL:', verifyUrl)
         return { success: true, dev: true }
     }
 
