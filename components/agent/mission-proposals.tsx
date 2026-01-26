@@ -39,8 +39,17 @@ export function MissionProposals() {
         // Real-time updates
         const channel = pusherClient.subscribe('public-missions')
         channel.bind('mission:created', (newMission: PendingMission) => {
+            console.log('🔔 Live Feed Event Received:', newMission)
             setMissions(prev => [newMission, ...prev])
             // Optional: Play a sound or show toast
+        })
+
+        channel.bind('pusher:subscription_succeeded', () => {
+            console.log('✅ Subscribed to public-missions channel')
+        })
+
+        channel.bind('pusher:subscription_error', (status: any) => {
+            console.error('❌ Subscription error:', status)
         })
 
         return () => {
