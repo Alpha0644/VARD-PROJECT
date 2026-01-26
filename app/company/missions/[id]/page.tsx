@@ -6,12 +6,7 @@ import { ArrowLeft, MapPin, Calendar, Clock, User, Shield, CheckCircle, AlertCir
 import Link from 'next/link'
 import { MissionTimeline } from '@/components/mission/mission-timeline'
 import { InvoiceButton } from '@/components/company/mission/invoice-button'
-import dynamic from 'next/dynamic'
-
-const MissionMap = dynamic(() => import('@/components/company/mission/mission-map').then(mod => mod.MissionMap), {
-    ssr: false,
-    loading: () => <div className="w-full h-full bg-gray-100 animate-pulse" />
-})
+import { MissionMapLoader } from '@/components/company/mission/mission-map-loader'
 
 // Status badge colors
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -209,7 +204,7 @@ export default async function MissionDetailsPage(props: { params: Promise<{ id: 
                     <div className="space-y-6">
                         {/* Map Card */}
                         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden h-80 relative z-0">
-                            <MissionMap
+                            <MissionMapLoader
                                 latitude={mission.latitude}
                                 longitude={mission.longitude}
                             />
