@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { pusherServer } from '@/lib/pusher'
+import { checkAgentCanOperate } from '@/lib/documents'
 
 // Valid status transitions
 const ALLOWED_STATUSES = ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const
@@ -40,6 +41,16 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
 
         if (!agent) return NextResponse.json({ error: 'Profil agent introuvable' }, { status: 404 })
 
+        // 🔴 CRITICAL: Check document validity (expiration) before any mission action
+        const operationCheck = await checkAgentCanOperate(session.user.id)
+        if (!operationCheck.canOperate) {
+            return NextResponse.json({
+                error: 'Documents non valides',
+                message: operationCheck.reason,
+                code: 'DOCUMENTS_EXPIRED'
+            }, { status: 403 })
+        }
+
         const mission = await db.mission.findUnique({
             where: { id: missionId },
             include: {
@@ -56,8 +67,37 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
             if (mission.status !== 'PENDING') {
                 return NextResponse.json({ error: 'Mission déjà acceptée par quelqu\'un d\'autre' }, { status: 409 })
             }
-            // Assign user
-            // We proceed to update
+
+            // 🔴 CRITICAL: Double-Booking Prevention
+            // Check if agent already has a mission during this time slot
+            const conflictingMission = await db.mission.findFirst({
+                where: {
+                    agentId: agent.id,
+                    status: {
+                        in: ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS']
+                    },
+                    // Mission overlaps if: existing.startTime < new.endTime AND existing.endTime > new.startTime
+                    AND: [
+                        { startTime: { lt: mission.endTime } },
+                        { endTime: { gt: mission.startTime } }
+                    ]
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    startTime: true,
+                    endTime: true
+                }
+            })
+
+            if (conflictingMission) {
+                return NextResponse.json({
+                    error: 'Double réservation impossible',
+                    message: `Vous avez déjà une mission "${conflictingMission.title}" prévue du ${conflictingMission.startTime.toLocaleString('fr-FR')} au ${conflictingMission.endTime.toLocaleString('fr-FR')}`,
+                    conflictingMissionId: conflictingMission.id
+                }, { status: 409 })
+            }
+            // Assign user - proceed to update
         } else {
             // Standard status update (EN_ROUTE, etc.) -> Must be assigned agent
             if (mission.agentId !== agent.id) {

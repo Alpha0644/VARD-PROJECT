@@ -20,7 +20,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 export default async function CompanyMissionsPage({
     searchParams,
 }: {
-    searchParams: { filter?: string }
+    searchParams: Promise<{ filter?: string }>
 }) {
     const session = await auth()
 
@@ -28,7 +28,8 @@ export default async function CompanyMissionsPage({
         redirect('/login')
     }
 
-    const filter = searchParams.filter || 'all'
+    const resolvedParams = await searchParams
+    const filter = resolvedParams.filter || 'all'
 
     // Fetch company and missions
     const company = await db.company.findUnique({
