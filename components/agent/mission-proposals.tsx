@@ -25,6 +25,13 @@ export function MissionProposals() {
     const router = useRouter()
 
     useEffect(() => {
+        // DEBUG: Log Pusher configuration
+        console.log('🔧 Pusher Config Debug:', {
+            key: process.env.NEXT_PUBLIC_PUSHER_KEY ? '✅ Present' : '❌ MISSING',
+            cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER ? '✅ Present' : '❌ MISSING',
+            keyValue: process.env.NEXT_PUBLIC_PUSHER_KEY?.slice(0, 8) + '...' // Show first 8 chars only
+        })
+
         // Fetch initial missions
         fetch('/api/missions/available')
             .then(res => res.json())
@@ -37,7 +44,9 @@ export function MissionProposals() {
             .finally(() => setLoading(false))
 
         // Real-time updates
+        console.log('🔌 Attempting Pusher connection...')
         const channel = pusherClient.subscribe('public-missions')
+
         channel.bind('mission:created', (newMission: PendingMission) => {
             console.log('🔔 Live Feed Event Received:', newMission)
             setMissions(prev => [newMission, ...prev])
@@ -48,8 +57,17 @@ export function MissionProposals() {
             console.log('✅ Subscribed to public-missions channel')
         })
 
-        channel.bind('pusher:subscription_error', (status: any) => {
+        channel.bind('pusher:subscription_error', (status: unknown) => {
             console.error('❌ Subscription error:', status)
+        })
+
+        // Also log general Pusher connection state
+        pusherClient.connection.bind('state_change', (states: { previous: string; current: string }) => {
+            console.log('🔗 Pusher state:', states.previous, '->', states.current)
+        })
+
+        pusherClient.connection.bind('error', (err: unknown) => {
+            console.error('🔥 Pusher connection error:', err)
         })
 
         return () => {
