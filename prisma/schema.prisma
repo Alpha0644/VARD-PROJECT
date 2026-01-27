@@ -45,6 +45,8 @@ model User {
   documents     Document[]
   notifications MissionNotification[]
   logs          MissionLog[]
+  reviewsWritten Review[] @relation("ReviewAuthor")
+  reviewsReceived Review[] @relation("ReviewTarget")
 
   // Relations
   companyProfile Company?
@@ -126,6 +128,7 @@ model Mission {
 
     notifications MissionNotification[]
     logs          MissionLog[]
+    reviews       Review[]
 }
 
 model MissionLog {
@@ -165,4 +168,39 @@ model MissionNotification {
     updatedAt DateTime @updatedAt
 
     @@unique([missionId, agentId])
+}
+
+model PushSubscription {
+    id        String   @id @default(cuid())
+    userId    String
+    endpoint  String   @unique
+    p256dh    String   // Public key
+    auth      String   // Auth secret
+    createdAt DateTime @default(now())
+    
+    @@index([userId])
+}
+
+model Review {
+    id        String   @id @default(cuid())
+    rating    Int      // 1-5
+    comment   String?
+    
+    // The mission being reviewed
+    missionId String
+    mission   Mission  @relation(fields: [missionId], references: [id])
+    
+    // Who wrote the review
+    authorId  String
+    author    User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+    
+    // Who received the review
+    targetId  String
+    target    User     @relation("ReviewTarget", fields: [targetId], references: [id])
+    
+    createdAt DateTime @default(now())
+    
+    @@index([missionId])
+    @@index([targetId])
+    @@index([authorId])
 }

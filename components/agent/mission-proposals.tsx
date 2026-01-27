@@ -1,36 +1,164 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { MapPin, Clock, Euro, ArrowRight, Shield } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { MapPin, Clock, ArrowRight, Shield, Navigation, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { pusherClient } from '@/lib/pusher-client'
 
 interface PendingMission {
     id: string
     title: string
-    description: string
+    description?: string
     location: string
     startTime: string
     endTime: string
+    latitude: number
+    longitude: number
     company: {
         companyName: string
     }
 }
 
-import { pusherClient } from '@/lib/pusher-client'
+interface MissionProposalsListProps {
+    missions: PendingMission[]
+    userPosition: [number, number] | null
+    onAccept: (missionId: string) => void
+    onReject?: (missionId: string) => void
+    acceptingId: string | null
+}
+
+// Calculate distance between two points
+const calculateDistance = (
+    lat1: number, lon1: number,
+    lat2: number, lon2: number
+): number => {
+    const R = 6371 // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLon = (lon2 - lon1) * Math.PI / 180
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+}
+
+export function MissionProposalsList({ missions, userPosition, onAccept, onReject, acceptingId }: MissionProposalsListProps) {
+    // Sort by distance if position available
+    const sortedMissions = [...missions].sort((a, b) => {
+        if (!userPosition) return 0
+        const distA = calculateDistance(userPosition[0], userPosition[1], a.latitude, a.longitude)
+        const distB = calculateDistance(userPosition[0], userPosition[1], b.latitude, b.longitude)
+        return distA - distB
+    })
+
+    return (
+        <div className="space-y-3">
+            <AnimatePresence mode="popLayout">
+                {sortedMissions.map((mission, index) => {
+                    const duration = (new Date(mission.endTime).getTime() - new Date(mission.startTime).getTime()) / (1000 * 60 * 60)
+                    const estPrice = Math.round(duration * 25)
+                    const distance = userPosition
+                        ? calculateDistance(userPosition[0], userPosition[1], mission.latitude, mission.longitude)
+                        : null
+
+                    return (
+                        <motion.div
+                            key={mission.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -100 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+                        >
+                            <div className="p-4">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-base text-gray-900 truncate">{mission.title}</h3>
+                                        <p className="text-xs text-gray-500 truncate">{mission.company.companyName}</p>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1 ml-3">
+                                        <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full whitespace-nowrap">
+                                            ~{estPrice}€
+                                        </span>
+                                        {distance !== null && (
+                                            <span className="text-xs text-blue-600 font-medium flex items-center gap-1">
+                                                <Navigation className="w-3 h-3" />
+                                                {distance.toFixed(1)} km
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap gap-3 text-xs text-gray-600 mb-3">
+                                    <div className="flex items-center gap-1.5">
+                                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                                        <span className="truncate max-w-[150px]">{mission.location}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                        <span>
+                                            {new Date(mission.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} -
+                                            {new Date(mission.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <motion.button
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => onAccept(mission.id)}
+                                    disabled={acceptingId === mission.id}
+                                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                                >
+                                    {acceptingId === mission.id ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            <span>Acceptation...</span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <span>Accepter</span>
+                                            <ArrowRight className="w-4 h-4" />
+                                        </>
+                                    )}
+                                </motion.button>
+
+                                {/* Reject Button */}
+                                {onReject && (
+                                    <motion.button
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => onReject(mission.id)}
+                                        className="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <X className="w-4 h-4" />
+                                        <span>Pas intéressé</span>
+                                    </motion.button>
+                                )}
+                            </div>
+                        </motion.div>
+                    )
+                })}
+            </AnimatePresence>
+        </div>
+    )
+}
 
 export function MissionProposals() {
     const [missions, setMissions] = useState<PendingMission[]>([])
     const [loading, setLoading] = useState(true)
     const [acceptingId, setAcceptingId] = useState<string | null>(null)
+    const [userPosition, setUserPosition] = useState<[number, number] | null>(null)
     const router = useRouter()
 
     useEffect(() => {
-        // DEBUG: Log Pusher configuration
-        console.log('🔧 Pusher Config Debug:', {
-            key: process.env.NEXT_PUBLIC_PUSHER_KEY ? '✅ Present' : '❌ MISSING',
-            cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER ? '✅ Present' : '❌ MISSING',
-            keyValue: process.env.NEXT_PUBLIC_PUSHER_KEY?.slice(0, 8) + '...' // Show first 8 chars only
-        })
+        // Get user position
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => setUserPosition([pos.coords.latitude, pos.coords.longitude]),
+                (err) => console.error('Geolocation error:', err)
+            )
+        }
 
         // Fetch initial missions
         fetch('/api/missions/available')
@@ -44,30 +172,15 @@ export function MissionProposals() {
             .finally(() => setLoading(false))
 
         // Real-time updates
-        console.log('🔌 Attempting Pusher connection...')
         const channel = pusherClient.subscribe('public-missions')
 
         channel.bind('mission:created', (newMission: PendingMission) => {
             console.log('🔔 Live Feed Event Received:', newMission)
             setMissions(prev => [newMission, ...prev])
-            // Optional: Play a sound or show toast
-        })
-
-        channel.bind('pusher:subscription_succeeded', () => {
-            console.log('✅ Subscribed to public-missions channel')
-        })
-
-        channel.bind('pusher:subscription_error', (status: unknown) => {
-            console.error('❌ Subscription error:', status)
-        })
-
-        // Also log general Pusher connection state
-        pusherClient.connection.bind('state_change', (states: { previous: string; current: string }) => {
-            console.log('🔗 Pusher state:', states.previous, '->', states.current)
-        })
-
-        pusherClient.connection.bind('error', (err: unknown) => {
-            console.error('🔥 Pusher connection error:', err)
+            // Haptic feedback if available
+            if (navigator.vibrate) {
+                navigator.vibrate(100)
+            }
         })
 
         return () => {
@@ -85,7 +198,10 @@ export function MissionProposals() {
             })
 
             if (res.ok) {
-                // Refresh to trigger switch to ActiveMission view in parent
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate([50, 50, 100])
+                }
                 router.refresh()
             } else {
                 alert('Erreur lors de l\'acceptation')
@@ -100,9 +216,9 @@ export function MissionProposals() {
 
     if (loading) {
         return (
-            <div className="p-4 space-y-4">
+            <div className="space-y-3">
                 {[1, 2, 3].map(i => (
-                    <div key={i} className="h-40 bg-gray-100 rounded-xl animate-pulse" />
+                    <div key={i} className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
                 ))}
             </div>
         )
@@ -110,73 +226,31 @@ export function MissionProposals() {
 
     if (missions.length === 0) {
         return (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-gray-50 z-20">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center justify-center py-12 text-center"
+            >
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-4 shadow-inner">
                     <Shield className="w-8 h-8 text-blue-600" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">Aucune mission disponible</h2>
-                <p className="text-gray-500">
-                    Restez connecté, nous vous notifierons dès qu&apos;une mission sera disponible dans votre secteur.
+                <h2 className="text-lg font-bold text-gray-900 mb-2">Aucune mission disponible</h2>
+                <p className="text-gray-500 text-sm max-w-[250px]">
+                    Restez connecté, nous vous notifierons dès qu&apos;une mission sera disponible.
                 </p>
-            </div>
+            </motion.div>
         )
     }
 
     return (
-        <div className="absolute inset-x-0 bottom-0 top-16 bg-gray-50 z-20 overflow-y-auto p-4 md:p-6 pb-24">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 px-1">Missions disponibles ({missions.length})</h2>
-
-            <div className="space-y-4 max-w-2xl mx-auto">
-                {missions.map((mission) => {
-                    const duration = (new Date(mission.endTime).getTime() - new Date(mission.startTime).getTime()) / (1000 * 60 * 60)
-                    const estPrice = Math.round(duration * 25) // Basic estimation
-
-                    return (
-                        <div key={mission.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-5">
-                                <div className="flex justify-between items-start mb-3">
-                                    <div>
-                                        <h3 className="font-bold text-lg text-gray-900">{mission.title}</h3>
-                                        <p className="text-sm text-gray-500">{mission.company.companyName}</p>
-                                    </div>
-                                    <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                                        ~{estPrice}€
-                                    </span>
-                                </div>
-
-                                <div className="space-y-2 text-sm text-gray-600 mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="w-4 h-4 text-gray-400" />
-                                        <span>{mission.location}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-4 h-4 text-gray-400" />
-                                        <span>
-                                            {new Date(mission.startTime).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} •
-                                            {new Date(mission.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} -
-                                            {new Date(mission.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={() => handleAccept(mission.id)}
-                                    disabled={acceptingId === mission.id}
-                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                    {acceptingId === mission.id ? (
-                                        'Acceptation...'
-                                    ) : (
-                                        <>
-                                            Accepter la mission <ArrowRight className="w-4 h-4" />
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    )
-                })}
-            </div>
-        </div>
+        <MissionProposalsList
+            missions={missions}
+            userPosition={userPosition}
+            onAccept={handleAccept}
+            acceptingId={acceptingId}
+        />
     )
 }
+
+// Export for use in dashboard with bottom sheet
+export { type PendingMission }

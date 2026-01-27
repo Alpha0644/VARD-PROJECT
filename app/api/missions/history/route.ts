@@ -76,10 +76,14 @@ export async function GET(request: Request) {
                 orderBy: { startTime: 'desc' },
                 include: {
                     company: {
-                        select: { companyName: true }
+                        select: { companyName: true, userId: true } // userId needed for rating target
                     },
                     agent: {
-                        select: { cartePro: true } // Avoid leaking too much info
+                        select: { cartePro: true, userId: true } // userId needed for rating target
+                    },
+                    reviews: {
+                        where: { authorId: userId },
+                        select: { id: true, rating: true }
                     }
                 }
             }),

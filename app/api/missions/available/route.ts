@@ -18,8 +18,7 @@ export async function GET() {
             return NextResponse.json({ error: 'Profil agent introuvable' }, { status: 404 })
         }
 
-        // Fetch all PENDING missions
-        // In a real app, we would filter by location (radius)
+        // Fetch all PENDING missions with coordinates for map display
         const missions = await db.mission.findMany({
             where: { status: 'PENDING' },
             include: {
@@ -30,7 +29,16 @@ export async function GET() {
             orderBy: { createdAt: 'desc' }
         })
 
-        return NextResponse.json(missions)
+        // Add coordinates (using geocoded location or defaults for demo)
+        // In production, these would come from a geocoding service or be stored in DB
+        const missionsWithCoords = missions.map((mission, index) => ({
+            ...mission,
+            // Demo coordinates around Paris - in production, store real coords in DB
+            latitude: 48.8566 + (Math.random() - 0.5) * 0.1,
+            longitude: 2.3522 + (Math.random() - 0.5) * 0.1,
+        }))
+
+        return NextResponse.json(missionsWithCoords)
 
     } catch (error) {
         console.error('Fetch Available Missions Error:', error)

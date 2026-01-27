@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
 
     // Public routes (no auth required)
-    const publicRoutes = ['/login', '/register', '/', '/privacy-policy', '/api/auth', '/api/upload']
+    const publicRoutes = ['/login', '/register', '/', '/privacy-policy', '/api/auth', '/api/upload', '/admin/login']
     if (publicRoutes.includes(pathname)) {
         return NextResponse.next()
     }
@@ -21,6 +21,7 @@ export async function middleware(request: NextRequest) {
 
     // Role-based access control
     const role = session.user.role
+    console.log(`[Middleware] Redirect Logic - User: ${session.user.email}, Role: ${role}, Path: ${request.nextUrl.pathname}`)
 
     // Auto-redirect /dashboard to role-specific dashboard
     if (pathname === '/dashboard') {

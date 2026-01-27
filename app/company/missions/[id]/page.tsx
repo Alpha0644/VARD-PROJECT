@@ -5,8 +5,8 @@ import { B2BLayout } from '@/components/company/b2b-layout'
 import { ArrowLeft, MapPin, Calendar, Clock, User, Shield, CheckCircle, AlertCircle, Phone, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { MissionTimeline } from '@/components/mission/mission-timeline'
-import { InvoiceButton } from '@/components/company/mission/invoice-button'
 import { MissionMapLoader } from '@/components/company/mission/mission-map-loader'
+import { CompanyMissionActions } from '@/components/company/mission/company-mission-actions'
 
 // Status badge colors
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -34,7 +34,10 @@ export default async function MissionDetailsPage(props: { params: Promise<{ id: 
             agent: {
                 include: { user: true }
             },
-            company: true
+            company: true,
+            reviews: {
+                where: { authorId: session.user.id }
+            }
         }
     })
 
@@ -79,31 +82,27 @@ export default async function MissionDetailsPage(props: { params: Promise<{ id: 
                         </p>
                     </div>
 
-                    <div className="flex gap-3">
-                        {/* Placeholder for Actions */}
-                        <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors">
-                            Contacter
-                        </button>
-                        {mission.status === 'COMPLETED' ? (
-                            <InvoiceButton
-                                mission={{
-                                    id: mission.id,
-                                    title: mission.title,
-                                    startTime: mission.startTime.toISOString(),
-                                    endTime: mission.endTime.toISOString(),
-                                    location: mission.location,
-                                    agent: mission.agent ? {
-                                        user: { name: mission.agent.user.name },
-                                        cartePro: mission.agent.cartePro
-                                    } : null
-                                }}
-                            />
-                        ) : (
-                            <button className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium transition-colors">
-                                Annuler
-                            </button>
-                        )}
-                    </div>
+                    <CompanyMissionActions
+                        mission={{
+                            id: mission.id,
+                            title: mission.title,
+                            status: mission.status,
+                            location: mission.location,
+                            startTime: mission.startTime.toISOString(),
+                            endTime: mission.endTime.toISOString(),
+                            agent: mission.agent ? {
+                                id: mission.agent.id,
+                                userId: mission.agent.userId,
+                                user: {
+                                    name: mission.agent.user.name,
+                                    email: mission.agent.user.email,
+                                    phone: mission.agent.user.phone
+                                },
+                                cartePro: mission.agent.cartePro
+                            } : null,
+                            hasReviewed: mission.reviews && mission.reviews.length > 0
+                        }}
+                    />
                 </div>
 
                 {/* Grid Content */}

@@ -9,9 +9,9 @@ import {
     FileText,
     Settings,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    History
 } from 'lucide-react'
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 
 interface SidebarProps {
@@ -27,7 +27,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
     { href: '/company/dashboard', label: 'Vue d\'ensemble', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { href: '/company/missions', label: 'Planning Missions', icon: <CalendarClock className="w-5 h-5" /> },
+    { href: '/company/missions', label: 'Missions', icon: <CalendarClock className="w-5 h-5" /> },
+    { href: '/company/missions?filter=completed', label: 'Historique', icon: <History className="w-5 h-5" /> },
     { href: '/company/agents', label: 'Mes Agents', icon: <Users className="w-5 h-5" /> },
     { href: '/company/invoices', label: 'Factures', icon: <FileText className="w-5 h-5" /> },
     { href: '/company/settings', label: 'Paramètres', icon: <Settings className="w-5 h-5" /> },
@@ -63,8 +64,8 @@ export function B2BSidebar({ isCollapsed = false, onToggle }: SidebarProps) {
                                 <Link
                                     href={item.href}
                                     className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all relative ${isActive
-                                            ? 'bg-slate-800/80 text-white'
-                                            : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                                        ? 'bg-slate-800/80 text-white'
+                                        : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                                         }`}
                                     title={isCollapsed ? item.label : undefined}
                                 >

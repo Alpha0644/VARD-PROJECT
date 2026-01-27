@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { MapPin, Clock, Building2, ChevronRight, CheckCircle, Navigation } from 'lucide-react'
 
 import { MissionWithCompany } from '@/lib/types/mission'
 import { AutoTracker } from './auto-tracker'
@@ -10,12 +12,26 @@ interface ActiveMissionProps {
     mission: MissionWithCompany
 }
 
-const STATUS_FLOW = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED']
+const STATUS_FLOW = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED'] as const
+
+const statusConfig: Record<string, { label: string, emoji: string, color: string }> = {
+    'ACCEPTED': { label: 'Mission acceptée', emoji: '✓', color: 'bg-blue-500' },
+    'EN_ROUTE': { label: 'En route', emoji: '🚗', color: 'bg-indigo-500' },
+    'ARRIVED': { label: 'Sur place', emoji: '📍', color: 'bg-purple-500' },
+    'IN_PROGRESS': { label: 'En cours', emoji: '▶️', color: 'bg-cyan-500' },
+    'COMPLETED': { label: 'Terminée', emoji: '✅', color: 'bg-green-500' },
+}
+
+const nextStatusLabels: Record<string, { label: string, emoji: string }> = {
+    'EN_ROUTE': { label: 'Je suis en route', emoji: '🚗' },
+    'ARRIVED': { label: 'Je suis arrivé', emoji: '📍' },
+    'IN_PROGRESS': { label: 'Commencer', emoji: '▶️' },
+    'COMPLETED': { label: 'Terminer la mission', emoji: '✅' },
+}
 
 export function ActiveMission({ mission }: ActiveMissionProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [currentStatus, setCurrentStatus] = useState(mission.status)
-    const [trackingActive, setTrackingActive] = useState(false) // Persist tracking state
     const router = useRouter()
 
     const handleStatusUpdate = async (newStatus: string) => {
@@ -24,128 +40,196 @@ export function ActiveMission({ mission }: ActiveMissionProps) {
             const res = await fetch(`/api/missions/${mission.id}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    status: newStatus,
-                })
+                body: JSON.stringify({ status: newStatus })
             })
 
             if (!res.ok) throw new Error('Update failed')
 
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate([50, 30, 100])
+            }
+
             setCurrentStatus(newStatus)
-            // Note: Removed router.refresh() to prevent state reset on Vercel
         } catch (error) {
             console.error('Failed to update status:', error)
-            alert('Erreur lors de la mise à jour du statut')
+            alert('Erreur lors de la mise à jour')
         } finally {
             setIsLoading(false)
         }
     }
 
     const getNextStatus = (status: string) => {
-        const index = STATUS_FLOW.indexOf(status)
+        const index = STATUS_FLOW.indexOf(status as typeof STATUS_FLOW[number])
         if (index === -1 || index === STATUS_FLOW.length - 1) return null
         return STATUS_FLOW[index + 1]
     }
 
     const nextStatus = getNextStatus(currentStatus)
-    const nextStatusLabels: Record<string, string> = {
-        'EN_ROUTE': '🚗 Je suis en route',
-        'ARRIVED': '📍 Je suis sur place',
-        'IN_PROGRESS': '▶️ Commencer la mission',
-        'COMPLETED': '✅ Terminer la mission'
-    }
+    const currentConfig = statusConfig[currentStatus] || statusConfig['ACCEPTED']
+    const progress = (STATUS_FLOW.indexOf(currentStatus as typeof STATUS_FLOW[number]) + 1) / STATUS_FLOW.length
 
+    // Completed state
     if (currentStatus === 'COMPLETED') {
         return (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-                <h3 className="text-xl font-bold text-green-800 mb-2">Mission Terminée ! 🎉</h3>
-                <p className="text-green-600">Bravo pour votre travail. Cette mission est archivée.</p>
-            </div>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 text-white shadow-2xl"
+            >
+                <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                        <CheckCircle className="w-8 h-8" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold">Mission Terminée !</h3>
+                        <p className="text-green-100 text-sm">Bravo pour votre travail</p>
+                    </div>
+                </div>
+                <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => router.refresh()}
+                    className="w-full bg-white/20 hover:bg-white/30 backdrop-blur py-3 rounded-xl font-medium transition-colors"
+                >
+                    Retour aux missions
+                </motion.button>
+            </motion.div>
         )
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-blue-100">
-            {/* Header */}
-            <div className="bg-blue-600 px-6 py-4">
-                <div className="flex justify-between items-center text-white">
-                    <h3 className="font-bold text-lg">Mission en Cours</h3>
-                    <span className="px-3 py-1 bg-blue-500 rounded-full text-xs font-mono">
-                        {currentStatus}
-                    </span>
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-gray-100"
+        >
+            {/* Header with gradient */}
+            <div className={`${currentConfig.color} px-5 py-4`}>
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <span className="text-2xl">{currentConfig.emoji}</span>
+                        <div>
+                            <h3 className="font-bold text-white text-lg">Mission en cours</h3>
+                            <p className="text-white/80 text-xs">{currentConfig.label}</p>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-white/60 text-xs">Progression</p>
+                        <p className="text-white font-bold">{Math.round(progress * 100)}%</p>
+                    </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="mt-3 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                    <motion.div
+                        className="h-full bg-white rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress * 100}%` }}
+                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                    />
                 </div>
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-6">
+            <div className="p-5 space-y-4">
+                {/* Mission Title */}
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{mission.title}</h2>
-                    <p className="text-gray-500">{mission.company.companyName}</p>
+                    <h2 className="text-xl font-bold text-gray-900">{mission.title}</h2>
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mt-1">
+                        <Building2 className="w-4 h-4" />
+                        <span>{mission.company.companyName}</span>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-gray-500 mb-1">📍 Lieu</p>
-                        <p className="font-medium">{mission.location}</p>
+                {/* Info Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center gap-2 text-gray-400 text-xs mb-1">
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>Lieu</span>
+                        </div>
+                        <p className="font-medium text-gray-900 text-sm truncate">{mission.location}</p>
                     </div>
-                    <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-gray-500 mb-1">📅 Début</p>
-                        <p className="font-medium">
-                            {new Date(mission.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <div className="bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center gap-2 text-gray-400 text-xs mb-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>Horaire</span>
+                        </div>
+                        <p className="font-medium text-gray-900 text-sm">
+                            {new Date(mission.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                            {' - '}
+                            {new Date(mission.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                     </div>
                 </div>
 
+                {/* Navigate Button */}
+                <motion.a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mission.location)}&travelmode=driving`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium text-gray-700 transition-colors"
+                >
+                    <Navigation className="w-4 h-4" />
+                    <span>Y aller (Google Maps)</span>
+                </motion.a>
+
+                {/* Description */}
                 {mission.description && (
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
                         <p className="text-blue-800 text-sm">{mission.description}</p>
                     </div>
                 )}
 
-                {/* Auto-Tracking (Hidden Logic) */}
+                {/* Auto-Tracking (Hidden) */}
                 <AutoTracker missionId={mission.id} status={currentStatus} />
 
-                {/* Progress Bar */}
-                <div className="relative pt-4 pb-2">
-                    <div className="flex justify-between mb-2">
-                        {STATUS_FLOW.map((s, idx) => {
-                            const isPast = STATUS_FLOW.indexOf(currentStatus) >= idx
-                            return (
-                                <div key={s} className="flex flex-col items-center flex-1">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isPast ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
-                                        }`}>
-                                        {idx + 1}
-                                    </div>
-                                    <span className={`text-[10px] mt-1 ${isPast ? 'text-blue-700 font-medium' : 'text-gray-300'}`}>
-                                        {s.replace('_', ' ')}
-                                    </span>
-                                </div>
-                            )
-                        })}
-                    </div>
-                    <div className="relative h-1 bg-gray-200 rounded mt-2 mx-4 z-0">
-                        <div
-                            className="absolute top-0 left-0 h-full bg-blue-600 rounded transition-all duration-500"
-                            style={{ width: `${(STATUS_FLOW.indexOf(currentStatus) / (STATUS_FLOW.length - 1)) * 100}%` }}
-                        />
-                    </div>
+                {/* Status Steps */}
+                <div className="flex justify-between pt-2">
+                    {STATUS_FLOW.map((status, idx) => {
+                        const isPast = STATUS_FLOW.indexOf(currentStatus as typeof STATUS_FLOW[number]) >= idx
+                        const isCurrent = currentStatus === status
+                        return (
+                            <div key={status} className="flex flex-col items-center flex-1">
+                                <motion.div
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${isPast
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-100 text-gray-400'
+                                        } ${isCurrent ? 'ring-4 ring-blue-100' : ''}`}
+                                    animate={isCurrent ? { scale: [1, 1.1, 1] } : {}}
+                                    transition={{ repeat: Infinity, duration: 2 }}
+                                >
+                                    {isPast ? '✓' : idx + 1}
+                                </motion.div>
+                            </div>
+                        )
+                    })}
                 </div>
 
                 {/* Action Button */}
                 {nextStatus && (
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => handleStatusUpdate(nextStatus)}
                         disabled={isLoading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg shadow-lg active:transform active:scale-95 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-3 disabled:opacity-50 transition-all"
                     >
                         {isLoading ? (
-                            <span className="animate-spin">🔄</span>
+                            <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Mise à jour...</span>
+                            </div>
                         ) : (
-                            <span>{nextStatusLabels[nextStatus] || nextStatus}</span>
+                            <>
+                                <span className="text-xl">{nextStatusLabels[nextStatus]?.emoji}</span>
+                                <span>{nextStatusLabels[nextStatus]?.label}</span>
+                                <ChevronRight className="w-5 h-5" />
+                            </>
                         )}
-                    </button>
+                    </motion.button>
                 )}
             </div>
-        </div>
+        </motion.div>
     )
 }

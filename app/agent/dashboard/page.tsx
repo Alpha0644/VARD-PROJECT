@@ -1,9 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { AgentMap } from '@/components/agent/map/agent-map'
-import { MissionProposals } from '@/components/agent/mission-proposals'
-import { ActiveMission } from '@/components/agent/active-mission'
+import { AgentDashboardWrapper } from '@/components/agent/dashboard/agent-dashboard-wrapper'
 
 export default async function AgentDashboardPage() {
     const session = await auth()
@@ -29,23 +27,5 @@ export default async function AgentDashboardPage() {
         }
     })
 
-    return (
-        <div className="relative w-full h-full min-h-screen bg-gray-100">
-            {/* Full Screen Map (Always visible in background) */}
-            <div className="absolute inset-0 z-0">
-                <AgentMap />
-            </div>
-
-            {/* Content Layer */}
-            {activeMission ? (
-                // Active Mission View (Floating Card)
-                <div className="absolute inset-x-0 bottom-0 z-20 p-4 md:p-6 pb-24">
-                    <ActiveMission mission={activeMission} />
-                </div>
-            ) : (
-                // Job Board (Proposals List)
-                <MissionProposals />
-            )}
-        </div>
-    )
+    return <AgentDashboardWrapper activeMission={activeMission} />
 }

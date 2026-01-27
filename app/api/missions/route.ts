@@ -6,6 +6,7 @@ import { findNearbyAgents } from '@/lib/redis-geo'
 import { checkApiRateLimit } from '@/lib/rate-limit'
 import { sendMissionNotificationEmail } from '@/lib/email'
 import { pusherServer } from '@/lib/pusher'
+import { sendPushToAll, PushSubscriptionData } from '@/lib/web-push'
 
 const createMissionSchema = z.object({
     title: z.string().min(5),
@@ -101,6 +102,41 @@ export async function POST(req: Request) {
                 companyName: company.companyName,
             },
         })
+
+        // Send Push Notifications to all subscribed agents
+        try {
+            const subscriptions = await db.pushSubscription.findMany({
+                select: {
+                    endpoint: true,
+                    p256dh: true,
+                    auth: true
+                }
+            })
+
+            if (subscriptions.length > 0) {
+                const pushSubs: PushSubscriptionData[] = subscriptions.map(s => ({
+                    endpoint: s.endpoint,
+                    keys: {
+                        p256dh: s.p256dh,
+                        auth: s.auth
+                    }
+                }))
+
+                await sendPushToAll(pushSubs, {
+                    title: '🚨 Nouvelle mission',
+                    body: `${title} - ${location}`,
+                    icon: '/icon-192.png',
+                    tag: `mission-${mission.id}`,
+                    data: {
+                        url: '/agent/dashboard',
+                        missionId: mission.id
+                    }
+                })
+            }
+        } catch (pushError) {
+            console.error('[Push Notifications] Error:', pushError)
+            // Don't fail the request if push fails
+        }
 
         // 3. Find Nearby Agents (Matching Engine)
         // Radius: 10km default
