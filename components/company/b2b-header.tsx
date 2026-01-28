@@ -1,15 +1,16 @@
 'use client'
 
-import { Bell, Plus, ChevronDown, User } from 'lucide-react'
+import { Bell, Plus, ChevronDown, User, Menu } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 
 interface B2BHeaderProps {
     sidebarCollapsed?: boolean
+    onMobileMenuToggle?: () => void
 }
 
-export function B2BHeader({ sidebarCollapsed = false }: B2BHeaderProps) {
+export function B2BHeader({ sidebarCollapsed = false, onMobileMenuToggle }: B2BHeaderProps) {
     const { data: session } = useSession()
     const [showProfileMenu, setShowProfileMenu] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
@@ -43,24 +44,33 @@ export function B2BHeader({ sidebarCollapsed = false }: B2BHeaderProps) {
 
     return (
         <header
-            className={`fixed top-0 right-0 h-16 bg-white border-b border-gray-200 shadow-sm z-30 transition-all duration-300 ${sidebarCollapsed ? 'left-16' : 'left-64'
-                }`}
+            className={`fixed top-0 right-0 h-16 bg-white border-b border-gray-200 shadow-sm z-30 transition-all duration-300 
+                left-0 ${sidebarCollapsed ? 'lg:left-16' : 'lg:left-64'}
+            `}
         >
-            <div className="h-full px-6 flex items-center justify-between">
-                {/* Left side - Breadcrumb or Title */}
+            <div className="h-full px-4 md:px-6 flex items-center justify-between">
+                {/* Left side - Burger + Title */}
                 <div className="flex items-center gap-4">
+                    {/* Mobile Burger Menu */}
+                    <button
+                        onClick={onMobileMenuToggle}
+                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                        aria-label="Menu"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
                     <h1 className="text-lg font-semibold text-gray-800">Dashboard</h1>
                 </div>
 
                 {/* Right side - Actions */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 md:gap-4">
                     {/* New Mission Button */}
                     <Link
                         href="/company/missions/new"
-                        className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-3 md:px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
                     >
                         <Plus className="w-4 h-4" />
-                        <span>Nouvelle Mission</span>
+                        <span className="hidden md:inline">Nouvelle Mission</span>
                     </Link>
 
                     {/* Notifications */}

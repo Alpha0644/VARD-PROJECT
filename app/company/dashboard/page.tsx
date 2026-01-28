@@ -166,7 +166,7 @@ export default async function CompanyDashboardPage() {
                 </div>
 
                 {/* Secondary Stats */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
                         <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                             <TrendingUp className="w-6 h-6 text-blue-600" />
@@ -232,8 +232,8 @@ export default async function CompanyDashboardPage() {
                                     <span className="font-medium text-gray-800">{doc.label}</span>
                                     {doc.uploaded && (
                                         <span className={`text-xs px-2 py-1 rounded font-medium ${doc.uploaded.status === 'VERIFIED' ? 'bg-green-100 text-green-800' :
-                                                doc.uploaded.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                                                    'bg-amber-100 text-amber-800'
+                                            doc.uploaded.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                                                'bg-amber-100 text-amber-800'
                                             }`}>
                                             {doc.uploaded.status === 'VERIFIED' ? 'Vérifié' :
                                                 doc.uploaded.status === 'REJECTED' ? 'Rejeté' : 'En attente'}

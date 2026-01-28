@@ -17,6 +17,7 @@ import { motion } from 'framer-motion'
 interface SidebarProps {
     isCollapsed?: boolean
     onToggle?: () => void
+    onMobileClose?: () => void
 }
 
 interface NavItem {
@@ -34,7 +35,7 @@ const navItems: NavItem[] = [
     { href: '/company/settings', label: 'Paramètres', icon: <Settings className="w-5 h-5" /> },
 ]
 
-export function B2BSidebar({ isCollapsed = false, onToggle }: SidebarProps) {
+export function B2BSidebar({ isCollapsed = false, onToggle, onMobileClose }: SidebarProps) {
     const pathname = usePathname()
 
     return (
@@ -63,6 +64,7 @@ export function B2BSidebar({ isCollapsed = false, onToggle }: SidebarProps) {
                             <li key={item.href}>
                                 <Link
                                     href={item.href}
+                                    onClick={onMobileClose}
                                     className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all relative ${isActive
                                         ? 'bg-slate-800/80 text-white'
                                         : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
