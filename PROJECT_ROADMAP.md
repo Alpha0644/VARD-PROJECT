@@ -48,7 +48,7 @@
 |----------|-------|--------|
 | 🔴 | Double-booking prevention | ✅ FAIT |
 | 🔴 | Documents expirés → suspension auto | ✅ FAIT |
-| 🟠 | Annulation mission + relance matching | ⬜ TODO |
+| 🟠 | Annulation mission + relance matching | ✅ FAIT |
 | 🟠 | Responsive mobile (toutes pages) | ⬜ TODO |
 | 🟡 | Profil Agent complet (photo, bio) | ⬜ TODO |
 | 🟡 | Profil Company complet (logo) | ⬜ TODO |
@@ -118,6 +118,14 @@ Phase 6 (Beta)    : Semaine 5-6  ░░░░░░░░░░░░░░░�
 ---
 
 ## 🔧 Changements Récents (Changelog)
+
+### 2026-01-28
+- ✅ Implémenté **Annulation Mission + Relance Matching** 
+  - API `/api/missions/[id]/cancel` avec validation et logs
+  - Compteur `cancellationCount` dans le modèle Agent (pénalité simple)
+  - Modal `CancelMissionModal` pour confirmation
+  - Relance automatique du matching si l'agent annule
+  - Notifications Push et Email aux autres agents disponibles
 
 ### 2026-01-27
 - ✅ Implémenté **Double-Booking Prevention** dans `/api/missions/[id]/status/route.ts`

@@ -94,6 +94,9 @@ model Agent {
   latitude    Float?
   longitude   Float?
   
+  // Reliability metrics
+  cancellationCount Int @default(0) // Number of times agent cancelled after accepting
+  
   // Relations
   missions    Mission[]
 }

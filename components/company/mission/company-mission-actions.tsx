@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { RateAgentModal } from './rate-agent-modal'
+import { CancelMissionModal } from './cancel-mission-modal'
 import { InvoiceButton } from './invoice-button'
-import { Star, Mail, Phone, AlertCircle } from 'lucide-react'
+import { Star, XCircle } from 'lucide-react'
 
 interface Agent {
     id: string
@@ -31,13 +33,24 @@ interface CompanyMissionActionsProps {
     mission: Mission
 }
 
+// Statuses that allow cancellation
+const CANCELLABLE_STATUSES = ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED']
+
 export function CompanyMissionActions({ mission }: CompanyMissionActionsProps) {
+    const router = useRouter()
     const [rateModalOpen, setRateModalOpen] = useState(false)
+    const [cancelModalOpen, setCancelModalOpen] = useState(false)
     const [hasReviewed, setHasReviewed] = useState(mission.hasReviewed)
 
     const handleRateSuccess = () => {
         setHasReviewed(true)
     }
+
+    const handleCancelSuccess = () => {
+        router.refresh() // Refresh to update mission list
+    }
+
+    const canCancel = CANCELLABLE_STATUSES.includes(mission.status)
 
     return (
         <div className="flex gap-3">
@@ -89,11 +102,27 @@ export function CompanyMissionActions({ mission }: CompanyMissionActionsProps) {
                         )
                     )}
                 </>
-            ) : (
-                <button className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium transition-colors">
-                    Annuler
-                </button>
-            )}
+            ) : canCancel ? (
+                <>
+                    <button
+                        onClick={() => setCancelModalOpen(true)}
+                        className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium transition-colors flex items-center gap-2"
+                    >
+                        <XCircle className="w-4 h-4" />
+                        Annuler
+                    </button>
+
+                    <CancelMissionModal
+                        isOpen={cancelModalOpen}
+                        onClose={() => setCancelModalOpen(false)}
+                        missionId={mission.id}
+                        missionTitle={mission.title}
+                        hasAgent={mission.agent !== null}
+                        onSuccess={handleCancelSuccess}
+                    />
+                </>
+            ) : null}
         </div>
     )
 }
+
