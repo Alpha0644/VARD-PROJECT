@@ -1,15 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { MapPin, Clock, Building2, ChevronRight, CheckCircle, Navigation } from 'lucide-react'
+import { MapPin, Clock, Building2, ChevronRight, CheckCircle, Navigation, XCircle } from 'lucide-react'
+import { pusherClient } from '@/lib/pusher-client'
 
 import { MissionWithCompany } from '@/lib/types/mission'
 import { AutoTracker } from './auto-tracker'
 
 interface ActiveMissionProps {
     mission: MissionWithCompany
+    userId?: string
 }
 
 const STATUS_FLOW = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED'] as const
@@ -20,6 +22,7 @@ const statusConfig: Record<string, { label: string, emoji: string, color: string
     'ARRIVED': { label: 'Sur place', emoji: '📍', color: 'bg-purple-500' },
     'IN_PROGRESS': { label: 'En cours', emoji: '▶️', color: 'bg-cyan-500' },
     'COMPLETED': { label: 'Terminée', emoji: '✅', color: 'bg-green-500' },
+    'CANCELLED': { label: 'Annulée', emoji: '❌', color: 'bg-red-500' },
 }
 
 const nextStatusLabels: Record<string, { label: string, emoji: string }> = {
@@ -29,10 +32,36 @@ const nextStatusLabels: Record<string, { label: string, emoji: string }> = {
     'COMPLETED': { label: 'Terminer la mission', emoji: '✅' },
 }
 
-export function ActiveMission({ mission }: ActiveMissionProps) {
+export function ActiveMission({ mission, userId }: ActiveMissionProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [currentStatus, setCurrentStatus] = useState(mission.status)
+    const [isCancelled, setIsCancelled] = useState(false)
+    const [cancelMessage, setCancelMessage] = useState('')
     const router = useRouter()
+
+    // Listen for mission cancellation via Pusher
+    useEffect(() => {
+        if (!userId) return
+
+        const channelName = `private-user-${userId}`
+        const channel = pusherClient.subscribe(channelName)
+
+        channel.bind('mission:cancelled', (data: { missionId: string, missionTitle: string, message: string }) => {
+            if (data.missionId === mission.id) {
+                setIsCancelled(true)
+                setCancelMessage(data.message || 'Cette mission a été annulée par l\'agence.')
+                // Vibrate to alert
+                if (navigator.vibrate) {
+                    navigator.vibrate([200, 100, 200])
+                }
+            }
+        })
+
+        return () => {
+            channel.unbind('mission:cancelled')
+            pusherClient.unsubscribe(channelName)
+        }
+    }, [userId, mission.id])
 
     const handleStatusUpdate = async (newStatus: string) => {
         setIsLoading(true)
@@ -68,6 +97,34 @@ export function ActiveMission({ mission }: ActiveMissionProps) {
     const nextStatus = getNextStatus(currentStatus)
     const currentConfig = statusConfig[currentStatus] || statusConfig['ACCEPTED']
     const progress = (STATUS_FLOW.indexOf(currentStatus as typeof STATUS_FLOW[number]) + 1) / STATUS_FLOW.length
+
+    // Cancelled state (real-time from Pusher)
+    if (isCancelled) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-gradient-to-br from-red-500 to-red-600 rounded-3xl p-6 text-white shadow-2xl"
+            >
+                <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                        <XCircle className="w-8 h-8" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold">Mission Annulée</h3>
+                        <p className="text-red-100 text-sm">{cancelMessage}</p>
+                    </div>
+                </div>
+                <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => router.refresh()}
+                    className="w-full bg-white/20 hover:bg-white/30 backdrop-blur py-3 rounded-xl font-medium transition-colors"
+                >
+                    Retour aux missions
+                </motion.button>
+            </motion.div>
+        )
+    }
 
     // Completed state
     if (currentStatus === 'COMPLETED') {

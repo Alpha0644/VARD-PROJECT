@@ -27,5 +27,6 @@ export default async function AgentDashboardPage() {
         }
     })
 
-    return <AgentDashboardWrapper activeMission={activeMission} />
+    return <AgentDashboardWrapper activeMission={activeMission} userId={session.user.id} />
 }
+

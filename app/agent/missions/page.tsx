@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Briefcase, Clock, TrendingUp, CheckCircle, Calendar, MapPin, FileDown } from 'lucide-react'
+import { Briefcase, Clock, TrendingUp, CheckCircle, Calendar, MapPin, FileDown, ArrowRight, X } from 'lucide-react'
 
 interface Stats {
     month: {
@@ -37,10 +38,12 @@ import { RateCompanyModal } from '@/components/agent/mission/rate-company-modal'
 import { Star } from 'lucide-react'
 
 export default function AgentMissionsPage() {
+    const router = useRouter()
     const [stats, setStats] = useState<Stats | null>(null)
     const [missions, setMissions] = useState<Mission[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'available' | 'history'>('available')
+    const [acceptingId, setAcceptingId] = useState<string | null>(null)
 
     // Rating Modal State
     const [ratingModalOpen, setRatingModalOpen] = useState(false)
@@ -62,6 +65,45 @@ export default function AgentMissionsPage() {
                     : m
             ))
         }
+    }
+
+    const handleAcceptMission = async (missionId: string) => {
+        setAcceptingId(missionId)
+        try {
+            const res = await fetch(`/api/missions/${missionId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'ACCEPTED' })
+            })
+
+            if (res.ok) {
+                if (navigator.vibrate) navigator.vibrate([50, 50, 100])
+                // Remove from list immediately
+                setMissions(prev => prev.filter(m => m.id !== missionId))
+                router.refresh()
+            } else {
+                const data = await res.json()
+                alert(data.error || 'Erreur lors de l\'acceptation')
+            }
+        } catch (error) {
+            console.error('Accept error:', error)
+            alert('Erreur réseau')
+        } finally {
+            setAcceptingId(null)
+        }
+    }
+
+    const handleRejectMission = (missionId: string) => {
+        // Remove from list optimistically
+        setMissions(prev => prev.filter(m => m.id !== missionId))
+        if (navigator.vibrate) navigator.vibrate(50)
+
+        // Persist to server
+        fetch('/api/agent/reject', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ missionId })
+        }).catch(console.error)
     }
 
     useEffect(() => {
@@ -260,6 +302,36 @@ export default function AgentMissionsPage() {
                                         </span>
                                     </div>
                                 </div>
+
+                                {/* Action Buttons for PENDING Missions */}
+                                {mission.status === 'PENDING' && activeTab === 'available' && (
+                                    <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end gap-2">
+                                        <button
+                                            onClick={() => handleRejectMission(mission.id)}
+                                            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
+                                        >
+                                            <X className="w-3 h-3" />
+                                            Refuser
+                                        </button>
+                                        <button
+                                            onClick={() => handleAcceptMission(mission.id)}
+                                            disabled={acceptingId === mission.id}
+                                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1 disabled:opacity-50"
+                                        >
+                                            {acceptingId === mission.id ? (
+                                                <>
+                                                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                    <span>...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>Accepter</span>
+                                                    <ArrowRight className="w-3 h-3" />
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
 
                                 {/* Action Buttons for Completed Missions */}
                                 {mission.status === 'COMPLETED' && (

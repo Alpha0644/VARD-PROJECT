@@ -173,41 +173,48 @@ export function AgentMap({ missions = [], onMissionClick }: AgentMapProps) {
                 )}
 
                 {/* Mission Markers */}
-                {missions.map((mission) => {
-                    const distance = position
-                        ? calculateDistance(position[0], position[1], mission.latitude, mission.longitude)
-                        : null
-
-                    return (
-                        <Marker
-                            key={mission.id}
-                            position={[mission.latitude, mission.longitude]}
-                            icon={missionIcon}
-                            eventHandlers={{
-                                click: () => onMissionClick?.(mission)
-                            }}
-                        >
-                            <Popup>
-                                <div className="min-w-[200px]">
-                                    <h3 className="font-bold text-gray-900 mb-1">{mission.title}</h3>
-                                    <p className="text-xs text-gray-500 mb-2">{mission.company.companyName}</p>
-                                    <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
-                                        <MapPin className="w-3 h-3" />
-                                        <span>{mission.location}</span>
-                                    </div>
-                                    <div className="text-xs text-gray-600 mb-2">
-                                        🕐 {formatTime(mission.startTime)} - {formatTime(mission.endTime)}
-                                    </div>
-                                    {distance !== null && (
-                                        <div className="text-xs font-medium text-blue-600">
-                                            📍 {distance.toFixed(1)} km
-                                        </div>
-                                    )}
-                                </div>
-                            </Popup>
-                        </Marker>
+                {missions
+                    .filter((mission) =>
+                        typeof mission.latitude === 'number' &&
+                        typeof mission.longitude === 'number' &&
+                        !isNaN(mission.latitude) &&
+                        !isNaN(mission.longitude)
                     )
-                })}
+                    .map((mission) => {
+                        const distance = position
+                            ? calculateDistance(position[0], position[1], mission.latitude, mission.longitude)
+                            : null
+
+                        return (
+                            <Marker
+                                key={mission.id}
+                                position={[mission.latitude, mission.longitude]}
+                                icon={missionIcon}
+                                eventHandlers={{
+                                    click: () => onMissionClick?.(mission)
+                                }}
+                            >
+                                <Popup>
+                                    <div className="min-w-[200px]">
+                                        <h3 className="font-bold text-gray-900 mb-1">{mission.title}</h3>
+                                        <p className="text-xs text-gray-500 mb-2">{mission.company.companyName}</p>
+                                        <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                                            <MapPin className="w-3 h-3" />
+                                            <span>{mission.location}</span>
+                                        </div>
+                                        <div className="text-xs text-gray-600 mb-2">
+                                            🕐 {formatTime(mission.startTime)} - {formatTime(mission.endTime)}
+                                        </div>
+                                        {distance !== null && (
+                                            <div className="text-xs font-medium text-blue-600">
+                                                📍 {distance.toFixed(1)} km
+                                            </div>
+                                        )}
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        )
+                    })}
 
                 {/* Recenter Button */}
                 <RecenterButton position={position} />

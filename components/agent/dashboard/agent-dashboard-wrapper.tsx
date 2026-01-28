@@ -22,9 +22,10 @@ const AgentDashboardClient = dynamic(
 
 interface AgentDashboardWrapperProps {
     activeMission: MissionWithCompany | null
+    userId?: string
 }
 
-export function AgentDashboardWrapper({ activeMission }: AgentDashboardWrapperProps) {
+export function AgentDashboardWrapper({ activeMission, userId }: AgentDashboardWrapperProps) {
     return (
         <div className="relative w-full h-full min-h-screen bg-gray-900">
             {activeMission ? (
@@ -34,7 +35,7 @@ export function AgentDashboardWrapper({ activeMission }: AgentDashboardWrapperPr
                         <AgentDashboardClient hasActiveMission={true} />
                     </div>
                     <div className="absolute inset-x-0 bottom-0 z-20 p-4 md:p-6 pb-24">
-                        <ActiveMission mission={activeMission} />
+                        <ActiveMission mission={activeMission} userId={userId} />
                     </div>
                 </>
             ) : (
@@ -44,3 +45,4 @@ export function AgentDashboardWrapper({ activeMission }: AgentDashboardWrapperPr
         </div>
     )
 }
+
