@@ -14,7 +14,8 @@ export async function GET() {
         }
 
         const agent = await db.agent.findUnique({
-            where: { userId: session.user.id }
+            where: { userId: session.user.id },
+            include: { user: true }
         })
 
         if (!agent) {
@@ -81,6 +82,10 @@ export async function GET() {
         })
 
         return NextResponse.json({
+            user: {
+                image: agent.user.image,
+                name: agent.user.name,
+            },
             month: {
                 completedCount: completedMissions.length,
                 totalHours: Math.round(totalHours * 10) / 10,

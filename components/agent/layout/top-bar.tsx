@@ -7,6 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
 
 interface AgentStats {
+    user: {
+        image: string | null
+        name: string | null
+    }
     month: {
         completedCount: number
         totalHours: number
@@ -54,18 +58,23 @@ export function AgentTopBar() {
     }
 
     const earnings = stats?.month.estimatedEarnings ?? 0
+    const userImage = stats?.user?.image
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center pointer-events-none">
             {/* Left side: Profile + Notifications */}
             <div className="flex items-center gap-2 pointer-events-auto">
                 {/* Profile Button */}
-                <Link href="/agent/profile">
+                <Link href="/agent/profile/edit">
                     <motion.div
                         whileTap={{ scale: 0.95 }}
-                        className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-lg hover:bg-black/60 transition-colors"
+                        className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-lg hover:bg-black/60 transition-colors overflow-hidden"
                     >
-                        <User className="w-5 h-5 text-white" />
+                        {userImage ? (
+                            <img src={userImage} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            <User className="w-5 h-5 text-white" />
+                        )}
                     </motion.div>
                 </Link>
 
@@ -76,8 +85,8 @@ export function AgentTopBar() {
                         onClick={handleNotifToggle}
                         disabled={pushLoading}
                         className={`w-11 h-11 rounded-full backdrop-blur-xl border flex items-center justify-center shadow-lg transition-colors ${isSubscribed
-                                ? 'bg-green-500/40 border-green-400/40 hover:bg-green-500/60'
-                                : 'bg-black/40 border-white/20 hover:bg-black/60'
+                            ? 'bg-green-500/40 border-green-400/40 hover:bg-green-500/60'
+                            : 'bg-black/40 border-white/20 hover:bg-black/60'
                             }`}
                     >
                         {pushLoading ? (

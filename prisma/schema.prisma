@@ -35,6 +35,7 @@ model User {
   role          String    @default("AGENT") // Type: UserRole
   name          String?
   phone         String?
+  image         String?
   isVerified    Boolean   @default(false)
   verificationToken String?
   verificationTokenExpiry DateTime?
@@ -76,6 +77,9 @@ model Company {
   companyName String
   siren       String   @unique // 9 digits
   address     String?
+  logoUrl     String?
+  description String?
+  website     String?
   
   // Relations
   missions    Mission[]
@@ -89,6 +93,10 @@ model Agent {
   
   cartePro    String   @unique // CNAPS number
   carteProExp DateTime // Expiration date
+
+  bio             String?
+  specialties     String[]
+  operatingRadius Int?
   
   // Location (Simple lat/lng for MVP)
   latitude    Float?
