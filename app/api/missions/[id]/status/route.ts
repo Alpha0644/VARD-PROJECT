@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { z } from 'zod'
 import { pusherServer } from '@/lib/pusher'
 import { checkAgentCanOperate } from '@/lib/documents'
+import { checkTimeSlotConflict } from '@/lib/mission-service'
 
 // Valid status transitions
 const ALLOWED_STATUSES = ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const
@@ -70,27 +71,13 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
 
             // 🔴 CRITICAL: Double-Booking Prevention
             // Check if agent already has a mission during this time slot
-            const conflictingMission = await db.mission.findFirst({
-                where: {
-                    agentId: agent.id,
-                    status: {
-                        in: ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS']
-                    },
-                    // Mission overlaps if: existing.startTime < new.endTime AND existing.endTime > new.startTime
-                    AND: [
-                        { startTime: { lt: mission.endTime } },
-                        { endTime: { gt: mission.startTime } }
-                    ]
-                },
-                select: {
-                    id: true,
-                    title: true,
-                    startTime: true,
-                    endTime: true
-                }
-            })
+            const { hasConflict, conflictingMission } = await checkTimeSlotConflict(
+                agent.id,
+                mission.startTime,
+                mission.endTime
+            )
 
-            if (conflictingMission) {
+            if (hasConflict && conflictingMission) {
                 return NextResponse.json({
                     error: 'Double réservation impossible',
                     message: `Vous avez déjà une mission "${conflictingMission.title}" prévue du ${conflictingMission.startTime.toLocaleString('fr-FR')} au ${conflictingMission.endTime.toLocaleString('fr-FR')}`,

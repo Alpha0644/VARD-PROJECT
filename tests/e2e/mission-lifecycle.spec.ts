@@ -121,6 +121,12 @@ test.describe('🚀 Mission Complete Lifecycle', () => {
         // loginUser already puts us on dashboard
         await page.waitForTimeout(1000) // Stabilize
 
+        // Dismiss cookie banner explicitly if present to avoid interception
+        const cookieBtn = page.locator('button:has-text("Accepter")').first()
+        if (await cookieBtn.isVisible()) {
+            await cookieBtn.click()
+        }
+
         // Look for accept button
         const acceptBtn = page.locator('button:has-text("Accepter")').first()
 
