@@ -29,6 +29,8 @@ const statusLabels: Record<string, { label: string, icon: typeof MapPin, color: 
     'COMPLETED': { label: 'Mission terminée', icon: CheckCircle, color: 'text-green-500' },
 }
 
+import { EmptyState } from '@/components/ui/empty-state'
+
 export function LiveActivityFeed({ companyId, initialEvents = [] }: LiveActivityFeedProps) {
     const [events, setEvents] = useState<ActivityEvent[]>(initialEvents)
     const [isConnected, setIsConnected] = useState(false)
@@ -86,10 +88,12 @@ export function LiveActivityFeed({ companyId, initialEvents = [] }: LiveActivity
             <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
                 <AnimatePresence initial={false}>
                     {events.length === 0 ? (
-                        <div className="py-8 text-center text-gray-500">
-                            <Clock className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                            <p className="text-sm">Aucune activité récente</p>
-                            <p className="text-xs text-gray-400 mt-1">Les mises à jour apparaîtront ici</p>
+                        <div className="py-4 px-5">
+                            <EmptyState
+                                icon={Clock}
+                                title="Aucune activité"
+                                description="Les mises à jour en direct apparaîtront ici."
+                            />
                         </div>
                     ) : (
                         events.map((event) => {

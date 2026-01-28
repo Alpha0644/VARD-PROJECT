@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MISSION_DEFAULTS } from '@/lib/constants'
 
+import { toast } from 'sonner'
+
 export function CreateMissionForm() {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
@@ -17,9 +19,9 @@ export function CreateMissionForm() {
             title: formData.get('title'),
             description: formData.get('description') || undefined,
             location: formData.get('location'),
-            // Hardcoded dates for MVP demo
-            startTime: new Date().toISOString(),
-            endTime: new Date(Date.now() + MISSION_DEFAULTS.DURATION_HOURS * 60 * 60 * 1000).toISOString(),
+            // Start in 1 hour to pass "future" validation
+            startTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            endTime: new Date(Date.now() + (MISSION_DEFAULTS.DURATION_HOURS + 1) * 60 * 60 * 1000).toISOString(),
             // Hardcoded Location (Paris Center) for MVP Matching Test
             latitude: 48.8566,
             longitude: 2.3522,
@@ -33,30 +35,28 @@ export function CreateMissionForm() {
             })
 
             if (res.ok) {
-                alert('Mission créée ! Les agents alentours ont été notifiés.')
+                toast.success('Mission publiée avec succès !', {
+                    description: 'Les agents à proximité ont été notifiés.'
+                })
+
                 // Reset form (safely)
                 const form = e.currentTarget
                 if (form) form.reset()
                 router.refresh()
             } else {
-                type ErrorResponse = {
-                    error: string
-                    details?: Record<string, unknown> | string
-                }
+                const data = await res.json().catch(() => ({}))
+                const errorMessage = data.error || 'Erreur lors de la création'
 
-                let err: ErrorResponse = { error: 'Erreur inconnue' }
-                try {
-                    err = await res.json()
-                } catch (parseError) {
-                    // If JSON parsing fails, use status text
-                    err = { error: res.statusText || 'Erreur serveur' }
-                }
-                console.error('[CreateMission] Error response:', err)
-                alert('Erreur: ' + (err.details ? JSON.stringify(err.details) : err.error))
+                toast.error('Erreur', {
+                    description: errorMessage
+                })
+                console.error('[CreateMission] Error:', data)
             }
         } catch (e) {
             console.error('[CreateMission] Network error:', e)
-            alert('Erreur réseau')
+            toast.error('Erreur réseau', {
+                description: 'Vérifiez votre connexion internet.'
+            })
         } finally {
             setLoading(false)
         }
@@ -65,6 +65,7 @@ export function CreateMissionForm() {
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-bold mb-4">📢 Poster une Mission (Test)</h2>
+
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium">Titre de la mission</label>
@@ -77,7 +78,11 @@ export function CreateMissionForm() {
                 <p className="text-xs text-gray-500">
                     ⚠️ Pour le test, cette mission sera géolocalisée automatiquement à <strong>Paris Centre</strong>.
                 </p>
-                <button disabled={loading} className="w-full bg-black text-white py-2 rounded">
+                <button
+                    disabled={loading}
+                    className="w-full bg-black text-white py-2 rounded"
+                    data-testid="submit-mission-btn"
+                >
                     {loading ? 'Publication...' : 'Poster & Notifier Agents'}
                 </button>
             </form>

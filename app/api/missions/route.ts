@@ -8,16 +8,7 @@ import { sendMissionNotificationEmail } from '@/lib/email'
 import { pusherServer } from '@/lib/pusher'
 import { sendPushToAll, PushSubscriptionData } from '@/lib/web-push'
 
-const createMissionSchema = z.object({
-    title: z.string().min(5),
-    description: z.string().optional(),
-    startTime: z.string().transform((str) => new Date(str)),
-    endTime: z.string().transform((str) => new Date(str)),
-    location: z.string(),
-    latitude: z.number(),
-    longitude: z.number(),
-    requirements: z.array(z.string()).optional(),
-})
+import { createMissionSchema } from '@/lib/validations/mission'
 
 export async function POST(req: Request) {
     try {

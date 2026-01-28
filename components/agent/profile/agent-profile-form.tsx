@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Camera, Save, Loader2, MapPin, Shield } from 'lucide-react'
 import Image from 'next/image'
@@ -96,11 +97,15 @@ export function AgentProfileForm({ initialData }: AgentProfileFormProps) {
 
             if (!res.ok) throw new Error('Erreur sauvegarde')
 
+            toast.success('Profil mis à jour', {
+                description: 'Vos modifications ont été enregistrées.'
+            })
             router.refresh()
-            // Success toast could go here
         } catch (error) {
             console.error(error)
-            alert('Erreur lors de la sauvegarde')
+            toast.error('Erreur', {
+                description: 'Impossible de mettre à jour le profil.'
+            })
         } finally {
             setIsLoading(false)
         }
@@ -170,8 +175,8 @@ export function AgentProfileForm({ initialData }: AgentProfileFormProps) {
                                 type="button"
                                 onClick={() => toggleSpecialty(spec)}
                                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${isSelected
-                                        ? 'bg-blue-600 text-white border-blue-600'
-                                        : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                                    ? 'bg-blue-600 text-white border-blue-600'
+                                    : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
                                     }`}
                             >
                                 {spec}

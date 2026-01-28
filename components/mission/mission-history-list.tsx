@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { History } from 'lucide-react'
+import { MissionCardSkeleton } from '@/components/ui/skeletons'
+import { EmptyState } from '@/components/ui/empty-state'
 
 interface Mission {
     id: string
@@ -41,9 +44,27 @@ export function MissionHistoryList({ role }: MissionHistoryListProps) {
         fetchHistory()
     }, [])
 
-    if (isLoading) return <div className="text-center py-8">Chargement de l'historique...</div>
+    if (isLoading) {
+        return (
+            <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                    <MissionCardSkeleton key={i} />
+                ))}
+            </div>
+        )
+    }
+
     if (error) return <div className="text-red-500 text-center py-8">{error}</div>
-    if (missions.length === 0) return <div className="text-gray-500 text-center py-8">Aucune mission terminée.</div>
+
+    if (missions.length === 0) {
+        return (
+            <EmptyState
+                icon={History}
+                title="Aucun historique"
+                description="Vous n'avez pas encore de missions terminées dans votre historique."
+            />
+        )
+    }
 
     return (
         <div className="space-y-4">

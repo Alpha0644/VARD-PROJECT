@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e1]:
+- generic [active] [ref=e1]:
   - generic [ref=e2]:
     - complementary [ref=e3]:
       - link "VARD Pro" [ref=e5] [cursor=pointer]:
@@ -71,7 +71,7 @@
             - heading "Informations générales" [level=2] [ref=e98]
             - generic [ref=e99]:
               - generic [ref=e100]: Titre de la mission *
-              - 'textbox "Ex: Gardiennage chantier de nuit" [ref=e101]': Cancel Test 1769603647185
+              - 'textbox "Ex: Gardiennage chantier de nuit" [ref=e101]'
             - generic [ref=e102]:
               - generic [ref=e103]: Type de mission
               - generic [ref=e104]:
@@ -104,7 +104,7 @@
               - text: Lieu de la mission
             - generic [ref=e128]:
               - generic [ref=e129]: Adresse complète *
-              - 'textbox "Ex: 15 Rue de la Paix, 75002 Paris" [ref=e130]': Paris 75001, France
+              - 'textbox "Ex: 15 Rue de la Paix, 75002 Paris" [ref=e130]'
           - generic [ref=e131]:
             - heading "Date et horaires" [level=2] [ref=e132]:
               - img [ref=e133]
@@ -115,7 +115,7 @@
                 - textbox [ref=e138]
               - generic [ref=e139]:
                 - generic [ref=e140]: Heure de début
-                - textbox [active] [ref=e141]
+                - textbox [ref=e141]: 08:00
               - generic [ref=e142]:
                 - generic [ref=e143]: Date de fin *
                 - textbox [ref=e144]

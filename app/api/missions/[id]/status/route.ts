@@ -7,14 +7,7 @@ import { pusherServer } from '@/lib/pusher'
 import { checkAgentCanOperate } from '@/lib/documents'
 import { checkTimeSlotConflict } from '@/lib/mission-service'
 
-// Valid status transitions
-const ALLOWED_STATUSES = ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const
-
-const statusUpdateSchema = z.object({
-    status: z.enum(ALLOWED_STATUSES),
-    latitude: z.number().optional(), // For tracking where update happened
-    longitude: z.number().optional()
-})
+import { updateMissionStatusSchema } from '@/lib/validations/mission'
 
 export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
     try {
@@ -27,9 +20,9 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
         const missionId = params.id
         const body = await req.json()
 
-        const validated = statusUpdateSchema.safeParse(body)
+        const validated = updateMissionStatusSchema.safeParse(body)
         if (!validated.success) {
-            return NextResponse.json({ error: 'Données invalides' }, { status: 400 })
+            return NextResponse.json({ error: 'Données invalides', details: validated.error.format() }, { status: 400 })
         }
 
         const { status, latitude, longitude } = validated.data

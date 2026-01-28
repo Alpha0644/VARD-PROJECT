@@ -5,6 +5,9 @@ import { MapPin, Clock, ArrowRight, Shield, Navigation, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { pusherClient } from '@/lib/pusher-client'
+import { toast } from 'sonner'
+import { MissionCardSkeleton } from '@/components/ui/skeletons'
+import { EmptyState } from '@/components/ui/empty-state'
 
 interface PendingMission {
     id: string
@@ -202,13 +205,20 @@ export function MissionProposals() {
                 if (navigator.vibrate) {
                     navigator.vibrate([50, 50, 100])
                 }
+                toast.success('Mission acceptée !', {
+                    description: 'Préparez-vous à intervenir.'
+                })
                 router.refresh()
             } else {
-                alert('Erreur lors de l\'acceptation')
+                toast.error('Erreur', {
+                    description: 'Impossible d\'accepter cette mission.'
+                })
             }
         } catch (error) {
             console.error('Accept error:', error)
-            alert('Erreur réseau')
+            toast.error('Erreur réseau', {
+                description: 'Veuillez réessayer plus tard.'
+            })
         } finally {
             setAcceptingId(null)
         }
@@ -218,7 +228,7 @@ export function MissionProposals() {
         return (
             <div className="space-y-3">
                 {[1, 2, 3].map(i => (
-                    <div key={i} className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
+                    <MissionCardSkeleton key={i} />
                 ))}
             </div>
         )
@@ -226,19 +236,11 @@ export function MissionProposals() {
 
     if (missions.length === 0) {
         return (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center py-12 text-center"
-            >
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-4 shadow-inner">
-                    <Shield className="w-8 h-8 text-blue-600" />
-                </div>
-                <h2 className="text-lg font-bold text-gray-900 mb-2">Aucune mission disponible</h2>
-                <p className="text-gray-500 text-sm max-w-[250px]">
-                    Restez connecté, nous vous notifierons dès qu&apos;une mission sera disponible.
-                </p>
-            </motion.div>
+            <EmptyState
+                icon={Shield}
+                title="Aucune mission disponible"
+                description="Restez connecté, nous vous notifierons dès qu'une mission sera disponible."
+            />
         )
     }
 

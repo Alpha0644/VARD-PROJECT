@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { agentProfileSchema } from '@/lib/validations/profile'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import { randomUUID } from 'crypto'
@@ -15,18 +16,22 @@ export async function PATCH(req: Request) {
 
         const formData = await req.formData()
 
-        const bio = formData.get('bio') as string
-        const operatingRadius = formData.get('operatingRadius') ? parseInt(formData.get('operatingRadius') as string) : null
-
-        let specialties: string[] = []
-        try {
-            const specString = formData.get('specialties') as string
-            if (specString) {
-                specialties = JSON.parse(specString)
-            }
-        } catch (e) {
-            console.error('Failed to parse specialties', e)
+        const rawData = {
+            bio: formData.get('bio') as string | undefined,
+            operatingRadius: formData.get('operatingRadius') ? parseInt(formData.get('operatingRadius') as string) : null,
+            specialties: formData.get('specialties') ? JSON.parse(formData.get('specialties') as string) : [],
         }
+
+        // Validate
+        const validationResult = agentProfileSchema.safeParse(rawData)
+        if (!validationResult.success) {
+            return NextResponse.json({
+                error: 'Données invalides',
+                details: validationResult.error.format()
+            }, { status: 400 })
+        }
+
+        const { bio, operatingRadius, specialties } = validationResult.data
 
         const imageFile = formData.get('image') as File | null
         let imageUrl: string | undefined = undefined

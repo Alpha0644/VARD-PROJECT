@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { companyProfileSchema } from '@/lib/validations/profile'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import { randomUUID } from 'crypto'
@@ -15,10 +16,22 @@ export async function PATCH(req: Request) {
 
         const formData = await req.formData()
 
-        const companyName = formData.get('companyName') as string
-        const address = formData.get('address') as string
-        const description = formData.get('description') as string
-        const website = formData.get('website') as string
+        const rawData = {
+            companyName: formData.get('companyName') as string,
+            address: formData.get('address') as string,
+            description: formData.get('description') as string,
+            website: formData.get('website') as string,
+        }
+
+        const validationResult = companyProfileSchema.safeParse(rawData)
+        if (!validationResult.success) {
+            return NextResponse.json({
+                error: 'Données invalides',
+                details: validationResult.error.format()
+            }, { status: 400 })
+        }
+
+        const { companyName, address, description, website } = validationResult.data
 
         const logoFile = formData.get('logo') as File | null
         let logoUrl: string | undefined = undefined

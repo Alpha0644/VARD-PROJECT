@@ -47,21 +47,60 @@ test.describe('🚀 Mission Complete Lifecycle', () => {
                 await locationInput.fill('Paris 75001, France')
             }
 
-            // Fill date/time if available
-            const dateInput = page.locator('[name="startTime"], input[type="datetime-local"]')
-            if (await dateInput.count() > 0) {
+            // Fill date/time
+            const startDateInput = page.locator('[name="startDate"]')
+            const endDateInput = page.locator('[name="endDate"]')
+
+            if (await startDateInput.count() > 0) {
                 const tomorrow = new Date()
                 tomorrow.setDate(tomorrow.getDate() + 1)
-                await dateInput.fill(tomorrow.toISOString().slice(0, 16))
+                const tomorrowStr = tomorrow.toISOString().split('T')[0]
+                await startDateInput.fill(tomorrowStr)
+
+                // Assuming defaults for time are okay or handled, but we need endDate
+                if (await endDateInput.count() > 0) {
+                    await endDateInput.fill(tomorrowStr) // Set same day end
+                }
+            } else {
+                // Fallback for datetime-local if used elsewhere
+                const dateInput = page.locator('[name="startTime"], input[type="datetime-local"]')
+                if (await dateInput.count() > 0) {
+                    const tomorrow = new Date()
+                    tomorrow.setDate(tomorrow.getDate() + 1)
+                    await dateInput.fill(tomorrow.toISOString().slice(0, 16))
+                }
             }
 
             // Submit the form
-            const submitBtn = page.locator('button[type="submit"], button:has-text("Poster"), button:has-text("Créer")')
-            if (await submitBtn.count() > 0) {
-                await submitBtn.first().click()
-                await page.waitForLoadState('networkidle')
+            // Submit the form
+            const submitBtn = page.locator('[data-testid="submit-mission-btn"]').or(
+                page.locator('button[type="submit"], button:has-text("Poster"), button:has-text("Créer")')
+            )
 
-                // Check for success
+            if (await submitBtn.count() > 0) {
+                // Prepare to capture response
+                const responsePromise = page.waitForResponse(response =>
+                    response.url().includes('/api/missions') && response.request().method() === 'POST'
+                )
+
+                // Wait for any animations/overlays to settle
+                await page.waitForTimeout(2000)
+
+                // Force click to avoid "element not stable" issues
+                await submitBtn.first().click({ force: true })
+
+                // Wait for response
+                const response = await responsePromise
+                const status = response.status()
+                console.log(`📡 API Response Status: ${status}`)
+
+                if (status >= 400) {
+                    const body = await response.json().catch(() => 'No JSON body')
+                    console.error('❌ API Error Details:', JSON.stringify(body, null, 2))
+                }
+
+                // Check for success UI
+                await page.waitForTimeout(1000)
                 const success = await page.locator('text=/succès|créée|publiée/i').count() > 0
                 console.log(`✅ Mission creation success: ${success}`)
             }
