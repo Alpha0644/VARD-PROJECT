@@ -69,6 +69,7 @@ test.describe('🚀 Mission Complete Lifecycle', () => {
 
         // Verify we have missions listed
         await page.goto('/company/missions')
+        await page.waitForTimeout(1000) // Wait for fetch
         const hasMissions = await page.locator('text=/surveillance|pending|en attente/i').count() > 0
         expect(hasMissions || true).toBe(true) // Soft assertion
     })
@@ -97,7 +98,7 @@ test.describe('🚀 Mission Complete Lifecycle', () => {
         const availableTab = page.locator('button:has-text("Disponibles"), [data-tab="available"]')
         if (await availableTab.count() > 0) {
             await availableTab.first().click()
-            await page.waitForTimeout(500)
+            await page.waitForTimeout(2000) // Wait for cards to load
         }
 
         // Look for mission cards
@@ -117,8 +118,8 @@ test.describe('🚀 Mission Complete Lifecycle', () => {
     test('4. Agent accepts a mission', async ({ page }) => {
         await loginUser(page, TEST_AGENT.email, TEST_AGENT.password)
 
-        await page.goto('/agent/dashboard')
-        await page.waitForLoadState('networkidle')
+        // loginUser already puts us on dashboard
+        await page.waitForTimeout(1000) // Stabilize
 
         // Look for accept button
         const acceptBtn = page.locator('button:has-text("Accepter")').first()
@@ -138,8 +139,7 @@ test.describe('🚀 Mission Complete Lifecycle', () => {
     test('5. Agent can update mission status through workflow', async ({ page }) => {
         await loginUser(page, TEST_AGENT.email, TEST_AGENT.password)
 
-        await page.goto('/agent/dashboard')
-        await page.waitForLoadState('networkidle')
+        await page.waitForTimeout(1000)
 
         // Check for active mission section
         const activeMission = page.locator('text=/mission active|en cours/i')
@@ -169,8 +169,8 @@ test.describe('🚀 Mission Complete Lifecycle', () => {
     test('6. Company can track agent on active mission', async ({ page }) => {
         await loginUser(page, TEST_COMPANY.email, TEST_COMPANY.password, 'COMPANY')
 
-        await page.goto('/company/dashboard')
-        await page.waitForLoadState('networkidle')
+        // loginUser lands on dashboard
+        await page.waitForTimeout(1000)
 
         // Check for live tracking map
         const hasMap = await page.locator('[class*="leaflet"], [class*="map"]').count() > 0

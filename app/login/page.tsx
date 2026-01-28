@@ -114,10 +114,13 @@ function AgentLoginForm() {
 
         setIsLoading(true)
 
+        // Determine input type explicitly at submit time to avoid race conditions
+        const currentInputType = detectInputType(identifier)
+
         try {
             const result = await signIn('credentials', {
-                email: inputType === 'email' ? identifier : undefined,
-                phone: inputType === 'phone' ? identifier.replace(/\s/g, '') : undefined,
+                email: currentInputType === 'email' ? identifier : undefined,
+                phone: currentInputType === 'phone' ? identifier.replace(/\s/g, '') : undefined,
                 password,
                 redirect: false,
             })

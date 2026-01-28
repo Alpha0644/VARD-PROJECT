@@ -110,7 +110,7 @@ async function main() {
         data: {
             userId: companyUser.id,
             companyName: 'Test Security Agency',
-            siren: `TEST${Date.now()}`, // Unique SIREN to avoid conflicts
+            siren: '12345678200010', // Valid Luhn SIRET (from mock data)
         },
     })
     console.log('✅ Created test-company@vard.test with company profile')

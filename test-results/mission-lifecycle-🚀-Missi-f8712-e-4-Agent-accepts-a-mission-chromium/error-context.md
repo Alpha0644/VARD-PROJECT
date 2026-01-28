@@ -1,0 +1,219 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner:
+      - generic [ref=e3]:
+        - link [ref=e4] [cursor=pointer]:
+          - /url: /agent/profile
+          - img [ref=e6]
+        - button [ref=e9] [cursor=pointer]:
+          - img [ref=e10]
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - img [ref=e18]
+          - generic [ref=e21]: Ce mois
+        - generic [ref=e23]: 200 €
+    - main [ref=e24]:
+      - generic [ref=e26]:
+        - generic [ref=e29]:
+          - generic:
+            - generic:
+              - button "🛡️" [ref=e30] [cursor=pointer]:
+                - generic [ref=e31]: 🛡️
+              - button "🛡️" [ref=e32] [cursor=pointer]:
+                - generic [ref=e33]: 🛡️
+              - button "🛡️" [ref=e34] [cursor=pointer]:
+                - generic [ref=e35]: 🛡️
+              - button "🛡️" [ref=e36] [cursor=pointer]:
+                - generic [ref=e37]: 🛡️
+              - button "🛡️" [ref=e38] [cursor=pointer]:
+                - generic [ref=e39]: 🛡️
+              - button "🛡️" [ref=e40] [cursor=pointer]:
+                - generic [ref=e41]: 🛡️
+          - generic [ref=e42]:
+            - link "Leaflet" [ref=e43] [cursor=pointer]:
+              - /url: https://leafletjs.com
+              - img [ref=e44]
+              - text: Leaflet
+            - text: "| ©"
+            - link "OpenStreetMap" [ref=e48] [cursor=pointer]:
+              - /url: https://www.openstreetmap.org/copyright
+        - button "Filtres" [ref=e50] [cursor=pointer]:
+          - img [ref=e51]
+          - generic [ref=e52]: Filtres
+        - generic [ref=e53]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: Missions disponibles
+            - generic [ref=e58]: "6"
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading "E2E Test Mission - Surveillance" [level=3]
+                      - paragraph: Test Security Agency
+                    - generic:
+                      - generic: ~200€
+                  - generic:
+                    - generic:
+                      - img
+                      - generic: Paris 75001, France
+                    - generic:
+                      - img
+                      - generic: 12:44 -20:44
+                  - button "Accepter":
+                    - generic: Accepter
+                    - img
+                  - button "Pas intéressé":
+                    - img
+                    - generic: Pas intéressé
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading "E2E Test Mission - Surveillance" [level=3]
+                      - paragraph: Test Security Agency
+                    - generic:
+                      - generic: ~200€
+                  - generic:
+                    - generic:
+                      - img
+                      - generic: Paris 75001, France
+                    - generic:
+                      - img
+                      - generic: 12:42 -20:42
+                  - button "Accepter":
+                    - generic: Accepter
+                    - img
+                  - button "Pas intéressé":
+                    - img
+                    - generic: Pas intéressé
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading "E2E Test Mission - Surveillance" [level=3]
+                      - paragraph: Test Security Agency
+                    - generic:
+                      - generic: ~200€
+                  - generic:
+                    - generic:
+                      - img
+                      - generic: Paris 75001, France
+                    - generic:
+                      - img
+                      - generic: 12:39 -20:39
+                  - button "Accepter":
+                    - generic: Accepter
+                    - img
+                  - button "Pas intéressé":
+                    - img
+                    - generic: Pas intéressé
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading "E2E Test Mission - Surveillance" [level=3]
+                      - paragraph: Test Security Agency
+                    - generic:
+                      - generic: ~200€
+                  - generic:
+                    - generic:
+                      - img
+                      - generic: Paris 75001, France
+                    - generic:
+                      - img
+                      - generic: 12:35 -20:35
+                  - button "Accepter":
+                    - generic: Accepter
+                    - img
+                  - button "Pas intéressé":
+                    - img
+                    - generic: Pas intéressé
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading "E2E Test Mission - Surveillance" [level=3]
+                      - paragraph: Test Security Agency
+                    - generic:
+                      - generic: ~200€
+                  - generic:
+                    - generic:
+                      - img
+                      - generic: Paris 75001, France
+                    - generic:
+                      - img
+                      - generic: 12:33 -20:33
+                  - button "Accepter":
+                    - generic: Accepter
+                    - img
+                  - button "Pas intéressé":
+                    - img
+                    - generic: Pas intéressé
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading "Gardiennage Chantier Test" [level=3]
+                      - paragraph: Test Security Agency
+                    - generic:
+                      - generic: ~200€
+                  - generic:
+                    - generic:
+                      - img
+                      - generic: Paris, France
+                    - generic:
+                      - img
+                      - generic: 12:32 -20:32
+                  - button "Accepter":
+                    - generic: Accepter
+                    - img
+                  - button "Pas intéressé":
+                    - img
+                    - generic: Pas intéressé
+    - navigation [ref=e59]:
+      - generic [ref=e60]:
+        - link "Carte" [ref=e61] [cursor=pointer]:
+          - /url: /agent/dashboard
+          - img [ref=e63]
+          - generic [ref=e65]: Carte
+        - link "6 Missions" [ref=e67] [cursor=pointer]:
+          - /url: /agent/missions
+          - generic [ref=e68]:
+            - img [ref=e69]
+            - generic [ref=e72]: "6"
+          - generic [ref=e73]: Missions
+        - link "Profil" [ref=e74] [cursor=pointer]:
+          - /url: /agent/profile
+          - img [ref=e76]
+          - generic [ref=e79]: Profil
+  - generic [ref=e81]:
+    - paragraph [ref=e83]:
+      - text: 🍪 Nous utilisons des
+      - strong [ref=e84]: cookies essentiels
+      - text: pour le fonctionnement du site (authentification uniquement). Aucun tracking publicitaire.
+      - link "En savoir plus" [ref=e85] [cursor=pointer]:
+        - /url: /privacy-policy
+    - generic [ref=e86]:
+      - button "Refuser" [ref=e87] [cursor=pointer]
+      - button "Accepter" [ref=e88] [cursor=pointer]
+  - region "Notifications alt+T"
+  - generic [ref=e93] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e94]:
+      - img [ref=e95]
+    - generic [ref=e98]:
+      - button "Open issues overlay" [ref=e99]:
+        - generic [ref=e100]:
+          - generic [ref=e101]: "1"
+          - generic [ref=e102]: "2"
+        - generic [ref=e103]:
+          - text: Issue
+          - generic [ref=e104]: s
+      - button "Collapse issues badge" [ref=e105]:
+        - img [ref=e106]
+  - alert [ref=e108]
+```

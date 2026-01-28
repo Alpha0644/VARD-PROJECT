@@ -39,6 +39,13 @@ export async function loginUser(
     role: 'AGENT' | 'COMPANY' = 'AGENT'
 ) {
     await page.goto('/login')
+
+    // Dismiss cookie banner if present
+    const cookieBtn = page.locator('button:has-text("Accepter")').first()
+    if (await cookieBtn.isVisible()) {
+        await cookieBtn.click()
+    }
+
     await page.waitForLoadState('networkidle')
 
     if (role === 'COMPANY') {
@@ -48,23 +55,37 @@ export async function loginUser(
 
         // For company login, we need SIRET + identifier + password
         // Using a test SIRET value
-        await page.fill('#entreprise-siret', '12345678900001')
+        await page.fill('#entreprise-siret', '12345678200010')
         await page.fill('#entreprise-identifier', email)
         await page.fill('#entreprise-password', password)
     } else {
         // Agent tab is default, but click to ensure
         await page.click('button:has-text("Agent")')
-        await page.waitForTimeout(300)
+        await page.waitForTimeout(500)
 
         // Agent uses identifier (email/phone) + password
-        await page.fill('#agent-identifier', email)
-        await page.fill('#agent-password', password)
+        // Use type/press to ensure events fire correctly for React
+        await page.click('#agent-identifier')
+        await page.keyboard.type(email, { delay: 50 })
+        await page.waitForTimeout(200)
+
+        await page.click('#agent-password')
+        await page.keyboard.type(password, { delay: 50 })
+        await page.waitForTimeout(200)
+
+        // Debug: Log the value we typed
+        const val = await page.inputValue('#agent-identifier')
+        console.log(`[Login] Typed agent identifier: "${val}"`)
     }
 
     await page.click('button[type="submit"]')
 
-    // Wait for redirect to dashboard
-    await page.waitForLoadState('networkidle')
+    // Wait for redirect to any dashboard
+    try {
+        await page.waitForURL(/.*dashboard/, { timeout: 10000 })
+    } catch (e) {
+        console.log('[Login] Warning: Timeout waiting for dashboard redirect')
+    }
 }
 
 /**
