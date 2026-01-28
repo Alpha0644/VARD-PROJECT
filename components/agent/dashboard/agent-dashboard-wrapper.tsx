@@ -20,14 +20,23 @@ const AgentDashboardClient = dynamic(
     }
 )
 
+import { ExpirationAlert } from '@/components/agent/dashboard/expiration-alert'
+
 interface AgentDashboardWrapperProps {
     activeMission: MissionWithCompany | null
     userId?: string
+    expirationStatus?: {
+        canOperate: boolean
+        reason?: string
+        warning?: string
+    }
 }
 
-export function AgentDashboardWrapper({ activeMission, userId }: AgentDashboardWrapperProps) {
+export function AgentDashboardWrapper({ activeMission, userId, expirationStatus }: AgentDashboardWrapperProps) {
     return (
         <div className="relative w-full h-full min-h-screen bg-gray-900">
+            {expirationStatus && <ExpirationAlert status={expirationStatus} />}
+
             {activeMission ? (
                 // Active Mission View - Full screen map with floating card
                 <>

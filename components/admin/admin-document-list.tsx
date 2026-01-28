@@ -1,8 +1,7 @@
-'use client'
-
 import { useState } from 'react'
 import { verifyDocumentAction, rejectDocumentAction } from '@/app/admin/documents/actions'
 import { CheckCircle, XCircle, FileText, ExternalLink, Loader2 } from 'lucide-react'
+import { VerifyDocumentModal } from './verify-document-modal'
 
 interface UserPreview {
     name: string | null
@@ -16,7 +15,7 @@ interface DocumentWithUser {
     type: string
     status: string
     url: string
-    name: string // This seems to be the filename in original code
+    name: string
     createdAt: Date
     user: UserPreview
 }
@@ -27,18 +26,23 @@ interface AdminDocumentListProps {
 
 export function AdminDocumentList({ documents }: AdminDocumentListProps) {
     const [isLoading, setIsLoading] = useState<string | null>(null)
+    const [selectedDoc, setSelectedDoc] = useState<DocumentWithUser | null>(null)
 
-    const handleVerify = async (doc: DocumentWithUser) => {
-        if (!confirm('Valider ce document ?')) return
+    const handleVerifyClick = (doc: DocumentWithUser) => {
+        setSelectedDoc(doc)
+    }
 
-        setIsLoading(doc.id)
-        const result = await verifyDocumentAction(doc.id, doc.userId)
+    const handleConfirmVerification = async (date?: Date) => {
+        if (!selectedDoc) return
+
+        setIsLoading(selectedDoc.id)
+        const result = await verifyDocumentAction(selectedDoc.id, selectedDoc.userId, date)
 
         if (result.error) {
             alert('Erreur: ' + result.error)
             setIsLoading(null)
         }
-        // No need to set loading null on success as the component will re-render/unmount or list updates
+        setSelectedDoc(null)
     }
 
     const handleReject = async (docId: string) => {
@@ -114,7 +118,7 @@ export function AdminDocumentList({ documents }: AdminDocumentListProps) {
                             Rejeter
                         </button>
                         <button
-                            onClick={() => handleVerify(doc)}
+                            onClick={() => handleVerifyClick(doc)}
                             disabled={isLoading === doc.id}
                             className="flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50 text-sm font-medium"
                         >
@@ -124,6 +128,16 @@ export function AdminDocumentList({ documents }: AdminDocumentListProps) {
                     </div>
                 </div>
             ))}
+
+            {selectedDoc && (
+                <VerifyDocumentModal
+                    isOpen={!!selectedDoc}
+                    onClose={() => setSelectedDoc(null)}
+                    onConfirm={handleConfirmVerification}
+                    documentType={selectedDoc.type}
+                    documentName={selectedDoc.name}
+                />
+            )}
         </div>
     )
 }

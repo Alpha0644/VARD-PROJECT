@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { AgentDashboardWrapper } from '@/components/agent/dashboard/agent-dashboard-wrapper'
 
+import { checkAgentCanOperate } from '@/lib/documents'
+
 export default async function AgentDashboardPage() {
     const session = await auth()
 
@@ -16,6 +18,9 @@ export default async function AgentDashboardPage() {
 
     if (!agent) redirect('/login')
 
+    // Check expiration status
+    const expirationStatus = await checkAgentCanOperate(session.user.id)
+
     // Check for active mission
     const activeMission = await db.mission.findFirst({
         where: {
@@ -27,6 +32,10 @@ export default async function AgentDashboardPage() {
         }
     })
 
-    return <AgentDashboardWrapper activeMission={activeMission} userId={session.user.id} />
+    return <AgentDashboardWrapper
+        activeMission={activeMission}
+        userId={session.user.id}
+        expirationStatus={expirationStatus}
+    />
 }
 

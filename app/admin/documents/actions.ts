@@ -3,12 +3,15 @@
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 
-export async function verifyDocumentAction(documentId: string, userId: string) {
+export async function verifyDocumentAction(documentId: string, userId: string, expiresAt?: Date) {
     try {
         // 1. Update Document Status
         await db.document.update({
             where: { id: documentId },
-            data: { status: 'VERIFIED' }
+            data: {
+                status: 'VERIFIED',
+                expiresAt: expiresAt ?? null
+            }
         })
 
         // 2. Check if User can be verified (needs CNAPS + ID_CARD verified)
