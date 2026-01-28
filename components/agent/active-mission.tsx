@@ -32,11 +32,14 @@ const nextStatusLabels: Record<string, { label: string, emoji: string }> = {
     'COMPLETED': { label: 'Terminer la mission', emoji: '✅' },
 }
 
+import { CancelMissionModal } from './cancel-mission-modal'
+
 export function ActiveMission({ mission, userId }: ActiveMissionProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [currentStatus, setCurrentStatus] = useState(mission.status)
     const [isCancelled, setIsCancelled] = useState(false)
     const [cancelMessage, setCancelMessage] = useState('')
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
     const router = useRouter()
 
     // Listen for mission cancellation via Pusher
@@ -287,6 +290,22 @@ export function ActiveMission({ mission, userId }: ActiveMissionProps) {
                     </motion.button>
                 )}
             </div>
+            {/* Cancel Button (Only for ACCEPTED status) */}
+            {currentStatus === 'ACCEPTED' && (
+                <button
+                    onClick={() => setIsCancelModalOpen(true)}
+                    className="w-full py-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors text-sm"
+                >
+                    Annuler la mission
+                </button>
+            )}
+
+            {/* Cancel Modal */}
+            <CancelMissionModal
+                missionId={mission.id}
+                isOpen={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+            />
         </motion.div>
     )
 }
