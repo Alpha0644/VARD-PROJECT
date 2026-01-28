@@ -30,13 +30,37 @@ export async function registerUser(page: Page, user: TestUser) {
 }
 
 /**
- * Login via UI
+ * Login via UI - supports both Agent and Company login flows
  */
-export async function loginUser(page: Page, email: string, password: string) {
+export async function loginUser(
+    page: Page,
+    email: string,
+    password: string,
+    role: 'AGENT' | 'COMPANY' = 'AGENT'
+) {
     await page.goto('/login')
+    await page.waitForLoadState('networkidle')
 
-    await page.fill('[name="email"]', email)
-    await page.fill('[name="password"]', password)
+    if (role === 'COMPANY') {
+        // Click on "Entreprise" tab
+        await page.click('button:has-text("Entreprise")')
+        await page.waitForTimeout(300)  // Wait for animation
+
+        // For company login, we need SIRET + identifier + password
+        // Using a test SIRET value
+        await page.fill('#entreprise-siret', '12345678900001')
+        await page.fill('#entreprise-identifier', email)
+        await page.fill('#entreprise-password', password)
+    } else {
+        // Agent tab is default, but click to ensure
+        await page.click('button:has-text("Agent")')
+        await page.waitForTimeout(300)
+
+        // Agent uses identifier (email/phone) + password
+        await page.fill('#agent-identifier', email)
+        await page.fill('#agent-password', password)
+    }
+
     await page.click('button[type="submit"]')
 
     // Wait for redirect to dashboard

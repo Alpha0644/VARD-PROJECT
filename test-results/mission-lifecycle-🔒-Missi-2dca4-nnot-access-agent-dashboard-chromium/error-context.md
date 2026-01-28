@@ -1,0 +1,51 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - paragraph [ref=e6]: La sécurité, réinventée.
+    - generic [ref=e7]:
+      - link "VARD" [ref=e9] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - button "Agent" [ref=e14] [cursor=pointer]: Agent
+          - button "Entreprise" [ref=e16] [cursor=pointer]
+        - heading "Bienvenue" [level=1] [ref=e17]
+        - paragraph [ref=e18]: Connectez-vous pour continuer
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic [ref=e22]: Email ou Numéro de téléphone
+            - generic [ref=e23]:
+              - img [ref=e24]
+              - textbox "agent@email.com ou 06 12 34 56 78" [ref=e27]
+          - generic [ref=e28]:
+            - generic [ref=e29]: Mot de passe
+            - generic [ref=e30]:
+              - img [ref=e31]
+              - textbox "••••••••" [ref=e34]
+              - button [ref=e35] [cursor=pointer]:
+                - img [ref=e36]
+          - link "Mot de passe oublié ?" [ref=e40] [cursor=pointer]:
+            - /url: /forgot-password
+          - button "Se connecter" [ref=e41] [cursor=pointer]
+        - generic [ref=e46]: ou
+        - paragraph [ref=e48]:
+          - text: Pas encore de compte ?
+          - link "Créer un compte" [ref=e49] [cursor=pointer]:
+            - /url: /register
+  - generic [ref=e51]:
+    - paragraph [ref=e53]:
+      - text: 🍪 Nous utilisons des
+      - strong [ref=e54]: cookies essentiels
+      - text: pour le fonctionnement du site (authentification uniquement). Aucun tracking publicitaire.
+      - link "En savoir plus" [ref=e55] [cursor=pointer]:
+        - /url: /privacy-policy
+    - generic [ref=e56]:
+      - button "Refuser" [ref=e57] [cursor=pointer]
+      - button "Accepter" [ref=e58] [cursor=pointer]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e64] [cursor=pointer]:
+    - img [ref=e65]
+  - alert [ref=e68]
+```
