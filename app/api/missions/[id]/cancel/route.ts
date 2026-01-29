@@ -3,10 +3,11 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { pusherServer } from '@/lib/pusher'
+import { sendPushNotification } from '@/lib/web-push'
 
 export async function POST(
     req: Request,
-    { params }: { params: Promise<{ id: string }> } // Correct Next.js 15 params type
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -65,7 +66,28 @@ export async function POST(
             // Notify involved parties
             await pusherServer.trigger(`company-${mission.companyId}`, 'mission:update', cancelledMission)
             if (mission.agentId) {
-                await pusherServer.trigger(`agent-${mission.agentId}`, 'mission:cancelled', cancelledMission) // Specific event for strong alert
+                await pusherServer.trigger(`agent-${mission.agentId}`, 'mission:cancelled', cancelledMission)
+
+                // Web Push (Background Notification)
+                // Find agent's push subscription
+                const agentUser = await db.user.findUnique({
+                    where: { id: mission.agentId },
+                    select: { pushSubscription: true }
+                })
+
+                if (agentUser?.pushSubscription) {
+                    try {
+                        const subCallback = JSON.parse(agentUser.pushSubscription as string)
+                        await sendPushNotification(subCallback, {
+                            title: '🚫 Mission Annulée',
+                            body: `L'entreprise a annulé la mission "${mission.title}".`,
+                            icon: '/icons/icon-192x192.png',
+                            data: { url: '/agent/missions' }
+                        })
+                    } catch (e) {
+                        console.error('Push failed', e)
+                    }
+                }
             }
 
             return NextResponse.json({ success: true, mission: cancelledMission })

@@ -11,6 +11,8 @@ import { Shield, FileBarChart } from 'lucide-react' // Added FileBarChart
 import { motion } from 'framer-motion'
 import { AgentReportingClient } from './agent-reporting-client' // New Import
 
+import { toast } from 'sonner' // Added toast import
+
 interface PendingMission {
     id: string
     title: string
@@ -28,6 +30,7 @@ interface PendingMission {
 interface AgentDashboardClientProps {
     hasActiveMission: boolean
     userName: string
+    userId?: string // Added userId prop
 }
 
 // Calculate distance between two points in km
@@ -56,7 +59,7 @@ const getMissionPrice = (mission: PendingMission): number => {
     return Math.round(getMissionDuration(mission) * 25)
 }
 
-export function AgentDashboardClient({ hasActiveMission, userName }: AgentDashboardClientProps) {
+export function AgentDashboardClient({ hasActiveMission, userName, userId }: AgentDashboardClientProps) {
     const [view, setView] = useState<'BOARD' | 'REPORTS'>('BOARD') // New State for Tabs
     const [missions, setMissions] = useState<PendingMission[]>([])
     const [loading, setLoading] = useState(true)
@@ -75,6 +78,26 @@ export function AgentDashboardClient({ hasActiveMission, userName }: AgentDashbo
             )
         }
 
+        // Subscribe to private channel for personal notifications (cancellation, etc.)
+        if (userId) {
+            const privateChannel = pusherClient.subscribe(`agent-${userId}`)
+
+            privateChannel.bind('mission:cancelled', (data: any) => {
+                toast.error(`Mission annulée: ${data.title || 'Une mission a été annulée'}`)
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200])
+                router.refresh()
+            })
+
+            privateChannel.bind('mission:update', (data: any) => {
+                toast.info(`Mise à jour mission: ${data.title}`)
+                router.refresh()
+            })
+
+            return () => {
+                pusherClient.unsubscribe(`agent-${userId}`)
+            }
+        }
+
         // Fetch missions if no active mission
         if (!hasActiveMission) {
             fetch('/api/missions/available')
@@ -87,15 +110,17 @@ export function AgentDashboardClient({ hasActiveMission, userName }: AgentDashbo
                 .catch(console.error)
                 .finally(() => setLoading(false))
 
-            // Real-time updates
+            // Real-time updates (Public)
             const channel = pusherClient.subscribe('public-missions')
             channel.bind('mission:created', (newMission: PendingMission) => {
                 setMissions(prev => [newMission, ...prev])
                 if (navigator.vibrate) navigator.vibrate(100)
+                toast.info('Nouvelle mission disponible !')
             })
 
             return () => {
                 pusherClient.unsubscribe('public-missions')
+                // Unsubscribe private handled in separate effect or here if we have ID
             }
         } else {
             setLoading(false)
