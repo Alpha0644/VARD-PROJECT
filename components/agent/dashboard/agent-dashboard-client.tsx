@@ -7,8 +7,9 @@ import { MissionProposalsList } from '@/components/agent/mission-proposals'
 import { MissionFiltersButton, MissionFilters, defaultFilters } from '@/components/agent/ui/mission-filters'
 import { pusherClient } from '@/lib/pusher-client'
 import { useRouter } from 'next/navigation'
-import { Shield } from 'lucide-react'
+import { Shield, FileBarChart } from 'lucide-react' // Added FileBarChart
 import { motion } from 'framer-motion'
+import { AgentReportingClient } from './agent-reporting-client' // New Import
 
 interface PendingMission {
     id: string
@@ -26,6 +27,7 @@ interface PendingMission {
 
 interface AgentDashboardClientProps {
     hasActiveMission: boolean
+    userName: string
 }
 
 // Calculate distance between two points in km
@@ -54,7 +56,8 @@ const getMissionPrice = (mission: PendingMission): number => {
     return Math.round(getMissionDuration(mission) * 25)
 }
 
-export function AgentDashboardClient({ hasActiveMission }: AgentDashboardClientProps) {
+export function AgentDashboardClient({ hasActiveMission, userName }: AgentDashboardClientProps) {
+    const [view, setView] = useState<'BOARD' | 'REPORTS'>('BOARD') // New State for Tabs
     const [missions, setMissions] = useState<PendingMission[]>([])
     const [loading, setLoading] = useState(true)
     const [acceptingId, setAcceptingId] = useState<string | null>(null)
@@ -209,6 +212,26 @@ export function AgentDashboardClient({ hasActiveMission }: AgentDashboardClientP
         )
     }
 
+    // Toggle View for Reports
+    if (view === 'REPORTS') {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+                    <h1 className="text-lg font-bold">Rapports & Activité</h1>
+                    <button
+                        onClick={() => setView('BOARD')}
+                        className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        Fermer
+                    </button>
+                </header>
+                <div className="flex-1 p-4 pb-24 overflow-y-auto">
+                    <AgentReportingClient userName={userName} />
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="relative h-full w-full">
             {/* Full Screen Map */}
@@ -217,6 +240,16 @@ export function AgentDashboardClient({ hasActiveMission }: AgentDashboardClientP
                     missions={filteredMissions}
                     onMissionClick={handleMissionClick}
                 />
+            </div>
+
+            {/* Reports Button - Top Left */}
+            <div className="absolute top-20 left-4 z-40">
+                <button
+                    onClick={() => setView('REPORTS')}
+                    className="bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg border border-gray-200 hover:bg-white transition-all"
+                >
+                    <FileBarChart className="w-6 h-6 text-gray-700" />
+                </button>
             </div>
 
             {/* Filters Button - Top Right */}

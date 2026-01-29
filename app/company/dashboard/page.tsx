@@ -203,6 +203,7 @@ export default async function CompanyDashboardPage() {
                     <CompanyDashboardClient
                         missions={missionsForMap}
                         companyId={company.id}
+                        userName={company.companyName}
                     />
                 )}
 

@@ -1,7 +1,7 @@
 import { Analytics } from '@vercel/analytics/react'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { CookieBanner } from '@/components/gdpr/cookie-banner'
+import { CookieBanner } from '@/components/legal/cookie-banner'
 import { Toaster } from '@/components/ui/sonner'
 import { SEO_METADATA } from '@/lib/constants/landing'
 import { Providers } from '@/components/providers'

@@ -1,6 +1,25 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+
+// Simple Edge-ready Rate Limiter initialization
+// We redefine it here because importing from lib/rate-limit.ts might cause issues with non-edge dependencies
+const redis = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN && !process.env.UPSTASH_REDIS_REST_URL.includes('your-redis-url'))
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+    : null
+
+const ratelimit = redis
+    ? new Ratelimit({
+        redis: redis,
+        limiter: Ratelimit.slidingWindow(20, '10 s'), // 20 requests per 10 seconds
+        analytics: true,
+    })
+    : null
 
 export async function middleware(request: NextRequest) {
     const session = await auth()
@@ -8,6 +27,25 @@ export async function middleware(request: NextRequest) {
 
     // Public routes (no auth required)
     const publicRoutes = ['/login', '/register', '/', '/privacy-policy', '/api/auth', '/api/upload', '/admin/login']
+
+    // Rate Limiting (API Only)
+    if (pathname.startsWith('/api') && ratelimit) {
+        // Use X-Forwarded-For or Fallback to '127.0.0.1'
+        const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
+        const { success, limit, reset, remaining } = await ratelimit.limit(ip)
+
+        if (!success) {
+            return new NextResponse('Too Many Requests', {
+                status: 429,
+                headers: {
+                    'X-RateLimit-Limit': limit.toString(),
+                    'X-RateLimit-Remaining': remaining.toString(),
+                    'X-RateLimit-Reset': reset.toString()
+                }
+            })
+        }
+    }
+
     if (publicRoutes.includes(pathname)) {
         return NextResponse.next()
     }

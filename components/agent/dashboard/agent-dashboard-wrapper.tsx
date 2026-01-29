@@ -30,9 +30,10 @@ interface AgentDashboardWrapperProps {
         reason?: string
         warning?: string
     }
+    userName: string
 }
 
-export function AgentDashboardWrapper({ activeMission, userId, expirationStatus }: AgentDashboardWrapperProps) {
+export function AgentDashboardWrapper({ activeMission, userId, expirationStatus, userName }: AgentDashboardWrapperProps) {
     return (
         <div className="relative w-full h-full min-h-screen bg-gray-900">
             {expirationStatus && <ExpirationAlert status={expirationStatus} />}
@@ -41,7 +42,7 @@ export function AgentDashboardWrapper({ activeMission, userId, expirationStatus 
                 // Active Mission View - Full screen map with floating card
                 <>
                     <div className="absolute inset-0 z-0">
-                        <AgentDashboardClient hasActiveMission={true} />
+                        <AgentDashboardClient hasActiveMission={true} userName={userName} />
                     </div>
                     <div className="absolute inset-x-0 bottom-0 z-20 p-4 md:p-6 pb-24">
                         <ActiveMission mission={activeMission} userId={userId} />
@@ -49,7 +50,7 @@ export function AgentDashboardWrapper({ activeMission, userId, expirationStatus 
                 </>
             ) : (
                 // Job Board View - Map with bottom sheet
-                <AgentDashboardClient hasActiveMission={false} />
+                <AgentDashboardClient hasActiveMission={false} userName={userName} />
             )}
         </div>
     )

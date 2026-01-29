@@ -1,7 +1,10 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { useState } from 'react'
 import { LiveActivityFeed } from './live-activity-feed'
+import { LayoutDashboard, BarChart3 } from 'lucide-react'
+import { CompanyReportingClient } from './company-reporting-client'
 
 // Dynamic import for MissionsMap to avoid SSR issues with Leaflet
 const MissionsMap = dynamic(
@@ -34,20 +37,53 @@ interface Mission {
 interface DashboardClientProps {
     missions: Mission[]
     companyId: string
+    userName: string
 }
 
-export function CompanyDashboardClient({ missions, companyId }: DashboardClientProps) {
+export function CompanyDashboardClient({ missions, companyId, userName }: DashboardClientProps) {
+    const [view, setView] = useState<'COMMAND' | 'ANALYTICS'>('COMMAND')
+
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Map - takes 2 columns */}
-            <div className="lg:col-span-2">
-                <MissionsMap missions={missions} companyId={companyId} />
+        <div className="space-y-6">
+            {/* Tab Navigation */}
+            <div className="flex items-center gap-2 border-b border-gray-200 pb-1 mb-6">
+                <button
+                    onClick={() => setView('COMMAND')}
+                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors border-b-2 ${view === 'COMMAND'
+                            ? 'border-blue-500 text-blue-600 bg-blue-50/50'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        }`}
+                >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Vue Globale
+                </button>
+                <button
+                    onClick={() => setView('ANALYTICS')}
+                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors border-b-2 ${view === 'ANALYTICS'
+                            ? 'border-purple-500 text-purple-600 bg-purple-50/50'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        }`}
+                >
+                    <BarChart3 className="w-4 h-4" />
+                    Analytiques & Rapports
+                </button>
             </div>
 
-            {/* Live Activity Feed - 1 column */}
-            <div>
-                <LiveActivityFeed companyId={companyId} />
-            </div>
+            {view === 'COMMAND' ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Map - takes 2 columns */}
+                    <div className="lg:col-span-2">
+                        <MissionsMap missions={missions} companyId={companyId} />
+                    </div>
+
+                    {/* Live Activity Feed - 1 column */}
+                    <div>
+                        <LiveActivityFeed companyId={companyId} />
+                    </div>
+                </div>
+            ) : (
+                <CompanyReportingClient userName={userName} />
+            )}
         </div>
     )
 }

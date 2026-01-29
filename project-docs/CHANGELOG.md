@@ -1,6 +1,46 @@
 # Changelog
 
-## 2026-01-26 - Phase 4, 5 & 6: Feature Complete & OMEGA Audit 🚀
+
+## 2026-01-29 - Phase 4: Security & Compliance 🛡️
+
+### Added
+- 🛡️ **Rate Limiting (Middleware)**:
+  - Integration with `@upstash/ratelimit`.
+  - Protection for `/api/*` routes (limits based on IP).
+- 🍪 **RGPD Compliance**:
+  - `CookieBanner` component (localStorage consent).
+  - Legal Pages: `Mentions Légales`, `Politique de Confidentialité`.
+- 🔒 **Security Headers**:
+  - HSTS, X-Frame-Options, X-Content-Type-Options via `next.config.mjs`.
+
+### Security
+- 🚨 **NPM Audit**: Patched `next` dependency (High Severity vulnerability).
+- ✅ **OMEGA Audit**: Fixed Middleware Type Safety (`request.ip` fallback).
+
+---
+
+## 2026-01-29 - Phase 3: Reporting & Analytics 📊
+
+### Added
+- 📈 **Company Analytics**:
+  - New "Analytiques" tab in Company Dashboard.
+  - KPI Cards: Fill Rate, Total Spend, Mission Volume.
+  - Charts: Monthly Expenses (Recharts).
+- 👮‍♂️ **Agent Reports**:
+  - "Rapports" tab in Agent Dashboard.
+  - Stats: Hours worked, Estimated Revenue.
+- 📄 **PDF Generation**:
+  - Client-side PDF generation for monthly activity reports.
+  - Integration with `@react-pdf/renderer`.
+- 🏰 **Admin Dashboard**:
+  - Upgraded to "Control Tower" with live KPIs and global volume charts.
+  - Real-time platform monitoring.
+
+### Changed
+- `CompanyDashboardClient`: Refactored to support Tabbed View (Map vs Analytics).
+- `AgentDashboardClient`: Added toggle for Reporting view.
+
+---
 
 ### Added
 - 👮‍♂️ **Agent Dashboard (Job Board)**:

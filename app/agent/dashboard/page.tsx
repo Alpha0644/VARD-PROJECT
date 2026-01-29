@@ -35,6 +35,7 @@ export default async function AgentDashboardPage() {
     return <AgentDashboardWrapper
         activeMission={activeMission}
         userId={session.user.id}
+        userName={session.user.name || 'Agent'}
         expirationStatus={expirationStatus}
     />
 }

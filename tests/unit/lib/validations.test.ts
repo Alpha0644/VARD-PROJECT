@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import { loginSchema, registerAgentSchema, registerCompanySchema } from '@/lib/validations/auth'
 import { agentProfileSchema, companyProfileSchema } from '@/lib/validations/profile'
 import { createMissionSchema } from '@/lib/validations/mission'
