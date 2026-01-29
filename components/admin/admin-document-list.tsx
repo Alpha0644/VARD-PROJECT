@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { verifyDocumentAction, rejectDocumentAction } from '@/app/admin/documents/actions'
+import { verifyDocumentAction, rejectDocumentAction } from '@/app/admin/(protected)/documents/actions'
 import { CheckCircle, XCircle, FileText, ExternalLink, Loader2 } from 'lucide-react'
 import { VerifyDocumentModal } from './verify-document-modal'
 

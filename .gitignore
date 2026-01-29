@@ -58,7 +58,7 @@ desktop.ini
 
 # Mutation testing reports
 .stryker-tmp/
-reports/
+/reports/
 
 # Visual regression
 tests/visual/test/
