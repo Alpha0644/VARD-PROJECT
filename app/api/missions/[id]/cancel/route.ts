@@ -69,24 +69,41 @@ export async function POST(
                 await pusherServer.trigger(`agent-${mission.agentId}`, 'mission:cancelled', cancelledMission)
 
                 // Web Push (Background Notification)
-                // Find agent's push subscription
-                const agentUser = await db.user.findUnique({
-                    where: { id: mission.agentId },
-                    select: { pushSubscription: true }
+                console.log(`[Cancel] Fetching push subscription for agent ${mission.agentId}`)
+
+                // Fix: Query the separate PushSubscription table, not User field
+                const subscription = await db.pushSubscription.findFirst({
+                    where: { userId: mission.agentId },
+                    orderBy: { createdAt: 'desc' } // Get latest
                 })
 
-                if (agentUser?.pushSubscription) {
+                if (subscription) {
+                    console.log(`[Cancel] Subscription found: ${subscription.endpoint.slice(0, 20)}...`)
                     try {
-                        const subCallback = JSON.parse(agentUser.pushSubscription as string)
-                        await sendPushNotification(subCallback, {
+                        // usage of logic from lib/web-push
+                        const payload = {
                             title: '🚫 Mission Annulée',
                             body: `L'entreprise a annulé la mission "${mission.title}".`,
                             icon: '/icons/icon-192x192.png',
                             data: { url: '/agent/missions' }
-                        })
+                        }
+
+                        // Reconstruct standard subscription object format
+                        const subFormatted = {
+                            endpoint: subscription.endpoint,
+                            keys: {
+                                p256dh: subscription.p256dh,
+                                auth: subscription.auth
+                            }
+                        }
+
+                        const result = await sendPushNotification(subFormatted, payload)
+                        console.log(`[Cancel] Push sent result: ${result}`)
                     } catch (e) {
-                        console.error('Push failed', e)
+                        console.error('[Cancel] Push failed', e)
                     }
+                } else {
+                    console.warn(`[Cancel] No push subscription found for agent ${mission.agentId}`)
                 }
             }
 
