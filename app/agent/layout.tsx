@@ -1,5 +1,6 @@
 import { AgentTopBar } from '@/components/agent/layout/top-bar'
 import { AgentBottomNav } from '@/components/agent/layout/bottom-nav'
+import { AgentSidebar } from '@/components/agent/layout/agent-sidebar'
 
 export default function AgentLayout({
     children,
@@ -7,17 +8,27 @@ export default function AgentLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="relative min-h-screen bg-black text-white overflow-hidden">
-            {/* Top Bar Overlay */}
-            <AgentTopBar />
+        <div className="relative min-h-screen bg-black text-white overflow-hidden flex">
+            {/* Desktop Sidebar (Left) - Hidden on Mobile */}
+            <AgentSidebar />
 
-            {/* Main Content Area - Full Screen (Map usually) */}
-            <main className="h-[100dvh] w-full relative">
-                {children}
-            </main>
+            <div className="flex-1 flex flex-col h-[100dvh] w-full relative md:pl-64">
+                {/* Top Bar Overlay - Mobile Only (or adjust if needed for desktop) */}
+                <div className="md:hidden">
+                    <AgentTopBar />
+                </div>
 
-            {/* Bottom Navigation */}
-            <AgentBottomNav />
+                {/* Main Content Area */}
+                <main className="flex-1 w-full relative overflow-y-auto md:overflow-hidden">
+                    {children}
+                </main>
+
+                {/* Bottom Navigation - Hidden on Desktop */}
+                <div className="md:hidden">
+                    <AgentBottomNav />
+                </div>
+            </div>
         </div>
     )
 }
+
