@@ -59,10 +59,12 @@ function MapUpdater({ position }: { position: { lat: number; lng: number } }) {
 // Proper way to update map - we use a callback on MapContainer
 function MapWithUpdates({
     position,
-    lastUpdate
+    lastUpdate,
+    customIcon
 }: {
     position: { lat: number; lng: number }
     lastUpdate: string | null
+    customIcon: L.DivIcon | null
 }) {
     const [map, setMap] = useState<L.Map | null>(null)
 
@@ -85,9 +87,11 @@ function MapWithUpdates({
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         attribution='&copy; OpenStreetMap'
                     />
-                    <Marker position={[position.lat, position.lng]}>
-                        <Popup>Agent en mission</Popup>
-                    </Marker>
+                    {customIcon && (
+                        <Marker position={[position.lat, position.lng]} icon={customIcon}>
+                            <Popup>Agent en mission</Popup>
+                        </Marker>
+                    )}
                 </MapContainer>
             </div>
             <div className="bg-white px-4 py-2 flex justify-between items-center text-sm">
@@ -105,6 +109,22 @@ function MapWithUpdates({
 }
 
 export function AgentMap({ missionId, agentId, initialPosition }: AgentMapProps) {
+    const [customIcon, setCustomIcon] = useState<L.DivIcon | null>(null)
+
+    useEffect(() => {
+        import('leaflet').then((L) => {
+            const icon = L.divIcon({
+                className: 'bg-transparent',
+                html: `<div class="w-8 h-8 bg-green-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center animate-pulse">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                       </div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 32]
+            })
+            setCustomIcon(icon)
+        })
+    }, [])
+
     const [position, setPosition] = useState<{ lat: number; lng: number } | null>(
         initialPosition || null
     )
@@ -120,13 +140,11 @@ export function AgentMap({ missionId, agentId, initialPosition }: AgentMapProps)
 
     useEffect(() => {
         const channelName = `presence-mission-${missionId}`
-        console.log('[AgentMap] Subscribing to', channelName)
         const channel = pusherClient.subscribe(channelName)
 
         channel.bind('pusher:subscription_succeeded', () => {
             setIsConnected(true)
             setSubscriptionError(null)
-            console.log('[AgentMap] ✅ Subscribed to', channelName)
         })
 
         channel.bind('pusher:subscription_error', (error: unknown) => {
@@ -135,7 +153,6 @@ export function AgentMap({ missionId, agentId, initialPosition }: AgentMapProps)
         })
 
         channel.bind('agent:location', (data: LocationEvent) => {
-            console.log('[AgentMap] 📍 Location event received:', data)
             if (data.agentId === agentId) {
                 setPosition({ lat: data.latitude, lng: data.longitude })
                 setLastUpdate(new Date(data.timestamp).toLocaleTimeString())
@@ -143,7 +160,6 @@ export function AgentMap({ missionId, agentId, initialPosition }: AgentMapProps)
         })
 
         return () => {
-            console.log('[AgentMap] Unsubscribing from', channelName)
             pusherClient.unsubscribe(channelName)
         }
     }, [missionId, agentId])
@@ -161,6 +177,6 @@ export function AgentMap({ missionId, agentId, initialPosition }: AgentMapProps)
         )
     }
 
-    return <MapWithUpdates position={position} lastUpdate={lastUpdate} />
+    return <MapWithUpdates position={position} lastUpdate={lastUpdate} customIcon={customIcon} />
 }
 

@@ -1,6 +1,9 @@
 import { Analytics } from '@vercel/analytics/react'
 import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
+
+const inter = Inter({ subsets: ['latin'] })
 import { CookieBanner } from '@/components/legal/cookie-banner'
 import { Toaster } from '@/components/ui/sonner'
 import { SEO_METADATA } from '@/lib/constants/landing'
@@ -98,7 +101,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="fr" className="scroll-smooth">
-            <body className="min-h-screen bg-white text-vard-dark antialiased">
+            <body className={`min-h-screen bg-white text-vard-dark antialiased ${inter.className}`}>
                 <Providers>
                     {children}
                 </Providers>

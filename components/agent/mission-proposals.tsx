@@ -178,7 +178,6 @@ export function MissionProposals() {
         const channel = pusherClient.subscribe('public-missions')
 
         channel.bind('mission:created', (newMission: PendingMission) => {
-            console.log('🔔 Live Feed Event Received:', newMission)
             setMissions(prev => [newMission, ...prev])
             // Haptic feedback if available
             if (navigator.vibrate) {

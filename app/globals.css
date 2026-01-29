@@ -8,8 +8,6 @@
    ============================================ */
 
 @layer base {
-    /* Import Inter font from Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     /* Root CSS Variables for easy theming */
     :root {
@@ -37,7 +35,7 @@
 
     /* Base body styles */
     body {
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        /* font-family treated by next/font/google class */
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;

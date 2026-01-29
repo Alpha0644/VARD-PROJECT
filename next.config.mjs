@@ -3,7 +3,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     // Optimise le bundle pour serverless (Vercel)
-    output: 'standalone',
+    // output: 'standalone', // Disabled for Windows local build compatibility (EINVAL colon error)
 
     // Headers de sécurité
     async headers() {

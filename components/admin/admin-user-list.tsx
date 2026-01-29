@@ -1,5 +1,7 @@
 'use client'
 
+import { formatDate } from '@/lib/utils'
+
 import { useState } from 'react'
 import { Search, UserCog, CheckCircle, Clock } from 'lucide-react'
 
@@ -81,10 +83,10 @@ export function AdminUserList({ users }: AdminUserListProps) {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded text-xs font-medium border ${user.role === 'AGENT'
-                                                ? 'bg-blue-50 text-blue-700 border-blue-100'
-                                                : user.role === 'COMPANY'
-                                                    ? 'bg-purple-50 text-purple-700 border-purple-100'
-                                                    : 'bg-gray-100 text-gray-700 border-gray-200'
+                                            ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                            : user.role === 'COMPANY'
+                                                ? 'bg-purple-50 text-purple-700 border-purple-100'
+                                                : 'bg-gray-100 text-gray-700 border-gray-200'
                                             }`}>
                                             {user.role}
                                         </span>
@@ -108,7 +110,7 @@ export function AdminUserList({ users }: AdminUserListProps) {
                                         )}
                                     </td>
                                     <td className="px-6 py-4 text-right text-gray-500">
-                                        {new Date(user.createdAt).toLocaleDateString()}
+                                        {formatDate(user.createdAt)}
                                     </td>
                                 </tr>
                             ))

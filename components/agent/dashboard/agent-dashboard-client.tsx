@@ -200,7 +200,6 @@ export function AgentDashboardClient({ hasActiveMission, userName }: AgentDashbo
     }
 
     const handleMissionClick = (mission: PendingMission) => {
-        console.log('Mission clicked on map:', mission.id)
     }
 
     // If active mission, just show map without bottom sheet

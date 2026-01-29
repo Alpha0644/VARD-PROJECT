@@ -102,7 +102,9 @@ export async function POST(req: Request) {
     }
     // LOCAL FILESYSTEM (Development Fallback)
     else {
-      console.log('[API Upload] Using Local Storage (Dev)')
+      if (process.env.NODE_ENV === 'development') {
+        console.info('[API Upload] Using Local Storage (Dev)')
+      }
       const uploadDir = path.join(process.cwd(), 'public/uploads')
       // Ensure dir exists (not possible in Vercel/Lambda usually, but fine for local)
 

@@ -2,7 +2,9 @@ import { resend, EMAIL_FROM } from '../config'
 
 export async function sendWelcomeEmail(email: string, name: string, role: 'AGENT' | 'COMPANY') {
     if (!resend) {
-        console.log('[DEV] Welcome email would be sent to:', email)
+        if (process.env.NODE_ENV === 'development') {
+            console.info('[DEV] Welcome email would be sent to:', email)
+        }
         return { success: true, dev: true }
     }
 
