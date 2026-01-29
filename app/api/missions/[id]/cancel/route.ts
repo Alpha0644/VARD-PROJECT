@@ -12,90 +12,114 @@ export async function POST(
         const { id } = await params
         const session = await auth()
 
-        if (!session || session.user.role !== 'AGENT') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+        if (!session) {
+            return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
         }
 
         const mission = await db.mission.findUnique({
             where: { id },
-            include: { agent: true }
         })
 
         if (!mission) {
             return NextResponse.json({ error: 'Mission introuvable' }, { status: 404 })
         }
 
-        // Verify ownership
-        // Ideally we find the Agent profile first
-        const agentProfile = await db.agent.findUnique({ where: { userId: session.user.id } })
+        const { role } = session.user
+        const body = await req.json().catch(() => ({}))
+        const reason = body.reason || 'Annulation sans motif'
 
-        if (!agentProfile || mission.agentId !== agentProfile.id) {
-            return NextResponse.json({ error: 'Ce n\'est pas votre mission' }, { status: 403 })
-        }
+        // =======================================================
+        // SCENARIO 1: COMPANY CANCELLATION (Definitive)
+        // =======================================================
+        if (role === 'COMPANY') {
+            // Verify ownership
+            const companyProfile = await db.company.findUnique({ where: { userId: session.user.id } })
 
-        // Verify Status
-        const cancellableStatuses = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED']
-        if (!cancellableStatuses.includes(mission.status)) {
-            return NextResponse.json({
-                error: 'Impossible d\'annuler une mission en cours ou terminée'
-            }, { status: 400 })
-        }
+            if (!companyProfile || mission.companyId !== companyProfile.id) {
+                return NextResponse.json({ error: 'Ce n\'est pas votre mission' }, { status: 403 })
+            }
 
-        // TRANSACTION: Reset Mission & Penalize Agent
-        const updatedMission = await db.$transaction(async (tx) => {
-            // 1. Update Mission
-            const m = await tx.mission.update({
-                where: { id },
-                data: {
-                    status: 'PENDING', // Return to pool
-                    agentId: null,      // Remove assignment
-                }
+            // Execute Cancellation
+            const cancelledMission = await db.$transaction(async (tx) => {
+                const m = await tx.mission.update({
+                    where: { id },
+                    data: {
+                        status: 'CANCELLED',
+                        agentId: null // Optional: keep trace or remove? Usually remove for clean slate, or keep for history. Let's keep agentId nullified if cancelled.
+                    }
+                })
+
+                await tx.missionLog.create({
+                    data: {
+                        missionId: id,
+                        userId: session.user.id,
+                        previousStatus: mission.status,
+                        newStatus: 'CANCELLED',
+                        comment: `Mission annulée par l'entreprise : ${reason}`,
+                    }
+                })
+
+                return m
             })
 
-            // 2. Penalize Agent (Use raw query to bypass potential client type mismatch if outdated)
-            // Assuming table name is "Agent" and columns are "userId", "cancellationCount"
-            await tx.$executeRaw`UPDATE "Agent" SET "cancellationCount" = "cancellationCount" + 1 WHERE "userId" = ${session.user.id}`
+            // Notify involved parties
+            await pusherServer.trigger(`company-${mission.companyId}`, 'mission:update', cancelledMission)
+            if (mission.agentId) {
+                await pusherServer.trigger(`agent-${mission.agentId}`, 'mission:cancelled', cancelledMission) // Specific event for strong alert
+            }
 
-            // 3. Log
-            await tx.missionLog.create({
-                data: {
-                    missionId: id,
-                    userId: session.user.id,
-                    previousStatus: mission.status,
-                    newStatus: 'PENDING', // Log as reset to pending
-                    comment: 'Mission annulée par l\'agent (Remise en jeu)',
-                }
+            return NextResponse.json({ success: true, mission: cancelledMission })
+        }
+
+        // =======================================================
+        // SCENARIO 2: AGENT CANCELLATION (Withdrawal/Unassign files)
+        // =======================================================
+        if (role === 'AGENT') {
+            // ... existing agent logic ...
+            const agentProfile = await db.agent.findUnique({ where: { userId: session.user.id } })
+
+            if (!agentProfile || mission.agentId !== agentProfile.id) {
+                return NextResponse.json({ error: 'Ce n\'est pas votre mission' }, { status: 403 })
+            }
+
+            const cancellableStatuses = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED']
+            if (!cancellableStatuses.includes(mission.status)) {
+                return NextResponse.json({ error: 'Statut invalide pour annulation' }, { status: 400 })
+            }
+
+            const updatedMission = await db.$transaction(async (tx) => {
+                const m = await tx.mission.update({
+                    where: { id },
+                    data: {
+                        status: 'PENDING',
+                        agentId: null,
+                    }
+                })
+
+                // Penalize Agent
+                await tx.$executeRaw`UPDATE "Agent" SET "cancellationCount" = "cancellationCount" + 1 WHERE "userId" = ${session.user.id}`
+
+                await tx.missionLog.create({
+                    data: {
+                        missionId: id,
+                        userId: session.user.id,
+                        previousStatus: mission.status,
+                        newStatus: 'PENDING',
+                        comment: 'Mission annulée par l\'agent (Remise en jeu)',
+                    }
+                })
+
+                return m
             })
 
-            return m
-        })
+            // Notifications
+            await pusherServer.trigger(`company-${mission.companyId}`, 'mission:update', updatedMission)
+            await pusherServer.trigger('missions-channel', 'mission:available', updatedMission)
 
-        // NOTIFICATIONS (Pusher)
+            return NextResponse.json({ success: true, mission: updatedMission })
+        }
 
-        // 1. Notify Company (Update specific mission card)
-        await pusherServer.trigger(
-            `company-${mission.companyId}`,
-            'mission:update',
-            updatedMission
-        )
-
-        // 2. Notify ALL Agents (New mission available!)
-        // We trigger 'mission:available' so it pops up on the map for everyone
-        await pusherServer.trigger(
-            'missions-channel',
-            'mission:available',
-            updatedMission
-        )
-
-        // 3. Notify the cancelling agent specifically to force UI refresh (remove active mission)
-        // By sending an update where agentId is null, the frontend check (if mission.agentId === currentAgentId) should fail
-        await pusherServer.trigger(
-            `agent-${session.user.id}`,
-            'mission:update',
-            updatedMission
-        )
-
-        return NextResponse.json({ success: true, mission: updatedMission })
+        return NextResponse.json({ error: 'Rôle non autorisé' }, { status: 403 })
 
     } catch (error) {
         console.error('Cancellation error:', error)
