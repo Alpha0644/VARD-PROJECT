@@ -111,15 +111,14 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
 
     return (
         <div className="fixed top-24 right-4 z-[9999] space-y-3 max-w-sm w-full pointer-events-none px-2 sm:px-0">
-            {/* DEBUG BUTTON - TO BE REMOVED */}
-            <div className="pointer-events-auto bg-black text-white p-2 rounded text-xs absolute -top-10 right-0 cursor-pointer shadow-lg z-50 border border-white/20" onClick={() => addNotification({
+            {/* <div className="pointer-events-auto bg-black text-white p-2 rounded text-xs absolute -top-10 right-0 cursor-pointer shadow-lg z-50 border border-white/20" onClick={() => addNotification({
                 type: 'cancelled',
                 missionId: 'debug',
                 missionTitle: 'Test Mission Debug',
                 message: 'Ceci est un test de notification'
             })}>
                 Test Notif
-            </div>
+            </div> */}
 
             <AnimatePresence>
                 {notifications.map((notification) => (
