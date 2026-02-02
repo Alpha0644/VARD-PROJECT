@@ -61,15 +61,17 @@ export async function POST(
                     }
                 })
 
-                await tx.missionLog.create({
-                    data: {
-                        missionId: id,
-                        userId: mission.agentId || 'system', // Log for the agent
-                        previousStatus: mission.status,
-                        newStatus: 'CANCELLED',
-                        comment: 'Mission annulée par l\'entreprise',
-                    }
-                })
+                if (mission.agentId) {
+                    await tx.missionLog.create({
+                        data: {
+                            missionId: id,
+                            userId: mission.agentId,
+                            previousStatus: mission.status,
+                            newStatus: 'CANCELLED',
+                            comment: 'Mission annulée par l\'entreprise',
+                        }
+                    })
+                }
 
                 return m
             })
