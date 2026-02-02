@@ -120,6 +120,8 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
             return () => {
                 pusherClient.unsubscribe(`private-user-${userId}`)
             }
+        } else {
+            console.warn('[Dashboard] ⚠️ Skipping private subscription: No userId provided')
         }
 
         // Fetch missions if no active mission
