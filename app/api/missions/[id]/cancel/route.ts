@@ -62,15 +62,23 @@ export async function POST(
                 })
 
                 if (mission.agentId) {
-                    await tx.missionLog.create({
-                        data: {
-                            missionId: id,
-                            userId: mission.agentId,
-                            previousStatus: mission.status,
-                            newStatus: 'CANCELLED',
-                            comment: 'Mission annulée par l\'entreprise',
-                        }
+                    // Fix: Resolve User ID from Agent ID because MissionLog refers to User
+                    const agentProfile = await tx.agent.findUnique({
+                        where: { id: mission.agentId },
+                        select: { userId: true }
                     })
+
+                    if (agentProfile) {
+                        await tx.missionLog.create({
+                            data: {
+                                missionId: id,
+                                userId: agentProfile.userId,
+                                previousStatus: mission.status,
+                                newStatus: 'CANCELLED',
+                                comment: 'Mission annulée par l\'entreprise',
+                            }
+                        })
+                    }
                 }
 
                 return m
