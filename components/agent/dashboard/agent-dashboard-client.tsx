@@ -77,7 +77,8 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setUserPosition([pos.coords.latitude, pos.coords.longitude]),
-                (err) => console.error('Geolocation error:', err)
+                (err) => console.warn('Geolocation warning:', err.message),
+                { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
             )
         }
 
