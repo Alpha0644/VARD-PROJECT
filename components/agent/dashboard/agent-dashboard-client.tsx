@@ -7,11 +7,13 @@ import { MissionProposalsList } from '@/components/agent/mission-proposals'
 import { MissionFiltersButton, MissionFilters, defaultFilters } from '@/components/agent/ui/mission-filters'
 import { pusherClient } from '@/lib/pusher-client'
 import { useRouter } from 'next/navigation'
-import { Shield, FileBarChart } from 'lucide-react' // Added FileBarChart
+import { Shield, FileBarChart, Bell, BellOff, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { AgentReportingClient } from './agent-reporting-client' // New Import
+import { AgentReportingClient } from './agent-reporting-client'
+import { LocationControl } from './location-control'
+import { usePushNotifications } from '@/hooks/use-push-notifications'
 
-import { toast } from 'sonner' // Added toast import
+import { toast } from 'sonner'
 
 interface PendingMission {
     id: string
@@ -276,6 +278,8 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
         )
     }
 
+    const { isSubscribed, subscribe, isLoading: notifLoading, isSupported: notifSupported } = usePushNotifications()
+
     // Toggle View for Reports
     if (view === 'REPORTS') {
         return (
@@ -306,14 +310,56 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
                 />
             </div>
 
-            {/* Reports Button - Top Left */}
-            <div className="absolute top-20 left-4 z-40">
+            {/* Control Buttons - Top Left Stack */}
+            <div className="absolute top-20 left-4 z-40 flex flex-col gap-3">
+                {/* Reports Button */}
                 <button
                     onClick={() => setView('REPORTS')}
                     className="bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg border border-gray-200 hover:bg-white transition-all"
+                    title="Rapports"
                 >
                     <FileBarChart className="w-6 h-6 text-gray-700" />
                 </button>
+
+                {/* Location Control */}
+                <LocationControl
+                    userId={userId}
+                    onLocationUpdate={(pos) => setUserPosition(pos)}
+                />
+
+                {/* Notification Button */}
+                {notifSupported && (
+                    <button
+                        onClick={async () => {
+                            if (!isSubscribed) {
+                                try {
+                                    await subscribe()
+                                    toast.success('Notifications activées !')
+                                } catch (err: any) {
+                                    toast.error('Erreur Notification', {
+                                        description: err.message
+                                    })
+                                }
+                            } else {
+                                toast.info('Notifications déjà actives')
+                            }
+                        }}
+                        disabled={notifLoading}
+                        className={`p-3 rounded-full shadow-lg border backdrop-blur-sm transition-all ${isSubscribed
+                                ? 'bg-green-500/90 border-green-400 text-white'
+                                : 'bg-white/90 border-orange-300 text-orange-600 hover:bg-white'
+                            }`}
+                        title={isSubscribed ? 'Notifications actives' : 'Activer les notifications'}
+                    >
+                        {notifLoading ? (
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                        ) : isSubscribed ? (
+                            <Bell className="w-6 h-6" />
+                        ) : (
+                            <BellOff className="w-6 h-6" />
+                        )}
+                    </button>
+                )}
             </div>
 
             {/* Filters Button - Top Right */}

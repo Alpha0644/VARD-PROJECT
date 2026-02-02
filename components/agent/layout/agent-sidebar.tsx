@@ -61,7 +61,7 @@ export function AgentSidebar({ isCollapsed = false, toggleSidebar }: AgentSideba
 
     return (
         <aside
-            className={`hidden md:flex fixed left-0 top-0 h-full bg-black border-r border-white/10 flex-col z-50 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}
+            className={`hidden md:flex fixed left-0 top-0 h-full bg-black border-r border-white/10 flex-col z-30 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}
         >
             {/* Logo area */}
             <div className={`h-16 flex items-center px-6 border-b border-white/10 ${isCollapsed ? 'justify-center px-0' : ''}`}>
