@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
+import { toast } from 'sonner'
 import {
     Map,
     Briefcase,
@@ -131,7 +132,19 @@ export function AgentSidebar({ isCollapsed = false, toggleSidebar }: AgentSideba
             {isSupported && (
                 <div className="px-3 pb-2">
                     <button
-                        onClick={() => !isSubscribed && subscribe()}
+                        onClick={async () => {
+                            if (!isSubscribed) {
+                                try {
+                                    await subscribe()
+                                    toast.success('Notifications activées !')
+                                } catch (err: any) {
+                                    console.error('Notification Error:', err.message)
+                                    toast.error('Erreur Notification', {
+                                        description: err.message
+                                    })
+                                }
+                            }
+                        }}
                         disabled={isSubscribed || isLoading}
                         className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-lg transition-colors border ${isSubscribed
                             ? 'bg-green-500/10 border-green-500/20 text-green-400'

@@ -7,7 +7,7 @@ interface UsePushNotificationsReturn {
     isSubscribed: boolean
     isLoading: boolean
     permission: NotificationPermission | 'default'
-    subscribe: () => Promise<boolean>
+    subscribe: () => Promise<void>
     unsubscribe: () => Promise<boolean>
 }
 
@@ -70,10 +70,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         checkSupport()
     }, [])
 
-    const subscribe = useCallback(async (): Promise<boolean> => {
-        if (!registration || !VAPID_PUBLIC_KEY) {
-            console.error('Missing registration or VAPID key')
-            return false
+    const subscribe = useCallback(async (): Promise<void> => {
+        if (!registration) {
+            throw new Error('Service Worker not registered')
+        }
+        if (!VAPID_PUBLIC_KEY) {
+            throw new Error('Configuration Warning: Missing VAPID Key. Please check environment variables.')
         }
 
         setIsLoading(true)
@@ -85,7 +87,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
             if (perm !== 'granted') {
                 setIsLoading(false)
-                return false
+                throw new Error('Permission denied by user')
             }
 
             // Subscribe to push
@@ -102,48 +104,37 @@ export function usePushNotifications(): UsePushNotificationsReturn {
                 body: JSON.stringify(subscription.toJSON())
             })
 
-            if (response.ok) {
-                setIsSubscribed(true)
-                setIsLoading(false)
-                return true
+            if (!response.ok) {
+                throw new Error('Failed to save subscription to server')
             }
 
-            // If server save failed, unsubscribe
-            await subscription.unsubscribe()
+            setIsSubscribed(true)
             setIsLoading(false)
-            return false
 
         } catch (error) {
             console.error('Subscribe error:', error)
             setIsLoading(false)
-            return false
+            throw error // Re-throw for UI to handle
         }
     }, [registration])
 
     const unsubscribe = useCallback(async (): Promise<boolean> => {
+        // ... unchanged unsubscribe logic ...
         if (!registration) return false
-
         setIsLoading(true)
-
         try {
             const subscription = await registration.pushManager.getSubscription()
-
             if (subscription) {
-                // Unsubscribe from server
                 await fetch('/api/push/subscribe', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ endpoint: subscription.endpoint })
                 })
-
-                // Unsubscribe locally
                 await subscription.unsubscribe()
             }
-
             setIsSubscribed(false)
             setIsLoading(false)
             return true
-
         } catch (error) {
             console.error('Unsubscribe error:', error)
             setIsLoading(false)
