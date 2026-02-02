@@ -80,11 +80,32 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
 
         // Subscribe to private channel for personal notifications (cancellation, etc.)
         if (userId) {
-            const privateChannel = pusherClient.subscribe(`agent-${userId}`)
+            // Must match backend: private-user-{userId}
+            const privateChannel = pusherClient.subscribe(`private-user-${userId}`)
 
+            // Event: Mission Cancelled
             privateChannel.bind('mission:cancelled', (data: any) => {
-                toast.error(`Mission annulée: ${data.title || 'Une mission a été annulée'}`)
+                toast.error(`Mission annulée: ${data.title || 'Une mission a été annulée'}`, {
+                    duration: 5000,
+                    action: {
+                        label: 'Voir',
+                        onClick: () => router.push('/agent/missions')
+                    }
+                })
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200])
+                router.refresh()
+            })
+
+            // Event: New Personalized Mission (Nearby match)
+            privateChannel.bind('mission:new', (data: any) => {
+                toast.success(`🎯 Nouvelle mission proche: ${data.title}`, {
+                    duration: 5000,
+                    action: {
+                        label: 'Voir',
+                        onClick: () => router.push(data.link || '/agent/dashboard')
+                    }
+                })
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100])
                 router.refresh()
             })
 
@@ -94,7 +115,7 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
             })
 
             return () => {
-                pusherClient.unsubscribe(`agent-${userId}`)
+                pusherClient.unsubscribe(`private-user-${userId}`)
             }
         }
 

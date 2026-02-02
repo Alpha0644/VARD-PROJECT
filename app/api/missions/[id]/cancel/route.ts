@@ -66,7 +66,8 @@ export async function POST(
             // Notify involved parties
             await pusherServer.trigger(`company-${mission.companyId}`, 'mission:update', cancelledMission)
             if (mission.agentId) {
-                await pusherServer.trigger(`agent-${mission.agentId}`, 'mission:cancelled', cancelledMission)
+                // Fix: Trigger private channel matching client subscription
+                await pusherServer.trigger(`private-user-${mission.agentId}`, 'mission:cancelled', cancelledMission)
 
                 // Web Push (Background Notification)
                 console.log(`[Cancel] Fetching push subscription for agent ${mission.agentId}`)
