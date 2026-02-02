@@ -71,7 +71,8 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
                 message: 'L\'entreprise a annulé cette mission.'
             })
             if (navigator.vibrate) navigator.vibrate([500, 100, 500])
-            router.refresh()
+            // Do NOT router.refresh() here - it causes re-renders that might wipe the notification state.
+            // Page components (Dashboard) usually have their own listeners for data updates.
         })
 
         return () => {
