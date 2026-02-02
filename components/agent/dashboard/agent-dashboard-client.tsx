@@ -60,6 +60,9 @@ const getMissionPrice = (mission: PendingMission): number => {
 }
 
 export function AgentDashboardClient({ hasActiveMission, userName, userId }: AgentDashboardClientProps) {
+    // Immediate render log to verify mounting and props
+    console.log('[Dashboard] 🚀 Rendering Client Component', { hasActiveMission, userName, userId })
+
     const [view, setView] = useState<'BOARD' | 'REPORTS'>('BOARD') // New State for Tabs
     const [missions, setMissions] = useState<PendingMission[]>([])
     const [loading, setLoading] = useState(true)
