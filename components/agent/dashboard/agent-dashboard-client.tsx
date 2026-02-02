@@ -76,7 +76,19 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
         // Get user position
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (pos) => setUserPosition([pos.coords.latitude, pos.coords.longitude]),
+                (pos) => {
+                    const { latitude, longitude } = pos.coords
+                    setUserPosition([latitude, longitude])
+
+                    // Critical: Update Redis for Matching Engine
+                    if (userId) {
+                        fetch('/api/agent/location', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ latitude, longitude })
+                        }).catch(e => console.error('[Dashboard] Location sync failed:', e))
+                    }
+                },
                 (err) => console.warn('Geolocation warning:', err.message),
                 { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
             )

@@ -10,9 +10,32 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const data = await req.formData()
-    const socketId = data.get('socket_id') as string
-    const channel = data.get('channel_name') as string
+    // Parse body carefully
+    let socketId: string | null = null
+    let channel: string | null = null
+
+    try {
+        const formData = await req.formData()
+        socketId = formData.get('socket_id') as string
+        channel = formData.get('channel_name') as string
+        console.log('[Pusher Auth] FormData received:', { socketId, channel })
+    } catch (e) {
+        // Fallback to JSON if frontend sent JSON (unlikely for pusher-js but possible)
+        try {
+            const json = await req.json()
+            socketId = json.socket_id
+            channel = json.channel_name
+            console.log('[Pusher Auth] JSON received:', { socketId, channel })
+        } catch (jsonError) {
+            console.error('[Pusher Auth] Failed to parse body:', e)
+            return NextResponse.json({ error: 'Invalid body format' }, { status: 400 })
+        }
+    }
+
+    if (!socketId || !channel) {
+        console.error('[Pusher Auth] Missing parameters')
+        return NextResponse.json({ error: 'Missing socket_id or channel_name' }, { status: 400 })
+    }
 
     // Support for private-user-{userId} channels (Agent notifications)
     if (channel.startsWith('private-user-')) {
