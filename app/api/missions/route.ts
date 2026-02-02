@@ -193,9 +193,43 @@ export async function POST(req: Request) {
             }
 
             return NextResponse.json({ mission, notifiedCount: nearbyUserIds.length })
-        }
+        } else {
+            // FALLBACK: No nearby agents found in Redis (location not synced)
+            // Notify ALL agents with push subscriptions as a fallback
+            console.log('[Mission] No nearby agents in Redis, broadcasting to all agents')
 
-        return NextResponse.json({ mission, notifiedCount: 0 })
+            try {
+                // Get all agent user IDs
+                const allAgents = await db.agent.findMany({
+                    select: { userId: true }
+                })
+
+                for (const agent of allAgents) {
+                    try {
+                        await pusherServer.trigger(
+                            `private-user-${agent.userId}`,
+                            'mission:new',
+                            {
+                                missionId: mission.id,
+                                title: mission.title,
+                                location: mission.location,
+                                companyName: company.companyName,
+                                startTime: startTime.toISOString(),
+                                link: `/agent/dashboard`
+                            }
+                        )
+                        console.log(`[Mission] Broadcasted to agent ${agent.userId}`)
+                    } catch (e) {
+                        console.error(`[Mission] Failed to notify agent ${agent.userId}:`, e)
+                    }
+                }
+
+                return NextResponse.json({ mission, notifiedCount: allAgents.length, fallback: true })
+            } catch (e) {
+                console.error('[Mission] Fallback broadcast failed:', e)
+                return NextResponse.json({ mission, notifiedCount: 0 })
+            }
+        }
     } catch (error) {
         console.error('Create Mission Error:', error)
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

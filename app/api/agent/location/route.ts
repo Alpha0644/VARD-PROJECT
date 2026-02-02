@@ -63,3 +63,44 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
 }
+
+// GET: Retrieve agent's current location
+export async function GET(req: Request) {
+    try {
+        const session = await auth()
+        if (!session || session.user.role !== 'AGENT') {
+            return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+        }
+
+        // Try Redis first (faster)
+        const { getAgentLocation } = await import('@/lib/redis-geo')
+        const redisLocation = await getAgentLocation(session.user.id)
+
+        if (redisLocation) {
+            return NextResponse.json({
+                latitude: redisLocation.lat,
+                longitude: redisLocation.long,
+                source: 'redis'
+            })
+        }
+
+        // Fallback to DB
+        const agent = await db.agent.findUnique({
+            where: { userId: session.user.id },
+            select: { latitude: true, longitude: true }
+        })
+
+        if (agent?.latitude && agent?.longitude) {
+            return NextResponse.json({
+                latitude: agent.latitude,
+                longitude: agent.longitude,
+                source: 'database'
+            })
+        }
+
+        return NextResponse.json({ error: 'Location not found' }, { status: 404 })
+    } catch (error) {
+        console.error('Get Location Error:', error)
+        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    }
+}
