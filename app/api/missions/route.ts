@@ -143,13 +143,20 @@ export async function POST(req: Request) {
 
         // 4. Create Notifications and Send Emails
         if (nearbyUserIds.length > 0) {
+            console.log(`[Mission] Found ${nearbyUserIds.length} nearby agents in Redis:`, nearbyUserIds)
+
             // Get agent emails for email notifications
             const agentUsers = await db.user.findMany({
                 where: { id: { in: nearbyUserIds } },
                 select: { id: true, email: true }
             })
 
+            const channelsSent: string[] = []
+
             for (const targetUserId of nearbyUserIds) {
+                const channel = `private-user-${targetUserId}`
+                console.log(`[Mission] Notifying channel: ${channel}`)
+
                 try {
                     // Create in-app notification
                     await db.missionNotification.create({
@@ -174,10 +181,10 @@ export async function POST(req: Request) {
 
                     // Trigger Pusher Real-time Event
                     await pusherServer.trigger(
-                        `private-user-${targetUserId}`,
+                        channel,
                         'mission:new',
                         {
-                            missionId: mission.id,  // FIXED: Was 'id', frontend expects 'missionId'
+                            missionId: mission.id,
                             title: mission.title,
                             location: mission.location,
                             companyName: company.companyName,
@@ -185,6 +192,8 @@ export async function POST(req: Request) {
                             link: `/agent/dashboard`
                         }
                     )
+                    channelsSent.push(channel)
+                    console.log(`[Mission] ✅ Sent to ${channel}`)
 
                 } catch (e) {
                     // Skip if already exists (unique constraint)
@@ -192,7 +201,14 @@ export async function POST(req: Request) {
                 }
             }
 
-            return NextResponse.json({ mission, notifiedCount: nearbyUserIds.length })
+            return NextResponse.json({
+                mission,
+                notifiedCount: nearbyUserIds.length,
+                debug: {
+                    nearbyUserIds,
+                    channelsSent
+                }
+            })
         } else {
             // FALLBACK: No nearby agents found in Redis (location not synced)
             // Notify ALL agents with push subscriptions as a fallback
