@@ -30,7 +30,16 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
 
         // Subscribe to user's private channel
         // Must match backend: private-user-{userId}
+        console.log(`[Pusher] Subscribing to: private-user-${userId}`)
         const channel = pusherClient.subscribe(`private-user-${userId}`)
+
+        channel.bind('pusher:subscription_succeeded', () => {
+            console.log('[Pusher] ✅ Subscription succeeded!')
+        })
+
+        channel.bind('pusher:subscription_error', (status: any) => {
+            console.error('[Pusher] ❌ Subscription error:', status)
+        })
 
         // 1. Listen for NEW Missions (Matching Engine)
         channel.bind('mission:new', (data: {
@@ -38,6 +47,7 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
             title: string
             link?: string
         }) => {
+            console.log('[Pusher] NEW MISSION RECEIVED', data)
             addNotification({
                 type: 'new',
                 missionId: data.missionId,
@@ -53,6 +63,7 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
             id: string // mission ID
             title: string
         }) => {
+            console.log('[Pusher] CANCEL RECEIVED', data)
             addNotification({
                 type: 'cancelled',
                 missionId: data.id,
