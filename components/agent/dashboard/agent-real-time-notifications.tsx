@@ -22,6 +22,7 @@ interface AgentRealTimeNotificationsProps {
 }
 
 export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotificationsProps) {
+    // console.log('[Notif] Mounting Global Notifications (v3-toast-backup)')
     const [notifications, setNotifications] = useState<MissionUpdate[]>([])
     const router = useRouter()
 
@@ -64,15 +65,29 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
             title: string
         }) => {
             console.log('[Pusher] CANCEL RECEIVED', data)
-            addNotification({
-                type: 'cancelled',
-                missionId: data.id,
-                missionTitle: data.title,
-                message: 'L\'entreprise a annulé cette mission.'
-            })
-            if (navigator.vibrate) navigator.vibrate([500, 100, 500])
-            // Do NOT router.refresh() here - it causes re-renders that might wipe the notification state.
-            // Page components (Dashboard) usually have their own listeners for data updates.
+            try {
+                // 1. Custom UI
+                addNotification({
+                    type: 'cancelled',
+                    missionId: data.id,
+                    missionTitle: data.title,
+                    message: 'L\'entreprise a annulé cette mission.'
+                })
+
+                // 2. Toast Backup (in case visual UI fails or is hidden)
+                toast.error(`🚫 Mission Annulée: ${data.title}`, {
+                    duration: 8000,
+                    position: 'top-center',
+                    className: 'z-[9999]'
+                })
+
+                // 3. Vibration
+                if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                    navigator.vibrate([500, 100, 500])
+                }
+            } catch (err) {
+                console.error('[Pusher] Error handling cancellation:', err)
+            }
         })
 
         return () => {
