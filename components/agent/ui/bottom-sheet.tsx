@@ -3,6 +3,7 @@
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion'
 import { useRef, useState, useEffect, ReactNode } from 'react'
 import { GripHorizontal } from 'lucide-react'
+import { useSidebar } from '@/components/agent/context/sidebar-context'
 
 interface BottomSheetProps {
     children: ReactNode
@@ -23,6 +24,7 @@ export function BottomSheet({
     badge,
     defaultState = 'half'
 }: BottomSheetProps) {
+    const { isCollapsed: sidebarCollapsed } = useSidebar()
     const [state, setState] = useState<SheetState>(defaultState)
     const [windowHeight, setWindowHeight] = useState(800)
     const constraintsRef = useRef(null)
@@ -83,13 +85,19 @@ export function BottomSheet({
 
     const height = getHeightForState(state)
 
+    // Sidebar width: 256px (w-64) when expanded, 80px (w-20) when collapsed
+    const sidebarWidth = sidebarCollapsed ? 80 : 256
+
     return (
         <motion.div
-            className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-xl rounded-t-3xl shadow-2xl border-t border-gray-200"
+            className="fixed bottom-0 right-0 z-30 bg-white/95 backdrop-blur-xl rounded-t-3xl shadow-2xl border-t border-gray-200 transition-all duration-300"
             initial={{ height: getHeightForState(defaultState) }}
             animate={{ height }}
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-            style={{ maxHeight: '90vh' }}
+            style={{
+                maxHeight: '90vh',
+                left: `${sidebarWidth}px`  // Dynamic left based on sidebar
+            }}
         >
             {/* Drag Handle */}
             <motion.div

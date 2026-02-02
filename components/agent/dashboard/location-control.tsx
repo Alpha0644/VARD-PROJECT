@@ -42,9 +42,9 @@ export function LocationControl({ userId, onLocationUpdate }: LocationControlPro
         try {
             const position = await new Promise<GeolocationPosition>((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 0
+                    enableHighAccuracy: false, // Use low accuracy first for speed
+                    timeout: 5000,             // Reduced from 15s to 5s
+                    maximumAge: 30000          // Accept cached position up to 30s old
                 })
             })
 
@@ -97,8 +97,8 @@ export function LocationControl({ userId, onLocationUpdate }: LocationControlPro
             <button
                 onClick={() => setExpanded(!expanded)}
                 className={`bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg border transition-all ${hasLocation
-                        ? 'border-green-300 text-green-600'
-                        : 'border-orange-300 text-orange-600'
+                    ? 'border-green-300 text-green-600'
+                    : 'border-orange-300 text-orange-600'
                     }`}
                 title={hasLocation ? 'Position active' : 'Position non définie'}
             >
