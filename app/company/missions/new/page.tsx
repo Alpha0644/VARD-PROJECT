@@ -122,12 +122,16 @@ export default function NewMissionPage() {
             })
 
             if (res.ok) {
+                const data = await res.json()
+                console.log('[Mission Created] API Response:', data)
+                console.log('[Mission Created] Debug Info:', data.debug)
                 setSuccess(true)
                 setTimeout(() => {
                     router.push('/company/missions')
                 }, 2000)
             } else {
                 const data = await res.json()
+                console.error('[Mission Creation Failed]', data)
                 setError(data.error || 'Erreur lors de la création')
             }
         } catch {
@@ -208,8 +212,8 @@ export default function NewMissionPage() {
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, missionType: type.id }))}
                                         className={`p-4 rounded-lg border-2 text-left transition-all ${formData.missionType === type.id
-                                                ? 'border-blue-500 bg-blue-50'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                            ? 'border-blue-500 bg-blue-50'
+                                            : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
                                         <span className="text-2xl">{type.icon}</span>
