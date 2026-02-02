@@ -137,131 +137,49 @@ export async function POST(req: Request) {
             console.error('[Push Notifications] Error:', pushError)
         }
 
-        // 3. Find Nearby Agents (Matching Engine)
-        // Radius: 10km default
-        const nearbyUserIds = await findNearbyAgents(latitude, longitude, 10)
+        // 3. Notify ALL Agents (MVP: No proximity filter)
+        // In production, you'd use findNearbyAgents for geo-filtering
+        console.log('[Mission] MVP Mode: Notifying ALL registered agents')
 
-        // 4. Create Notifications and Send Emails
-        if (nearbyUserIds.length > 0) {
-            console.log(`[Mission] Found ${nearbyUserIds.length} nearby agents in Redis:`, nearbyUserIds)
+        const allAgents = await db.agent.findMany({
+            select: { userId: true }
+        })
 
-            // Get agent emails for email notifications
-            const agentUsers = await db.user.findMany({
-                where: { id: { in: nearbyUserIds } },
-                select: { id: true, email: true }
-            })
+        const channelsSent: string[] = []
 
-            const channelsSent: string[] = []
-
-            for (const targetUserId of nearbyUserIds) {
-                const channel = `private-user-${targetUserId}`
-                console.log(`[Mission] Notifying channel: ${channel}`)
-
-                try {
-                    // Create in-app notification
-                    await db.missionNotification.create({
-                        data: {
-                            missionId: mission.id,
-                            agentId: targetUserId,
-                            status: 'SENT',
-                        }
-                    })
-
-                    // Send email notification
-                    const agentUser = agentUsers.find(u => u.id === targetUserId)
-                    if (agentUser?.email) {
-                        await sendMissionNotificationEmail(
-                            agentUser.email,
-                            title,
-                            location,
-                            startTime,
-                            company.companyName
-                        )
-                    }
-
-                    // Trigger Pusher Real-time Event
-                    await pusherServer.trigger(
-                        channel,
-                        'mission:new',
-                        {
-                            missionId: mission.id,
-                            title: mission.title,
-                            location: mission.location,
-                            companyName: company.companyName,
-                            startTime: startTime.toISOString(),
-                            link: `/agent/dashboard`
-                        }
-                    )
-                    channelsSent.push(channel)
-                    console.log(`[Mission] ✅ Sent to ${channel}`)
-
-                } catch (e) {
-                    // Skip if already exists (unique constraint)
-                    console.error(`[Mission Matching] Failed to notify user ${targetUserId}:`, e)
-                }
-            }
-
-            return NextResponse.json({
-                mission,
-                notifiedCount: nearbyUserIds.length,
-                debug: {
-                    nearbyUserIds,
-                    channelsSent
-                }
-            })
-        } else {
-            // FALLBACK: No nearby agents found in Redis (location not synced)
-            // Notify ALL agents with push subscriptions as a fallback
-            console.log('[Mission] No nearby agents in Redis, broadcasting to all agents')
+        for (const agent of allAgents) {
+            const channel = `private-user-${agent.userId}`
 
             try {
-                // Get all agent user IDs
-                const allAgents = await db.agent.findMany({
-                    select: { userId: true }
-                })
-
-                console.log(`[Mission] Found ${allAgents.length} agents in DB:`, allAgents.map(a => a.userId))
-
-                const notifiedChannels: string[] = []
-
-                for (const agent of allAgents) {
-                    const channel = `private-user-${agent.userId}`
-                    console.log(`[Mission] Sending mission:new to channel: ${channel}`)
-
-                    try {
-                        await pusherServer.trigger(
-                            channel,
-                            'mission:new',
-                            {
-                                missionId: mission.id,
-                                title: mission.title,
-                                location: mission.location,
-                                companyName: company.companyName,
-                                startTime: startTime.toISOString(),
-                                link: `/agent/dashboard`
-                            }
-                        )
-                        notifiedChannels.push(channel)
-                        console.log(`[Mission] ✅ Successfully sent to ${channel}`)
-                    } catch (e) {
-                        console.error(`[Mission] ❌ Failed to notify ${channel}:`, e)
+                // Trigger Pusher Real-time Event
+                await pusherServer.trigger(
+                    channel,
+                    'mission:new',
+                    {
+                        missionId: mission.id,
+                        title: mission.title,
+                        location: mission.location,
+                        companyName: company.companyName,
+                        startTime: startTime.toISOString(),
+                        link: `/agent/dashboard`
                     }
-                }
+                )
+                channelsSent.push(channel)
+                console.log(`[Mission] ✅ Sent to ${channel}`)
 
-                return NextResponse.json({
-                    mission,
-                    notifiedCount: allAgents.length,
-                    fallback: true,
-                    debug: {
-                        agentUserIds: allAgents.map(a => a.userId),
-                        channelsSent: notifiedChannels
-                    }
-                })
             } catch (e) {
-                console.error('[Mission] Fallback broadcast failed:', e)
-                return NextResponse.json({ mission, notifiedCount: 0 })
+                console.error(`[Mission] Failed to notify ${channel}:`, e)
             }
         }
+
+        return NextResponse.json({
+            mission,
+            notifiedCount: allAgents.length,
+            debug: {
+                allAgentUserIds: allAgents.map(a => a.userId),
+                channelsSent
+            }
+        })
     } catch (error) {
         console.error('Create Mission Error:', error)
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
