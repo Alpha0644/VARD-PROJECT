@@ -204,10 +204,17 @@ export async function POST(req: Request) {
                     select: { userId: true }
                 })
 
+                console.log(`[Mission] Found ${allAgents.length} agents in DB:`, allAgents.map(a => a.userId))
+
+                const notifiedChannels: string[] = []
+
                 for (const agent of allAgents) {
+                    const channel = `private-user-${agent.userId}`
+                    console.log(`[Mission] Sending mission:new to channel: ${channel}`)
+
                     try {
                         await pusherServer.trigger(
-                            `private-user-${agent.userId}`,
+                            channel,
                             'mission:new',
                             {
                                 missionId: mission.id,
@@ -218,13 +225,22 @@ export async function POST(req: Request) {
                                 link: `/agent/dashboard`
                             }
                         )
-                        console.log(`[Mission] Broadcasted to agent ${agent.userId}`)
+                        notifiedChannels.push(channel)
+                        console.log(`[Mission] ✅ Successfully sent to ${channel}`)
                     } catch (e) {
-                        console.error(`[Mission] Failed to notify agent ${agent.userId}:`, e)
+                        console.error(`[Mission] ❌ Failed to notify ${channel}:`, e)
                     }
                 }
 
-                return NextResponse.json({ mission, notifiedCount: allAgents.length, fallback: true })
+                return NextResponse.json({
+                    mission,
+                    notifiedCount: allAgents.length,
+                    fallback: true,
+                    debug: {
+                        agentUserIds: allAgents.map(a => a.userId),
+                        channelsSent: notifiedChannels
+                    }
+                })
             } catch (e) {
                 console.error('[Mission] Fallback broadcast failed:', e)
                 return NextResponse.json({ mission, notifiedCount: 0 })
