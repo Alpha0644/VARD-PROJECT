@@ -1,8 +1,8 @@
 # 🗺️ VARD PROJECT - ROADMAP & ÉTAT DU PROJET
 **"Uber pour la Sécurité Privée"**
 
-> **Dernière mise à jour :** 2026-01-27  
-> **Statut :** MVP Development - Phase 2 en cours
+> **Dernière mise à jour :** 2026-02-02  
+> **Statut :** MVP Development - Phase 2 Complete, Phase 3 En cours
 
 ---
 
@@ -20,51 +20,64 @@
 | **Onboarding** | Validation manuelle Admin | ✅ |
 | **Mission Dispatch** | Création mission par Company | ✅ |
 | **Mission Dispatch** | Matching géolocalisé (rayon X km) | ✅ |
-| **Mission Dispatch** | Notifications Push Web | ✅ |
-| **Mission Dispatch** | Real-time feed (Pusher) | ✅ |
+| **Mission Dispatch** | Notifications Push Web | ✅ **(Fixé 2026-02-02)** |
+| **Mission Dispatch** | Real-time feed (Pusher) | ✅ **(Fixé 2026-02-02)** |
 | **Gestion Mission** | Acceptation instantanée | ✅ |
 | **Gestion Mission** | Statuts (PENDING→COMPLETED) | ✅ |
 | **Gestion Mission** | Tracking GPS live agent | ✅ |
 | **Gestion Mission** | Check-in/Check-out | ✅ |
-| **Gestion Mission** | Double-Booking Prevention | ✅ **(2026-01-27)** |
-| **Gestion Mission** | Documents Expirés → Blocage | ✅ **(2026-01-27)** |
+| **Gestion Mission** | Double-Booking Prevention | ✅ |
+| **Gestion Mission** | Documents Expirés → Blocage | ✅ |
+| **Gestion Mission** | Annulation mission (Agent/Company) | ✅ **(Fixé 2026-02-02)** |
 | **Dashboard Agent** | Vue missions disponibles | ✅ |
 | **Dashboard Agent** | Espace opérationnel | ✅ |
 | **Dashboard Agent** | Historique missions | ✅ |
+| **Dashboard Agent** | Contrôle GPS manuel | ✅ **(Ajouté 2026-02-02)** |
+| **Dashboard Agent** | Bouton notifications | ✅ **(Ajouté 2026-02-02)** |
+| **Dashboard Agent** | Sidebar responsive | ✅ **(Fixé 2026-02-02)** |
 | **Dashboard Company** | Liste missions publiées | ✅ |
 | **Dashboard Company** | Suivi statut missions | ✅ |
 | **Dashboard Company** | Tracking agent temps réel | ✅ |
 | **Dashboard Admin** | Validation documents | ✅ |
 | **Dashboard Admin** | Vue utilisateurs | ✅ |
 | **Rating System** | Système de notation | ✅ |
+| **Tests** | Unit Tests Notifications | ✅ **(12 tests - 2026-02-02)** |
 
 ---
 
 ## 🔄 PROCHAINES ÉTAPES (par ordre de priorité)
 
-### Phase 2 : Finalisation MVP (En cours)
+### Phase 2 : Finalisation MVP ✅ COMPLETE
 
 | Priorité | Tâche | Statut |
 |----------|-------|--------|
 | 🔴 | Double-booking prevention | ✅ FAIT |
 | 🔴 | Documents expirés → suspension auto | ✅ FAIT |
-| 🟠 | Annulation mission + relance matching | ✅ FAIT |
-| 🟠 | Responsive mobile (toutes pages) | ⬜ TODO |
-| 🟡 | Profil Agent complet (photo, bio) | ⬜ TODO |
-| 🟡 | Profil Company complet (logo) | ⬜ TODO |
-| 🔴 | Tests E2E Playwright | ⬜ TODO |
+| 🟠 | Annulation mission + notifications | ✅ FAIT |
+| 🟠 | Notifications Agent (Pusher + WebPush) | ✅ FAIT |
+| 🟠 | Dashboard Agent UX (GPS, Notifs, Sidebar) | ✅ FAIT |
 
-### Phase 3 : Reporting & Analytics
+### Phase 3 : Polish & Mobile (PRIORITÉ ACTUELLE)
+
+| Priorité | Tâche | Statut |
+|----------|-------|--------|
+| 🔴 | **Responsive mobile (toutes pages)** | ⬜ TODO |
+| 🔴 | **Tests E2E Playwright** | ⬜ TODO |
+| 🟠 | Profil Agent complet (photo, bio) | ⬜ TODO |
+| 🟠 | Profil Company complet (logo) | ⬜ TODO |
+| 🟡 | Animations polish (Framer Motion) | ⬜ TODO |
+
+### Phase 4 : Reporting & Analytics
 
 | Priorité | Tâche | Statut |
 |----------|-------|--------|
 | 🟠 | Récapitulatif mensuel heures (Agent) | ⬜ TODO |
 | 🟠 | Récapitulatif mensuel missions (Company) | ⬜ TODO |
-| 🟠 | Dashboard statistiques | ⬜ TODO |
+| 🟠 | Dashboard statistiques avancées | ⬜ TODO |
 | 🔴 | Export données RGPD | ⬜ TODO |
 | 🟠 | KPIs Admin (fill rate, no-shows) | ⬜ TODO |
 
-### Phase 4 : Sécurité & Compliance
+### Phase 5 : Sécurité & Compliance
 
 | Priorité | Tâche | Statut |
 |----------|-------|--------|
@@ -74,7 +87,7 @@
 | 🔴 | Banner cookies RGPD | ⬜ TODO |
 | 🟠 | Droit à l'effacement | ⬜ TODO |
 
-### Phase 5 : Infrastructure Production
+### Phase 6 : Infrastructure Production
 
 | Priorité | Tâche | Statut |
 |----------|-------|--------|
@@ -83,7 +96,7 @@
 | 🔴 | Uptime monitoring | ⬜ TODO |
 | 🔴 | Backups automatiques DB | ⬜ TODO |
 
-### Phase 6 : Lancement Beta
+### Phase 7 : Lancement Beta
 
 | Priorité | Tâche | Statut |
 |----------|-------|--------|
@@ -92,7 +105,7 @@
 | 🟠 | Documentation FAQ | ⬜ TODO |
 | 🔴 | Beta testing (10-20 users) | ⬜ TODO |
 
-### Phase 7 : Post-MVP (v2.0) - FUTUR
+### Phase 8 : Post-MVP (v2.0) - FUTUR
 
 | Priorité | Tâche | Statut |
 |----------|-------|--------|
@@ -106,41 +119,40 @@
 ## 📅 Timeline Estimée
 
 ```
-Phase 2 (MVP)     : Semaine 1-2  ████████░░░░░░░░░░░░  [EN COURS]
-Phase 3 (Reports) : Semaine 2-3  ░░░░░░░░████████░░░░  
-Phase 4 (Security): Semaine 3-4  ░░░░░░░░░░░░████████  
-Phase 5 (Infra)   : Semaine 4-5  ░░░░░░░░░░░░░░░░████  
-Phase 6 (Beta)    : Semaine 5-6  ░░░░░░░░░░░░░░░░░░██  
+Phase 2 (MVP)     : Semaine 1-2  ████████████████████  [COMPLETE ✅]
+Phase 3 (Polish)  : Semaine 2-3  ████████░░░░░░░░░░░░  [EN COURS]
+Phase 4 (Reports) : Semaine 3-4  ░░░░░░░░████████░░░░  
+Phase 5 (Security): Semaine 4-5  ░░░░░░░░░░░░████████  
+Phase 6 (Infra)   : Semaine 5-6  ░░░░░░░░░░░░░░░░████  
+Phase 7 (Beta)    : Semaine 6-7  ░░░░░░░░░░░░░░░░░░██  
 
-🚀 LANCEMENT MVP : Semaine 6-7
+🚀 LANCEMENT MVP : Semaine 7-8
 ```
 
 ---
 
 ## 🔧 Changements Récents (Changelog)
 
+### 2026-02-02
+- ✅ **Corrigé bugs critiques notifications Agent**
+  - ID mismatch: Utilisait Agent Profile ID au lieu de User ID pour Pusher/WebPush
+  - Restauré `sendPushToAll` manquant dans création mission
+  - 12 tests unitaires/intégration créés et passés
+- ✅ **Amélioré Dashboard Agent UX**
+  - Nouveau composant `LocationControl` pour activer GPS manuellement
+  - Bouton notification flottant visible sur mobile
+  - Sidebar responsive : content se décale au lieu d'être couvert
+  - Bottom Sheet suit le toggle sidebar
+  - GPS timeout réduit de 15s à 5s
+- ✅ **Créé SidebarContext** pour partage état sidebar entre composants
+
 ### 2026-01-28
 - ✅ Implémenté **Annulation Mission + Relance Matching** 
-  - API `/api/missions/[id]/cancel` avec validation et logs
-  - Compteur `cancellationCount` dans le modèle Agent (pénalité simple)
-  - Modal `CancelMissionModal` pour confirmation
-  - Relance automatique du matching si l'agent annule
-  - Notifications Push et Email aux autres agents disponibles
 
 ### 2026-01-27
-- ✅ Implémenté **Double-Booking Prevention** dans `/api/missions/[id]/status/route.ts`
-  - Vérifie si l'agent a déjà une mission sur le même créneau horaire
-  - Retourne un message d'erreur clair avec les détails de la mission conflictuelle
-  - Couvre les statuts : ACCEPTED, EN_ROUTE, ARRIVED, IN_PROGRESS
-- ✅ Implémenté **Documents Expirés → Blocage** dans `lib/documents.ts`
-  - Nouvelle fonction `checkAgentCanOperate()` - vérifie si l'agent peut opérer
-  - Nouvelle fonction `checkAgentDocumentsValidity()` - détails de l'expiration
-  - Bloque l'acceptation de mission si carte pro expirée
-  - Avertissement si expire dans < 30 jours
-  - Interface `DocumentValidityResult` exportée pour le frontend
-- ✅ Corrigé **Next.js 15+ searchParams** dans `app/company/missions/page.tsx`
-  - searchParams est maintenant une Promise (changement Next.js 15)
-- 📝 Créé `PROJECT_ROADMAP.md` pour la persistance du contexte entre sessions
+- ✅ Implémenté **Double-Booking Prevention**
+- ✅ Implémenté **Documents Expirés → Blocage**
+- 📝 Créé `PROJECT_ROADMAP.md`
 
 ---
 
@@ -156,16 +168,14 @@ Phase 6 (Beta)    : Semaine 5-6  ░░░░░░░░░░░░░░░�
 
 ---
 
-## 🎯 Pour la Prochaine IA
+## 🎯 Pour la Prochaine Session
 
-**Si tu reprends ce projet, commence par :**
+**Prochaines tâches recommandées (Phase 3) :**
 
-1. Lire ce fichier (`PROJECT_ROADMAP.md`)
-2. Lire `architecture/CONTEXT.md` (business rules)
-3. Lire `.cursorrules` (OMEGA Protocol)
-4. Regarder la section "PROCHAINES ÉTAPES" ci-dessus
-5. Continuer avec la prochaine tâche marquée ⬜ TODO
+1. **Responsive Mobile** - Audit et fix de toutes les pages pour mobile
+2. **Tests E2E Playwright** - Couvrir les flows critiques (login, mission lifecycle)
+3. **Profil Agent/Company** - Upload photo, bio, logo
 
 ---
 
-*Fichier auto-généré - Mettre à jour après chaque session de développement*
+*Fichier mis à jour le 2026-02-02*
