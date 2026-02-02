@@ -61,7 +61,7 @@ const getMissionPrice = (mission: PendingMission): number => {
 
 export function AgentDashboardClient({ hasActiveMission, userName, userId }: AgentDashboardClientProps) {
     // Immediate render log to verify mounting and props
-    console.log('[Dashboard] 🚀 Rendering Client Component', { hasActiveMission, userName, userId })
+    // console.log('[Dashboard] 🚀 Rendering Client Component', { hasActiveMission, userName, userId })
 
     const [view, setView] = useState<'BOARD' | 'REPORTS'>('BOARD') // New State for Tabs
     const [missions, setMissions] = useState<PendingMission[]>([])
@@ -153,6 +153,7 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
             const channel = pusherClient.subscribe('public-missions')
             channel.bind('mission:created', (newMission: PendingMission) => {
                 setMissions(prev => [newMission, ...prev])
+                // Haptic feedback if available
                 if (navigator.vibrate) navigator.vibrate(100)
                 toast.info('Nouvelle mission disponible !')
             })

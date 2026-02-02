@@ -29,13 +29,11 @@ export async function GET() {
             orderBy: { createdAt: 'desc' }
         })
 
-        // Add coordinates (using geocoded location or defaults for demo)
-        // In production, these would come from a geocoding service or be stored in DB
-        const missionsWithCoords = missions.map((mission, index) => ({
+        // Use real coordinates from DB
+        const missionsWithCoords = missions.map(mission => ({
             ...mission,
-            // Demo coordinates around Paris - in production, store real coords in DB
-            latitude: 48.8566 + (Math.random() - 0.5) * 0.1,
-            longitude: 2.3522 + (Math.random() - 0.5) * 0.1,
+            latitude: mission.latitude || 48.8566, // Fallback if missing
+            longitude: mission.longitude || 2.3522
         }))
 
         return NextResponse.json(missionsWithCoords)

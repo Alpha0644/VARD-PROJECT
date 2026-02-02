@@ -34,6 +34,10 @@ export default defineConfig({
 
         // Video on failure
         video: 'retain-on-failure',
+
+        // Default Location (Paris) for Geolocation tests
+        geolocation: { latitude: 48.8566, longitude: 2.3522 },
+        permissions: ['geolocation'],
     },
 
     // Configure projects for major browsers

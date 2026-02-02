@@ -16,7 +16,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
         }
 
-        const body = await req.json()
+        let body
+        try {
+            body = await req.json()
+        } catch (e) {
+            console.error('[Location API] Failed to parse body', e)
+            return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+        }
         const validated = locationSchema.safeParse(body)
 
         if (!validated.success) {
