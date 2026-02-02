@@ -4,7 +4,7 @@
  * Test Strategy: Unit Testing with Mocked Dependencies
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { POST } from '@/app/api/missions/route'
 import { db } from '@/lib/db'
 import { auth } from '@/lib/auth'
@@ -12,10 +12,62 @@ import { findNearbyAgents } from '@/lib/redis-geo'
 import { checkApiRateLimit } from '@/lib/rate-limit'
 
 // Mock dependencies
-vi.mock('@/lib/db')
-vi.mock('@/lib/auth')
-vi.mock('@/lib/redis-geo')
-vi.mock('@/lib/rate-limit')
+import { vi } from 'vitest'
+
+// Safe future dates for testing
+const FUTURE_START = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Tomorrow
+const FUTURE_END = new Date(Date.now() + 32 * 60 * 60 * 1000).toISOString() // Tomorrow + 8h
+
+// Correctly mock next/server Response objects
+vi.mock('next/server', () => {
+    return {
+        NextResponse: {
+            json: (body: any, init?: any) => ({
+                status: init?.status || 200,
+                json: async () => body,
+            }),
+        },
+    }
+})
+
+// Mock auth before imports
+vi.mock('@/lib/auth', () => ({
+    auth: vi.fn(),
+}))
+
+vi.mock('@/lib/db', () => ({
+    db: {
+        company: { findUnique: vi.fn(), create: vi.fn() },
+        mission: { create: vi.fn() },
+        missionNotification: { create: vi.fn() },
+        user: {
+            findMany: vi.fn().mockResolvedValue([
+                { id: 'agent-1', email: 'agent1@test.com' },
+                { id: 'agent-2', email: 'agent2@test.com' },
+                { id: 'agent-3', email: 'agent3@test.com' }
+            ])
+        },
+        pushSubscription: { findMany: vi.fn().mockResolvedValue([]) },
+    }
+}))
+
+vi.mock('@/lib/redis-geo', () => ({
+    findNearbyAgents: vi.fn().mockResolvedValue([]),
+}))
+
+vi.mock('@/lib/rate-limit', () => ({
+    checkApiRateLimit: vi.fn(),
+}))
+
+vi.mock('@/lib/pusher', () => ({
+    pusherServer: {
+        trigger: vi.fn().mockResolvedValue(undefined),
+    },
+}))
+
+vi.mock('@/lib/web-push', () => ({
+    sendPushToAll: vi.fn().mockResolvedValue(undefined),
+}))
 
 describe('POST /api/missions', () => {
     const mockCompany = {
@@ -79,8 +131,8 @@ describe('POST /api/missions', () => {
                 body: JSON.stringify({
                     title: 'Gardiennage chantier',
                     description: 'Mission de sécurité',
-                    startTime: new Date().toISOString(),
-                    endTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+                    startTime: FUTURE_START,
+                    endTime: FUTURE_END,
                     location: 'Paris',
                     latitude: 48.8566,
                     longitude: 2.3522,
@@ -126,9 +178,9 @@ describe('POST /api/missions', () => {
                 method: 'POST',
                 body: JSON.stringify({
                     title: 'Test Mission',
-                    startTime: new Date().toISOString(),
-                    endTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-                    location: 'Lyon',
+                    startTime: FUTURE_START,
+                    endTime: FUTURE_END,
+                    location: 'Lyon, France',
                     latitude: 45.764,
                     longitude: 4.8357,
                 }),
@@ -273,8 +325,8 @@ describe('POST /api/missions', () => {
                 method: 'POST',
                 body: JSON.stringify({
                     title: 'Test Mission',
-                    startTime: new Date().toISOString(),
-                    endTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+                    startTime: FUTURE_START,
+                    endTime: FUTURE_END,
                     location: 'Paris',
                     latitude: 48.8566,
                     longitude: 2.3522,

@@ -58,6 +58,22 @@ export function useMissionNotifications(userId: string) {
             router.refresh()
         })
 
+        // Listener for cancellation
+        channel.bind('mission:cancelled', (data: { title: string }) => {
+            console.log('[Pusher Debug] Cancel Event RECEIVED:', data)
+            toast.error('Mission Annulée', {
+                description: `La mission "${data.title}" a été annulée par l'entreprise.`,
+                position: 'top-center',
+                duration: 8000,
+                style: {
+                    background: '#EF4444', // Red background
+                    color: 'white',
+                    border: 'none'
+                }
+            })
+            router.refresh()
+        })
+
         return () => {
             pusherClient.unsubscribe(channelName)
         }

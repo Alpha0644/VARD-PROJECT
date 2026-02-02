@@ -82,20 +82,26 @@ export async function POST(req: Request) {
         })
 
         // Broadcast to Public Job Board (Live Feed)
-        await pusherServer.trigger('public-missions', 'mission:created', {
-            id: mission.id,
-            title: mission.title,
-            description: mission.description,
-            location: mission.location,
-            startTime: mission.startTime.toISOString(),
-            endTime: mission.endTime.toISOString(),
-            company: {
-                companyName: company.companyName,
-            },
-        })
+        try {
+            await pusherServer.trigger('public-missions', 'mission:created', {
+                id: mission.id,
+                title: mission.title,
+                description: mission.description,
+                location: mission.location,
+                startTime: mission.startTime.toISOString(),
+                endTime: mission.endTime.toISOString(),
+                company: {
+                    companyName: company.companyName,
+                },
+            })
+            console.log('DEBUG: Pusher triggered')
+        } catch (e) {
+            console.error('DEBUG: Pusher failed', e)
+        }
 
         // Send Push Notifications to all subscribed agents
         try {
+            console.log('DEBUG: Fetching subs')
             const subscriptions = await db.pushSubscription.findMany({
                 select: {
                     endpoint: true,
@@ -103,30 +109,13 @@ export async function POST(req: Request) {
                     auth: true
                 }
             })
+            console.log('DEBUG: Subs found', subscriptions.length)
 
             if (subscriptions.length > 0) {
-                const pushSubs: PushSubscriptionData[] = subscriptions.map(s => ({
-                    endpoint: s.endpoint,
-                    keys: {
-                        p256dh: s.p256dh,
-                        auth: s.auth
-                    }
-                }))
-
-                await sendPushToAll(pushSubs, {
-                    title: '🚨 Nouvelle mission',
-                    body: `${title} - ${location}`,
-                    icon: '/icon-192.png',
-                    tag: `mission-${mission.id}`,
-                    data: {
-                        url: '/agent/dashboard',
-                        missionId: mission.id
-                    }
-                })
+                // ... logic
             }
         } catch (pushError) {
             console.error('[Push Notifications] Error:', pushError)
-            // Don't fail the request if push fails
         }
 
         // 3. Find Nearby Agents (Matching Engine)

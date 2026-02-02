@@ -47,7 +47,8 @@ export async function POST(
                     data: {
                         status: 'CANCELLED',
                         agentId: null // Optional: keep trace or remove? Usually remove for clean slate, or keep for history. Let's keep agentId nullified if cancelled.
-                    }
+                    },
+                    include: { company: true }
                 })
 
                 await tx.missionLog.create({
@@ -57,6 +58,16 @@ export async function POST(
                         previousStatus: mission.status,
                         newStatus: 'CANCELLED',
                         comment: `Mission annulée par l'entreprise : ${reason}`,
+                    }
+                })
+
+                await tx.missionLog.create({
+                    data: {
+                        missionId: id,
+                        userId: mission.agentId || 'system', // Log for the agent
+                        previousStatus: mission.status,
+                        newStatus: 'CANCELLED',
+                        comment: 'Mission annulée par l\'entreprise',
                     }
                 })
 
@@ -151,6 +162,28 @@ export async function POST(
 
                 return m
             })
+
+            // Fetch company user ID for notification
+            const missionCompany = await db.company.findUnique({
+                where: { id: mission.companyId },
+                select: { userId: true }
+            })
+
+            if (missionCompany) {
+                await pusherServer.trigger(
+                    `private-company-${missionCompany.userId}`,
+                    'mission:status-change',
+                    {
+                        missionId: mission.id,
+                        missionTitle: mission.title,
+                        previousStatus: mission.status,
+                        newStatus: 'CANCELLED', // Or 'PENDING' effectively for the mission, but logically it's a cancellation of the contract
+                        agentName: session.user.name || 'Agent',
+                        timestamp: new Date().toISOString(),
+                        message: 'L\'agent a annulé la mission. Elle est de nouveau disponible.'
+                    }
+                )
+            }
 
             // Notifications
             await pusherServer.trigger(`company-${mission.companyId}`, 'mission:update', updatedMission)

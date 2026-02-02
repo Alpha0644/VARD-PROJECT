@@ -1,0 +1,12 @@
+{
+    "version": "3.0.0",
+    "errors_encountered": [],
+    "successful_patterns": [],
+    "anti_patterns": [],
+    "learning_stats": {
+        "total_errors_recorded": 0,
+        "errors_never_repeated": 0,
+        "repeat_error_rate": 0.0,
+        "successful_pattern_usage": 0
+    }
+}

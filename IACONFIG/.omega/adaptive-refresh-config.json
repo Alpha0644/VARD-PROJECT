@@ -1,0 +1,154 @@
+{
+    "version": "3.0.0",
+    "adaptive_refresh": {
+        "enabled": true,
+        "strategy": "complexity_based",
+        "fixed_interval_fallback": 10
+    },
+    "triggers": [
+        {
+            "type": "conversation_start",
+            "priority": "critical",
+            "action": "full_refresh",
+            "description": "Always refresh at conversation start"
+        },
+        {
+            "type": "mode_switch",
+            "priority": "high",
+            "action": "full_refresh",
+            "description": "Refresh when switching between ARCHITECT/BUILDER/etc"
+        },
+        {
+            "type": "complexity_threshold",
+            "priority": "high",
+            "threshold": 0.7,
+            "action": "full_refresh",
+            "description": "Refresh before complex ARCHITECT tasks"
+        },
+        {
+            "type": "drift_detected",
+            "priority": "critical",
+            "action": "emergency_refresh",
+            "description": "Immediate refresh if AI detects it's forgetting rules"
+        },
+        {
+            "type": "architect_task_count",
+            "priority": "medium",
+            "threshold": 5,
+            "action": "full_refresh",
+            "description": "Refresh after 5 consecutive ARCHITECT tasks"
+        },
+        {
+            "type": "message_count",
+            "priority": "low",
+            "threshold": 15,
+            "action": "light_refresh",
+            "description": "Fallback: refresh every 15 messages if no other trigger"
+        },
+        {
+            "type": "error_rate_spike",
+            "priority": "high",
+            "threshold": 0.3,
+            "action": "full_refresh",
+            "description": "Refresh if error rate > 30%"
+        }
+    ],
+    "complexity_scoring": {
+        "keywords_weight": {
+            "database": 0.9,
+            "payment": 1.0,
+            "auth": 0.9,
+            "security": 0.8,
+            "api": 0.7,
+            "component": 0.3,
+            "css": 0.1,
+            "text": 0.1
+        },
+        "mode_base_complexity": {
+            "ARCHITECT": 0.8,
+            "BUILDER": 0.4,
+            "FAST-TRACK": 0.1,
+            "DEBUG": 0.6,
+            "REFACTOR": 0.5
+        },
+        "calculation": "base_complexity + (keyword_scores * 0.2)"
+    },
+    "drift_detection": {
+        "enabled": true,
+        "patterns": [
+            {
+                "indicator": "about_to_use_any_type",
+                "confidence": 0.9,
+                "action": "emergency_refresh"
+            },
+            {
+                "indicator": "about_to_hardcode_secret",
+                "confidence": 1.0,
+                "action": "emergency_refresh"
+            },
+            {
+                "indicator": "forgot_zod_validation",
+                "confidence": 0.8,
+                "action": "emergency_refresh"
+            },
+            {
+                "indicator": "suggesting_forbidden_package",
+                "confidence": 0.9,
+                "action": "emergency_refresh"
+            }
+        ],
+        "self_check_frequency": "every_generation",
+        "questions": [
+            "Am I about to violate a hard law?",
+            "Did I check STACK.md for approved packages?",
+            "Am I using Zod validation for external inputs?",
+            "Did I verify security checklist for ARCHITECT tasks?"
+        ]
+    },
+    "refresh_actions": {
+        "full_refresh": {
+            "steps": [
+                "Read /.omega/context-anchor.md",
+                "Review current mode requirements",
+                "Check recent violations in learned-patterns.json",
+                "Reset internal context cache"
+            ],
+            "duration_estimate": "5-10 seconds"
+        },
+        "light_refresh": {
+            "steps": [
+                "Re-read critical rules section only",
+                "Verify current mode compliance"
+            ],
+            "duration_estimate": "2-3 seconds"
+        },
+        "emergency_refresh": {
+            "steps": [
+                "STOP current generation",
+                "Full context reload",
+                "Re-analyze request",
+                "Start over with fresh context"
+            ],
+            "duration_estimate": "10-15 seconds",
+            "notification": "⚠️ EMERGENCY CONTEXT REFRESH: Detected potential violation. Reloading protocols..."
+        }
+    },
+    "metrics_tracking": {
+        "enabled": true,
+        "file": ".omega/context-metrics.json",
+        "tracked_fields": [
+            "last_refresh_timestamp",
+            "messages_since_last_refresh",
+            "current_complexity_score",
+            "drift_incidents_count",
+            "emergency_refreshes_count",
+            "current_mode",
+            "architect_task_streak"
+        ]
+    },
+    "optimization": {
+        "cache_common_reads": true,
+        "compress_non_critical_sections": true,
+        "prioritize_recent_rules": true
+    }
+}
