@@ -6,9 +6,8 @@ const nextConfig = {
     // output: 'standalone', // Disabled for Windows local build compatibility (EINVAL colon error)
 
     // Bypass linting during build to avoid environment-specific errors
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
+    // eslint config is now deprecated in next.config.mjs
+    // We rely on external linting steps or default behavior
     typescript: {
         ignoreBuildErrors: true, // We already check types manually
     },
