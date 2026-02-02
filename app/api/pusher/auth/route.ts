@@ -17,7 +17,10 @@ export async function POST(req: Request) {
     // Support for private-user-{userId} channels (Agent notifications)
     if (channel.startsWith('private-user-')) {
         const expectedChannel = `private-user-${session.user.id}`
+        console.log(`[Pusher Auth] Request for channel: ${channel}, User: ${session.user.id}`)
+
         if (channel !== expectedChannel) {
+            console.warn(`[Pusher Auth] Forbidden: Expected ${expectedChannel}, got ${channel}`)
             return NextResponse.json({ error: 'Forbidden subscription' }, { status: 403 })
         }
 
@@ -25,6 +28,7 @@ export async function POST(req: Request) {
             user_id: session.user.id,
             user_info: { name: session.user.name, role: session.user.role },
         })
+        console.log(`[Pusher Auth] Authorized successfully for ${channel}`)
         return NextResponse.json(authResponse)
     }
 
