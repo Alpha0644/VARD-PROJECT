@@ -103,32 +103,20 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
 
             // Event: Mission Cancelled
             privateChannel.bind('mission:cancelled', (data: any) => {
-                toast.error(`Mission annulée: ${data.title || 'Une mission a été annulée'}`, {
-                    duration: 5000,
-                    action: {
-                        label: 'Voir',
-                        onClick: () => router.push('/agent/missions')
-                    }
-                })
+                // Toast handled by AgentRealTimeNotifications
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200])
                 router.refresh()
             })
 
             // Event: New Personalized Mission (Nearby match)
             privateChannel.bind('mission:new', (data: any) => {
-                toast.success(`🎯 Nouvelle mission proche: ${data.title}`, {
-                    duration: 5000,
-                    action: {
-                        label: 'Voir',
-                        onClick: () => router.push(data.link || '/agent/dashboard')
-                    }
-                })
+                // Toast handled by AgentRealTimeNotifications
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100])
                 router.refresh()
             })
 
             privateChannel.bind('mission:update', (data: any) => {
-                toast.info(`Mise à jour mission: ${data.title}`)
+                // Keep generic update if not handled elsewhere, or redundant
                 router.refresh()
             })
 
@@ -346,8 +334,8 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
                         }}
                         disabled={notifLoading}
                         className={`p-3 rounded-full shadow-lg border backdrop-blur-sm transition-all ${isSubscribed
-                                ? 'bg-green-500/90 border-green-400 text-white'
-                                : 'bg-white/90 border-orange-300 text-orange-600 hover:bg-white'
+                            ? 'bg-green-500/90 border-green-400 text-white'
+                            : 'bg-white/90 border-orange-300 text-orange-600 hover:bg-white'
                             }`}
                         title={isSubscribed ? 'Notifications actives' : 'Activer les notifications'}
                     >
