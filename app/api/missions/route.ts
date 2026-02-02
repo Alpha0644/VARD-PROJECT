@@ -112,7 +112,26 @@ export async function POST(req: Request) {
             console.log('DEBUG: Subs found', subscriptions.length)
 
             if (subscriptions.length > 0) {
-                // ... logic
+                // Map DB shape to Library shape
+                const formattedSubs: PushSubscriptionData[] = subscriptions.map(sub => ({
+                    endpoint: sub.endpoint,
+                    keys: {
+                        p256dh: sub.p256dh,
+                        auth: sub.auth
+                    }
+                }))
+
+                const pushPayload = {
+                    title: `Nouvelle mission: ${mission.title}`,
+                    body: `À ${mission.location} - ${company.companyName}`,
+                    icon: '/icon-192.png',
+                    data: {
+                        url: `/agent/missions/${mission.id}`,
+                        missionId: mission.id
+                    }
+                }
+
+                await sendPushToAll(formattedSubs, pushPayload)
             }
         } catch (pushError) {
             console.error('[Push Notifications] Error:', pushError)
