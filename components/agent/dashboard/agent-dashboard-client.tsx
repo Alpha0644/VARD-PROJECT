@@ -159,7 +159,7 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
                 }
             })
             .catch(console.error)
-    }, [hasActiveMission])
+    }, [hasActiveMission, userId]) // Added userId dependency
 
     // Filter and sort missions
     const filteredMissions = useMemo(() => {
