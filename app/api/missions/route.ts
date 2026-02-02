@@ -177,12 +177,12 @@ export async function POST(req: Request) {
                         `private-user-${targetUserId}`,
                         'mission:new',
                         {
-                            id: mission.id,
+                            missionId: mission.id,  // FIXED: Was 'id', frontend expects 'missionId'
                             title: mission.title,
                             location: mission.location,
                             companyName: company.companyName,
                             startTime: startTime.toISOString(),
-                            link: `/agent/missions/${mission.id}`
+                            link: `/agent/dashboard`
                         }
                     )
 
