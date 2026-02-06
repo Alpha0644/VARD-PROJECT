@@ -38,7 +38,7 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
             console.log('[Pusher] ✅ Subscription succeeded!')
         })
 
-        channel.bind('pusher:subscription_error', (status: any) => {
+        channel.bind('pusher:subscription_error', (status: unknown) => {
             console.error('[Pusher] ❌ Subscription error:', status)
         })
 
@@ -85,7 +85,7 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
                 if (typeof navigator !== 'undefined' && navigator.vibrate) {
                     navigator.vibrate([500, 100, 500])
                 }
-            } catch (err) {
+            } catch (err: unknown) {
                 console.error('[Pusher] Error handling cancellation:', err)
             }
         })

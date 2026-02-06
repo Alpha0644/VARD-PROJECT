@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { companyProfileSchema } from '@/lib/validations/profile'
+import { logError } from '@/lib/logger'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import { randomUUID } from 'crypto'
@@ -70,7 +71,7 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ success: true })
 
     } catch (error) {
-        console.error('Company profile update error:', error)
+        logError(error, { context: 'company-profile-update' })
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
 }

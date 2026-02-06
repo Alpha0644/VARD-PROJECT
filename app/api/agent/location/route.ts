@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { updateAgentLocation } from '@/lib/redis-geo'
+import { logger, logError } from '@/lib/logger'
 
 const locationSchema = z.object({
     latitude: z.number(),
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
         try {
             body = await req.json()
         } catch (e) {
-            console.error('[Location API] Failed to parse body', e)
+            logError(e, { context: 'location-parse-body', userId: session.user.id })
             return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
         }
         const validated = locationSchema.safeParse(body)
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, lat: latitude, long: longitude })
     } catch (error) {
-        console.error('Update Location Error:', error)
+        logError(error, { context: 'update-location', userId: session.user.id })
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
 }
@@ -100,7 +101,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json({ error: 'Location not found' }, { status: 404 })
     } catch (error) {
-        console.error('Get Location Error:', error)
+        logError(error, { context: 'get-location' })
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
 }

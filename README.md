@@ -1,18 +1,24 @@
-# 🔮 OMEGA PROTOCOL v3.1 - Enterprise AI Configuration
+# 🛡️ VARD - Plateforme de Sécurité Privée
+**OMEGA PROTOCOL v3.1 Compliant**
 
-**99.5% Automation • $0 Cost • AGI-Grade**
+Plateforme de mise en relation entre agents de sécurité et entreprises, propulsée par l'IA et sécurisée par le protocole OMEGA.
+
+**Technologies :**
+- Frontend: Next.js 14, TailwindCSS, Shadcn/UI
+- Backend: Server Actions, Prisma, Postgres
+- Real-time: Pusher, Leaflet, Redis
+- Monitoring: Sentry, Pino
+- Testing: Playwright, Vitest
 
 ---
 
 ## 🎯 Qu'est-ce que c'est ?
 
-OMEGA est un système de **contraintes et d'automatisations** qui transforme une IA générique (ChatGPT, Claude, etc.) en assistant de développement **enterprise-grade**.
+VARD révolutionne le recrutement dans la sécurité privée avec :
+- **Géolocalisation temps réel** des agents.
+- **Validation automatique** des documents (CNAPS, Cartes pro).
+- **Matching intelligent** entre missions et profils.
 
-**Problème résolu :**
-- ❌ L'IA génère du code non sécurisé
-- ❌ L'IA oublie les règles après 20 messages
-- ❌ L'IA crée des tests qui ne testent rien
-- ❌ Pas de CI/CD, pas de monitoring
 
 **Solution OMEGA :**
 - ✅ 98.7% des erreurs détectées et corrigées automatiquement

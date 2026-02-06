@@ -25,15 +25,21 @@ test.describe('🔐 Authentication Flow (OMEGA: Critical)', () => {
         await page.fill('[name="password"]', testPassword)
         await page.fill('[name="name"]', testName)
 
-        // Select AGENT role
-        await page.click('[value="AGENT"]')
+        // Dismiss cookie banner explicitly if present to avoid interception
+        const cookieBtn = page.locator('button:has-text("Accepter"), button:has-text("Continuer sans accepter")').first()
+        if (await cookieBtn.isVisible()) {
+            await cookieBtn.click()
+        }
+
+        // Select AGENT role (using text as value attribute doesn't exist on these custom buttons)
+        await page.locator('button:has-text("Agent")').click()
 
         // Step 3: Submit form
         await page.click('button[type="submit"]')
 
         // Step 4: Verify redirect
         // Current implementation shows success message then redirects to login
-        await expect(page.locator('text=/succès|success|vérif|verify/i')).toBeVisible({ timeout: 10000 })
+        await expect(page.locator('text=/succès|success|vérif|verify|réussie/i')).toBeVisible({ timeout: 10000 })
 
         // Wait for redirect to login
         await page.waitForURL('**/login', { timeout: 15000 })
@@ -72,7 +78,8 @@ test.describe('🔐 Authentication Flow (OMEGA: Critical)', () => {
         await page.fill('[name="email"]', 'test@omega.test')
         await page.fill('[name="password"]', 'weak')
         await page.fill('[name="name"]', 'Test User')
-        await page.click('[value="AGENT"]')
+        // Select AGENT role
+        await page.locator('button:has-text("Agent")').click()
         await page.click('button[type="submit"]')
 
         // Should show password error

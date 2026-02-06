@@ -50,9 +50,13 @@ export function AgentTopBar() {
         if (isSubscribed) {
             await unsubscribe()
         } else {
-            const success = await subscribe()
-            if (success && navigator.vibrate) {
-                navigator.vibrate([50, 50, 50])
+            try {
+                await subscribe()
+                if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                    navigator.vibrate([50, 50, 50])
+                }
+            } catch (error) {
+                console.error('Subscription failed', error)
             }
         }
     }
@@ -61,7 +65,7 @@ export function AgentTopBar() {
     const userImage = stats?.user?.image
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center pointer-events-none">
+        <header className="fixed top-0 left-0 right-0 z-50 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] flex justify-between items-center pointer-events-none">
             {/* Left side: Profile + Notifications */}
             <div className="flex items-center gap-2 pointer-events-auto">
                 {/* Profile Button */}

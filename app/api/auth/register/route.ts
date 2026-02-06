@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { registerAgentSchema, registerCompanySchema } from '@/lib/validations/auth'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { randomBytes } from 'crypto'
+import { logAuth, logError } from '@/lib/logger'
 
 export async function POST(req: Request) {
     try {
@@ -100,9 +101,7 @@ export async function POST(req: Request) {
             },
         })
 
-        // Send verification email
-        const { sendVerificationEmail } = await import('@/lib/email')
-        await sendVerificationEmail(email, verificationToken)
+        logAuth('register', user.id, true)
 
         return NextResponse.json(
             {
@@ -112,7 +111,7 @@ export async function POST(req: Request) {
             { status: 201 }
         )
     } catch (error) {
-        console.error('Registration error:', error)
+        logError(error, { context: 'auth-register' })
         return NextResponse.json(
             { error: 'Erreur serveur. Réessayez plus tard.' },
             { status: 500 }

@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
+import { handleApiError, UnauthorizedError, ForbiddenError, BadRequestError } from '@/lib/api-error'
 
 const searchParamsSchema = z.object({
     limit: z.coerce.number().min(1).max(50).default(10),
@@ -15,19 +16,21 @@ export async function GET(request: Request) {
         const session = await auth()
 
         if (!session) {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+            throw new UnauthorizedError()
         }
 
         const { searchParams } = new URL(request.url)
         const validated = searchParamsSchema.safeParse(Object.fromEntries(searchParams))
 
         if (!validated.success) {
-            return NextResponse.json({ error: 'Paramètres invalides' }, { status: 400 })
+            return NextResponse.json(
+                { error: 'Paramètres invalides', details: validated.error.flatten() },
+                { status: 400 }
+            )
         }
 
         const { limit, offset, status } = validated.data
 
-        const role = session.user.role
         const userId = session.user.id
 
         // Build query based on role
@@ -40,13 +43,16 @@ export async function GET(request: Request) {
 
         if (session.user.role === 'AGENT') {
             // Agent sees missions assigned to them
-            // We need to find the Agent profile first
             const agent = await db.agent.findUnique({
                 where: { userId: session.user.id }
             })
 
             if (!agent) {
-                return NextResponse.json({ data: [], meta: { total: 0 } })
+                // Not an error per se, just empty history for new agent
+                return NextResponse.json({
+                    data: [],
+                    meta: { total: 0, limit, offset, hasMore: false }
+                })
             }
 
             whereClause.agentId = agent.id
@@ -57,14 +63,17 @@ export async function GET(request: Request) {
             })
 
             if (!company) {
-                return NextResponse.json({ data: [], meta: { total: 0 } })
+                return NextResponse.json({
+                    data: [],
+                    meta: { total: 0, limit, offset, hasMore: false }
+                })
             }
 
             whereClause.companyId = company.id
         } else if (session.user.role === 'ADMIN') {
             // Admin sees everything (no additional filter)
         } else {
-            return NextResponse.json({ error: 'Rôle non reconnu' }, { status: 403 })
+            throw new ForbiddenError('Rôle non reconnu')
         }
 
         // Execute query
@@ -101,7 +110,6 @@ export async function GET(request: Request) {
         })
 
     } catch (error) {
-        console.error('History API Error:', error)
-        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+        return handleApiError(error)
     }
 }

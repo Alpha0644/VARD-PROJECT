@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { logError } from '@/lib/logger'
 
 const responseSchema = z.object({
     status: z.enum(['ACCEPTED', 'REJECTED'])
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true })
 
     } catch (error) {
-        console.error('Respond Error:', error)
+        logError(error, { context: 'respond-notification' })
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
 }

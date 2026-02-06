@@ -3,8 +3,16 @@
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { LiveActivityFeed } from './live-activity-feed'
-import { LayoutDashboard, BarChart3 } from 'lucide-react'
-import { CompanyReportingClient } from './company-reporting-client'
+import { LayoutDashboard, BarChart3, Loader2 } from 'lucide-react'
+
+// Dynamic imports
+const CompanyReportingClient = dynamic(
+    () => import('./company-reporting-client').then(mod => mod.CompanyReportingClient),
+    {
+        ssr: false,
+        loading: () => <div className="p-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-gray-400" /></div>
+    }
+)
 
 // Dynamic import for MissionsMap to avoid SSR issues with Leaflet
 const MissionsMap = dynamic(
@@ -50,8 +58,8 @@ export function CompanyDashboardClient({ missions, companyId, userName }: Dashbo
                 <button
                     onClick={() => setView('COMMAND')}
                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors border-b-2 ${view === 'COMMAND'
-                            ? 'border-blue-500 text-blue-600 bg-blue-50/50'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        ? 'border-blue-500 text-blue-600 bg-blue-50/50'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                 >
                     <LayoutDashboard className="w-4 h-4" />
@@ -60,8 +68,8 @@ export function CompanyDashboardClient({ missions, companyId, userName }: Dashbo
                 <button
                     onClick={() => setView('ANALYTICS')}
                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors border-b-2 ${view === 'ANALYTICS'
-                            ? 'border-purple-500 text-purple-600 bg-purple-50/50'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        ? 'border-purple-500 text-purple-600 bg-purple-50/50'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                 >
                     <BarChart3 className="w-4 h-4" />

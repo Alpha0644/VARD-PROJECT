@@ -8,6 +8,7 @@ import { checkApiRateLimit } from '@/lib/rate-limit'
 import { UPLOAD_CONSTRAINTS } from '@/lib/constants'
 import { createClient } from '@supabase/supabase-js'
 import sharp from 'sharp'
+import { logger, logError } from '@/lib/logger'
 
 // Image MIME types that should be processed by sharp
 const IMAGE_MIMES = ['image/jpeg', 'image/jpg', 'image/png']
@@ -89,7 +90,7 @@ export async function POST(req: Request) {
         })
 
       if (error) {
-        console.error('[Supabase Storage Error]', error)
+        logError(error, { context: 'supabase-upload', userId: session.user.id })
         throw new Error('Erreur stockage Supabase')
       }
 
@@ -103,7 +104,7 @@ export async function POST(req: Request) {
     // LOCAL FILESYSTEM (Development Fallback)
     else {
       if (process.env.NODE_ENV === 'development') {
-        console.info('[API Upload] Using Local Storage (Dev)')
+        logger.info('[API Upload] Using Local Storage (Dev)')
       }
       const uploadDir = path.join(process.cwd(), 'public/uploads')
       // Ensure dir exists (not possible in Vercel/Lambda usually, but fine for local)
@@ -127,9 +128,11 @@ export async function POST(req: Request) {
       },
     })
 
+    logger.info({ documentId: document.id, userId: session.user.id, type }, 'Document uploaded successfully')
+
     return NextResponse.json({ success: true, document })
   } catch (error) {
-    console.error('Upload error:', error)
+    logError(error, { context: 'upload-api' })
     return NextResponse.json({ error: 'Erreur technique lors de l\'upload' }, { status: 500 })
   }
 }

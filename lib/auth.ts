@@ -18,6 +18,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         signIn: '/login',
         error: '/login',
     },
+    // Fix for Mobile/Local login: Allow non-secure cookies on HTTP
+    useSecureCookies: process.env.NODE_ENV === 'production',
+    cookies: {
+        sessionToken: {
+            name: `next-auth.session-token`,
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+            },
+        },
+    },
     providers: [
         Credentials({
             name: 'credentials',

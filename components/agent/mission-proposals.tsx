@@ -112,6 +112,7 @@ export function MissionProposalsList({ missions, userPosition, onAccept, onRejec
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => onAccept(mission.id)}
                                     disabled={acceptingId === mission.id}
+                                    data-testid="mission-accept-btn"
                                     className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                                 >
                                     {acceptingId === mission.id ? (
@@ -132,6 +133,7 @@ export function MissionProposalsList({ missions, userPosition, onAccept, onRejec
                                     <motion.button
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => onReject(mission.id)}
+                                        data-testid="mission-reject-btn"
                                         className="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
                                     >
                                         <X className="w-4 h-4" />

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { handleApiError, UnauthorizedError, NotFoundError } from '@/lib/api-error'
 
 // GET /api/company/stats - Récupère les statistiques de l'entreprise
 export async function GET() {
@@ -8,7 +9,7 @@ export async function GET() {
         const session = await auth()
 
         if (!session || session.user.role !== 'COMPANY') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+            throw new UnauthorizedError()
         }
 
         const company = await db.company.findUnique({
@@ -16,7 +17,7 @@ export async function GET() {
         })
 
         if (!company) {
-            return NextResponse.json({ error: 'Profil entreprise non trouvé' }, { status: 404 })
+            throw new NotFoundError('Profil entreprise non trouvé')
         }
 
         // Get current date ranges
@@ -127,7 +128,6 @@ export async function GET() {
         })
 
     } catch (error) {
-        console.error('Company stats error:', error)
-        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+        return handleApiError(error)
     }
 }

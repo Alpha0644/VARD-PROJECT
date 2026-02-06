@@ -1,9 +1,9 @@
-
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { pusherServer } from '@/lib/pusher'
 import { sendPushNotification } from '@/lib/web-push'
+import { logger, logError, logMission } from '@/lib/logger'
 
 export async function POST(
     req: Request,
@@ -33,20 +33,18 @@ export async function POST(
         // SCENARIO 1: COMPANY CANCELLATION (Definitive)
         // =======================================================
         if (role === 'COMPANY') {
-            // Verify ownership
             const companyProfile = await db.company.findUnique({ where: { userId: session.user.id } })
 
             if (!companyProfile || mission.companyId !== companyProfile.id) {
                 return NextResponse.json({ error: 'Ce n\'est pas votre mission' }, { status: 403 })
             }
 
-            // Execute Cancellation
             const cancelledMission = await db.$transaction(async (tx) => {
                 const m = await tx.mission.update({
                     where: { id },
                     data: {
                         status: 'CANCELLED',
-                        agentId: null // Optional: keep trace or remove? Usually remove for clean slate, or keep for history. Let's keep agentId nullified if cancelled.
+                        agentId: null
                     },
                     include: { company: true }
                 })
@@ -62,7 +60,6 @@ export async function POST(
                 })
 
                 if (mission.agentId) {
-                    // Fix: Resolve User ID from Agent ID because MissionLog refers to User
                     const agentProfile = await tx.agent.findUnique({
                         where: { id: mission.agentId },
                         select: { userId: true }
@@ -84,11 +81,11 @@ export async function POST(
                 return m
             })
 
-            // Notify involved parties
+            logMission('cancelled-by-company', id, { companyId: companyProfile.id, reason })
+
             await pusherServer.trigger(`company-${mission.companyId}`, 'mission:update', cancelledMission)
 
             if (mission.agentId) {
-                // FIX: Resolve User ID from Agent Profile ID
                 const agentProfile = await db.agent.findUnique({
                     where: { id: mission.agentId },
                     select: { userId: true }
@@ -96,23 +93,18 @@ export async function POST(
 
                 if (agentProfile) {
                     const agentUserId = agentProfile.userId
-                    console.log(`[Cancel] Agent Profile ID: ${mission.agentId}, User ID: ${agentUserId}`)
 
-                    // Trigger Pusher on correct channel (private-user-{USER_ID})
                     await pusherServer.trigger(`private-user-${agentUserId}`, 'mission:cancelled', {
                         ...cancelledMission,
                         title: mission.title
                     })
-                    console.log(`[Cancel] Pusher triggered on private-user-${agentUserId}`)
 
-                    // Web Push (Background Notification)
                     const subscription = await db.pushSubscription.findFirst({
-                        where: { userId: agentUserId }, // FIX: Use User ID, not Agent ID
+                        where: { userId: agentUserId },
                         orderBy: { createdAt: 'desc' }
                     })
 
                     if (subscription) {
-                        console.log(`[Cancel] Subscription found for user ${agentUserId}`)
                         try {
                             const payload = {
                                 title: '🚫 Mission Annulée',
@@ -129,16 +121,13 @@ export async function POST(
                                 }
                             }
 
-                            const result = await sendPushNotification(subFormatted, payload)
-                            console.log(`[Cancel] Push sent result: ${result}`)
+                            await sendPushNotification(subFormatted, payload)
                         } catch (e) {
-                            console.error('[Cancel] Push failed', e)
+                            logError(e, { context: 'cancel-push-failed', agentUserId, missionId: id })
                         }
                     } else {
-                        console.warn(`[Cancel] No push subscription for user ${agentUserId}`)
+                        logger.warn({ agentUserId, missionId: id }, 'No push subscription found during cancellation')
                     }
-                } else {
-                    console.warn(`[Cancel] Agent profile not found for ID ${mission.agentId}`)
                 }
             }
 
@@ -146,10 +135,9 @@ export async function POST(
         }
 
         // =======================================================
-        // SCENARIO 2: AGENT CANCELLATION (Withdrawal/Unassign files)
+        // SCENARIO 2: AGENT CANCELLATION (Withdrawal/Unassign)
         // =======================================================
         if (role === 'AGENT') {
-            // ... existing agent logic ...
             const agentProfile = await db.agent.findUnique({ where: { userId: session.user.id } })
 
             if (!agentProfile || mission.agentId !== agentProfile.id) {
@@ -170,7 +158,6 @@ export async function POST(
                     }
                 })
 
-                // Penalize Agent
                 await tx.$executeRaw`UPDATE "Agent" SET "cancellationCount" = "cancellationCount" + 1 WHERE "userId" = ${session.user.id}`
 
                 await tx.missionLog.create({
@@ -186,7 +173,8 @@ export async function POST(
                 return m
             })
 
-            // Fetch company user ID for notification
+            logMission('cancelled-by-agent', id, { agentId: agentProfile.id })
+
             const missionCompany = await db.company.findUnique({
                 where: { id: mission.companyId },
                 select: { userId: true }
@@ -200,7 +188,7 @@ export async function POST(
                         missionId: mission.id,
                         missionTitle: mission.title,
                         previousStatus: mission.status,
-                        newStatus: 'CANCELLED', // Or 'PENDING' effectively for the mission, but logically it's a cancellation of the contract
+                        newStatus: 'CANCELLED',
                         agentName: session.user.name || 'Agent',
                         timestamp: new Date().toISOString(),
                         message: 'L\'agent a annulé la mission. Elle est de nouveau disponible.'
@@ -208,7 +196,6 @@ export async function POST(
                 )
             }
 
-            // Notifications
             await pusherServer.trigger(`company-${mission.companyId}`, 'mission:update', updatedMission)
             await pusherServer.trigger('missions-channel', 'mission:available', updatedMission)
 
@@ -218,7 +205,7 @@ export async function POST(
         return NextResponse.json({ error: 'Rôle non autorisé' }, { status: 403 })
 
     } catch (error) {
-        console.error('Cancellation error:', error)
+        logError(error, { context: 'mission-cancellation' })
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
 }

@@ -167,7 +167,7 @@ test.describe('🚀 Mission Complete Lifecycle', () => {
         }
 
         // Look for accept button
-        const acceptBtn = page.locator('button:has-text("Accepter")').first()
+        const acceptBtn = page.locator('[data-testid="mission-accept-btn"]').first()
 
         if (await acceptBtn.count() > 0) {
             await acceptBtn.click()
@@ -278,7 +278,9 @@ test.describe('🚀 Mission Complete Lifecycle', () => {
             await page.waitForTimeout(500)
 
             // Check for rating modal/form
-            const hasRatingUI = await page.locator('text=/étoiles|note|stars/i, [class*="star"]').count() > 0
+            const ratingText = page.locator('text=/étoiles|note|stars/i')
+            const starIcon = page.locator('[class*="star"]')
+            const hasRatingUI = await ratingText.count() > 0 || await starIcon.count() > 0
             console.log(`✅ Rating UI visible: ${hasRatingUI}`)
         } else {
             console.log('ℹ️ No completed missions to rate')

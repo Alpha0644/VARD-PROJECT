@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { AgentMap } from '@/components/agent/map/agent-map'
+import dynamic from 'next/dynamic'
 import { BottomSheet } from '@/components/agent/ui/bottom-sheet'
 import { MissionProposalsList } from '@/components/agent/mission-proposals'
 import { MissionFiltersButton, MissionFilters, defaultFilters } from '@/components/agent/ui/mission-filters'
@@ -9,9 +9,17 @@ import { pusherClient } from '@/lib/pusher-client'
 import { useRouter } from 'next/navigation'
 import { Shield, FileBarChart, Bell, BellOff, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { AgentReportingClient } from './agent-reporting-client'
 import { LocationControl } from './location-control'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
+
+// Dynamic Imports
+const AgentMap = dynamic(() => import('@/components/agent/map/agent-map').then(mod => mod.AgentMap), {
+    ssr: false,
+    loading: () => <div className="w-full h-full bg-slate-100 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-gray-400" /></div>
+})
+const AgentReportingClient = dynamic(() => import('./agent-reporting-client').then(mod => mod.AgentReportingClient), {
+    loading: () => <div className="p-8 flex justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>
+})
 
 import { toast } from 'sonner'
 
@@ -102,20 +110,20 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
             const privateChannel = pusherClient.subscribe(`private-user-${userId}`)
 
             // Event: Mission Cancelled
-            privateChannel.bind('mission:cancelled', (data: any) => {
+            privateChannel.bind('mission:cancelled', (data: { id: string, title?: string }) => {
                 // Toast handled by AgentRealTimeNotifications
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200])
                 router.refresh()
             })
 
             // Event: New Personalized Mission (Nearby match)
-            privateChannel.bind('mission:new', (data: any) => {
+            privateChannel.bind('mission:new', (data: { missionId: string, title: string }) => {
                 // Toast handled by AgentRealTimeNotifications
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100])
                 router.refresh()
             })
 
-            privateChannel.bind('mission:update', (data: any) => {
+            privateChannel.bind('mission:update', (data: unknown) => {
                 // Keep generic update if not handled elsewhere, or redundant
                 router.refresh()
             })

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { logError } from '@/lib/logger'
 
 export async function GET(req: Request) {
     try {
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json(notifications)
     } catch (error) {
-        console.error('Fetch Notifications Error:', error)
+        logError(error, { context: 'fetch-notifications' })
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
 }

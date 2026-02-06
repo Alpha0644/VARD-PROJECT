@@ -71,3 +71,11 @@ tests/visual/reference/
 TODO.md
 NOTES.md
 .env*.local
+
+# Debug Output
+*.txt
+playwright-report/
+test-results/
+auth_fail.txt
+auth_results.txt
+logs.txt

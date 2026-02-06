@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { pusherServer } from '@/lib/pusher'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: Request) {
     const session = await auth()
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     if (!socketId || !channel) {
-        console.error('[Pusher Auth] Missing parameters')
+        logger.error({ pathname: '/api/pusher/auth' }, 'Missing socket_id or channel_name in Pusher auth')
         return NextResponse.json({ error: 'Missing socket_id or channel_name' }, { status: 400 })
     }
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { logError } from '@/lib/logger'
 
 const rejectSchema = z.object({
     missionId: z.string()
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
         })
 
     } catch (error) {
-        console.error('Mission reject error:', error)
+        logError(error, { context: 'agent-reject-mission' })
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
 }
@@ -94,7 +95,7 @@ export async function GET() {
         return NextResponse.json({ rejectedIds })
 
     } catch (error) {
-        console.error('Get rejected missions error:', error)
+        logError(error, { context: 'get-rejected-missions' })
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
 }

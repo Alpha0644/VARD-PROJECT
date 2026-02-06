@@ -3,17 +3,45 @@
 import { useState, useEffect } from 'react'
 import { startOfMonth, format } from 'date-fns'
 import { MonthSelector } from '@/components/reports/month-selector'
-import { StatsChart } from '@/components/reports/stats-chart'
-import { ReportPDF } from '@/components/reports/pdf-document'
-import { PDFDownloadLink } from '@react-pdf/renderer'
+import dynamic from 'next/dynamic'
 import { FileDown, Loader2, Target, CreditCard, TrendingUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeletons'
 
+// Lazy load heavy components
+const StatsChart = dynamic(() => import('@/components/reports/stats-chart').then(mod => mod.StatsChart), {
+    loading: () => <Skeleton className="h-[300px] w-full" />,
+    ssr: false
+})
+
+const ReportPDF = dynamic(() => import('@/components/reports/pdf-document').then(mod => mod.ReportPDF), { ssr: false })
+const PDFDownloadLink = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink), { ssr: false })
+
+interface CompanyReportingStats {
+    period: string
+    summary: {
+        totalMissions: number
+        fillRate: number
+        totalSpend: number
+    }
+    chartData: Array<{
+        name: string
+        value: number
+    }>
+    missions: Array<{
+        id: string
+        title: string
+        status: string
+        agentName: string
+        cost: number
+        date: string
+    }>
+}
+
 export function CompanyReportingClient({ userName }: { userName: string }) {
     const [currentDate, setCurrentDate] = useState(startOfMonth(new Date()))
     const [isLoading, setIsLoading] = useState(true)
-    const [data, setData] = useState<any>(null)
+    const [data, setData] = useState<CompanyReportingStats | null>(null)
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -140,13 +168,13 @@ export function CompanyReportingClient({ userName }: { userName: string }) {
                                         </td>
                                     </tr>
                                 ) : (
-                                    data?.missions.map((mission: any) => (
+                                    data?.missions.map((mission) => (
                                         <tr key={mission.id} className="hover:bg-gray-50">
                                             <td className="px-4 py-3 font-medium text-gray-900">
                                                 {mission.title}
                                                 <div className="text-xs">
                                                     <span className={`px-1.5 py-0.5 rounded ${mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                                            mission.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
+                                                        mission.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
                                                         }`}>
                                                         {mission.status}
                                                     </span>

@@ -21,7 +21,9 @@ export async function registerUser(page: Page, user: TestUser) {
     await page.fill('[name="email"]', user.email)
     await page.fill('[name="password"]', user.password)
     await page.fill('[name="name"]', user.name)
-    await page.click(`[value="${user.role}"]`)
+    // Map role enum to UI text
+    const roleText = user.role === 'COMPANY' ? 'Entreprise' : 'Agent'
+    await page.locator(`button:has-text("${roleText}")`).click()
 
     await page.click('button[type="submit"]')
 

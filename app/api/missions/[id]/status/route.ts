@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { pusherServer } from '@/lib/pusher'
 import { checkAgentCanOperate } from '@/lib/documents'
 import { checkTimeSlotConflict } from '@/lib/mission-service'
+import { logError } from '@/lib/logger'
 
 import { updateMissionStatusSchema } from '@/lib/validations/mission'
 
@@ -127,15 +128,14 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
                 }
             )
         } catch (pusherError) {
-            console.error('Pusher notification failed:', pusherError)
+            logError(pusherError, { context: 'pusher-status-change', missionId: mission.id })
             // Don't fail the request if Pusher fails
         }
 
         return NextResponse.json(updatedMission)
 
     } catch (error) {
-        console.error('Update Status Error:', error)
+        logError(error, { context: 'update-mission-status' })
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
     }
 }
-

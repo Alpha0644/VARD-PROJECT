@@ -1,40 +1,36 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { z } from 'zod'
-import { findNearbyAgents } from '@/lib/redis-geo'
 import { checkApiRateLimit } from '@/lib/rate-limit'
-import { sendMissionNotificationEmail } from '@/lib/email'
 import { pusherServer } from '@/lib/pusher'
 import { sendPushToAll, PushSubscriptionData } from '@/lib/web-push'
-
 import { createMissionSchema } from '@/lib/validations/mission'
+import { logger, logMission, logError } from '@/lib/logger'
+import {
+    handleApiError,
+    UnauthorizedError,
+    ForbiddenError,
+    RateLimitError,
+    BadRequestError
+} from '@/lib/api-error'
 
 export async function POST(req: Request) {
     try {
         const session = await auth()
 
-
         if (!session || session.user.role !== 'COMPANY') {
-
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+            throw new UnauthorizedError('Non autorisé')
         }
 
         if (!session.user.isVerified) {
-            return NextResponse.json({ error: 'Compte non vérifié' }, { status: 403 })
+            throw new ForbiddenError('Compte non vérifié')
         }
 
         // Rate limiting (20 req/min)
         const rateLimit = await checkApiRateLimit('mission', session.user.id)
 
         if (!rateLimit.success) {
-            return NextResponse.json(
-                {
-                    error: 'Trop de requêtes',
-                    message: 'Limite: 20 créations de missions par minute'
-                },
-                { status: 429 }
-            )
+            throw new RateLimitError('Limite: 20 créations de missions par minute')
         }
 
         const body = await req.json()
@@ -42,6 +38,9 @@ export async function POST(req: Request) {
         const validated = createMissionSchema.safeParse(body)
 
         if (!validated.success) {
+            // ZodError handled by handleApiError, but here we have a SafeParseReturnType.
+            // We can either throw the error or return manual response.
+            // To be consistent, let's keep manual response for now or throw custom BadRequest
             return NextResponse.json(
                 { error: 'Données invalides', details: validated.error.flatten() },
                 { status: 400 }
@@ -56,12 +55,11 @@ export async function POST(req: Request) {
         })
 
         if (!company) {
-            // Lazy create company profile if missing (MVP shortcut)
             company = await db.company.create({
                 data: {
                     userId: session.user.id,
                     companyName: session.user.name || 'Agence Sans Nom',
-                    siren: 'PENDING-' + Math.floor(Math.random() * 100000), // Temporary placeholder
+                    siren: 'PENDING-' + Math.floor(Math.random() * 100000),
                 },
             })
         }
@@ -81,6 +79,8 @@ export async function POST(req: Request) {
             },
         })
 
+        logMission('created', mission.id, { companyId: company.id, location })
+
         // Broadcast to Public Job Board (Live Feed)
         try {
             await pusherServer.trigger('public-missions', 'mission:created', {
@@ -94,14 +94,12 @@ export async function POST(req: Request) {
                     companyName: company.companyName,
                 },
             })
-            console.log('DEBUG: Pusher triggered')
         } catch (e) {
-            console.error('DEBUG: Pusher failed', e)
+            logError(e, { context: 'pusher-broadcast', missionId: mission.id })
         }
 
         // Send Push Notifications to all subscribed agents
         try {
-            console.log('DEBUG: Fetching subs')
             const subscriptions = await db.pushSubscription.findMany({
                 select: {
                     endpoint: true,
@@ -109,10 +107,8 @@ export async function POST(req: Request) {
                     auth: true
                 }
             })
-            console.log('DEBUG: Subs found', subscriptions.length)
 
             if (subscriptions.length > 0) {
-                // Map DB shape to Library shape
                 const formattedSubs: PushSubscriptionData[] = subscriptions.map(sub => ({
                     endpoint: sub.endpoint,
                     keys: {
@@ -132,15 +128,13 @@ export async function POST(req: Request) {
                 }
 
                 await sendPushToAll(formattedSubs, pushPayload)
+                logger.info({ missionId: mission.id, subscribersCount: subscriptions.length }, 'Push notifications sent')
             }
         } catch (pushError) {
-            console.error('[Push Notifications] Error:', pushError)
+            logError(pushError, { context: 'push-notifications', missionId: mission.id })
         }
 
         // 3. Notify ALL Agents (MVP: No proximity filter)
-        // In production, you'd use findNearbyAgents for geo-filtering
-        console.log('[Mission] MVP Mode: Notifying ALL registered agents')
-
         const allAgents = await db.agent.findMany({
             select: { userId: true }
         })
@@ -151,7 +145,6 @@ export async function POST(req: Request) {
             const channel = `private-user-${agent.userId}`
 
             try {
-                // Trigger Pusher Real-time Event
                 await pusherServer.trigger(
                     channel,
                     'mission:new',
@@ -165,23 +158,19 @@ export async function POST(req: Request) {
                     }
                 )
                 channelsSent.push(channel)
-                console.log(`[Mission] ✅ Sent to ${channel}`)
 
             } catch (e) {
-                console.error(`[Mission] Failed to notify ${channel}:`, e)
+                logError(e, { context: 'pusher-agent-notify', channel, missionId: mission.id })
             }
         }
+
+        logger.info({ missionId: mission.id, agentsNotified: allAgents.length }, 'Mission created and agents notified')
 
         return NextResponse.json({
             mission,
             notifiedCount: allAgents.length,
-            debug: {
-                allAgentUserIds: allAgents.map(a => a.userId),
-                channelsSent
-            }
         })
     } catch (error) {
-        console.error('Create Mission Error:', error)
-        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+        return handleApiError(error)
     }
 }
