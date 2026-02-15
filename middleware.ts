@@ -41,6 +41,11 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
     // Disable dangerous features
     response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=()')
 
+    // Additional hardening
+    response.headers.set('X-DNS-Prefetch-Control', 'off')
+    response.headers.set('X-Download-Options', 'noopen')
+    response.headers.set('X-Permitted-Cross-Domain-Policies', 'none')
+
     // CSP - Report-Only mode for safety (switch to enforce after testing)
     const csp = [
         "default-src 'self'",
@@ -53,7 +58,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
         "base-uri 'self'",
         "form-action 'self'",
     ].join('; ')
-    response.headers.set('Content-Security-Policy-Report-Only', csp)
+    response.headers.set('Content-Security-Policy', csp)
 
     return response
 }

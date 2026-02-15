@@ -3,6 +3,7 @@ import { auth, signOut } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { compare } from 'bcryptjs'
 import { z } from 'zod'
+import { logAuth, logError } from '@/lib/logger'
 
 const deleteAccountSchema = z.object({
     password: z.string().min(1, 'Mot de passe requis'),
@@ -76,6 +77,8 @@ export async function DELETE(req: Request) {
             where: { id: userId },
         })
 
+        logAuth('delete-account', userId, true)
+
         // Invalidate session
         await signOut({ redirect: false })
 
@@ -87,10 +90,11 @@ export async function DELETE(req: Request) {
             { status: 200 }
         )
     } catch (error) {
-        console.error('Account deletion error:', error)
+        logError(error, { context: 'delete-account' })
         return NextResponse.json(
             { error: 'Erreur lors de la suppression du compte' },
             { status: 500 }
         )
     }
 }
+

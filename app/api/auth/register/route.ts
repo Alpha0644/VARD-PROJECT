@@ -59,8 +59,12 @@ export async function POST(req: Request) {
         // Let's stick to validating standard User fields for now if we don't want to break the "Profile Completion later" flow, 
         // OR better: Create the profile row immediately if data is present.
 
-        const data = validationResult.data as any // Type assertion for common fields access
-        const { email, password, name, phone, role } = data
+        const data = validationResult.data
+        const email = 'email' in data ? data.email : ''
+        const password = 'password' in data ? data.password : ''
+        const name = 'name' in data ? data.name : ('companyName' in data ? data.companyName : '')
+        const phone = 'phone' in data && typeof data.phone === 'string' ? data.phone : undefined
+        const role = body.role as string
 
         // Check if user already exists
         const existingUser = await db.user.findUnique({
