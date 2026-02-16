@@ -10,10 +10,17 @@ import { FileDown, Loader2, TrendingUp, Clock, Euro } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeletons'
 
+interface AgentReportData {
+    period: string
+    summary: { totalMissions: number; totalHours: number; totalRevenue: number }
+    chartData: { name: string; value: number }[]
+    missions: { id: string; title: string; date: string; startTime: string; revenue: number; company: { companyName: string } }[]
+}
+
 export function AgentReportingClient({ userName }: { userName: string }) {
     const [currentDate, setCurrentDate] = useState(startOfMonth(new Date()))
     const [isLoading, setIsLoading] = useState(true)
-    const [data, setData] = useState<any>(null)
+    const [data, setData] = useState<AgentReportData | null>(null)
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -26,7 +33,6 @@ export function AgentReportingClient({ userName }: { userName: string }) {
                 setData(json)
             } catch (error) {
                 toast.error('Impossible de charger les statistiques')
-                console.error(error)
             } finally {
                 setIsLoading(false)
             }
@@ -134,7 +140,7 @@ export function AgentReportingClient({ userName }: { userName: string }) {
                                         </td>
                                     </tr>
                                 ) : (
-                                    data?.missions.map((mission: any) => (
+                                    data?.missions.map((mission) => (
                                         <tr key={mission.id} className="hover:bg-gray-50">
                                             <td className="px-4 py-3 font-medium text-gray-900">
                                                 {mission.title}

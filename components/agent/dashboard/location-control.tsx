@@ -67,24 +67,24 @@ export function LocationControl({ userId, onLocationUpdate }: LocationControlPro
             } else {
                 throw new Error('Server sync failed')
             }
-        } catch (error: any) {
-            console.error('Location error:', error)
+        } catch (error: unknown) {
+            const geoError = error as { code?: number }
 
-            if (error.code === 1) {
+            if (geoError.code === 1) {
                 toast.error('Permission GPS refusée', {
                     description: 'Autorisez la géolocalisation dans les paramètres de votre navigateur.'
                 })
-            } else if (error.code === 2) {
+            } else if (geoError.code === 2) {
                 toast.error('Position indisponible', {
                     description: 'Vérifiez que le GPS est activé sur votre appareil.'
                 })
-            } else if (error.code === 3) {
+            } else if (geoError.code === 3) {
                 toast.error('Timeout', {
                     description: 'La récupération de la position a pris trop de temps.'
                 })
             } else {
                 toast.error('Erreur de localisation', {
-                    description: error.message || 'Impossible de récupérer votre position.'
+                    description: 'Impossible de récupérer votre position.'
                 })
             }
         } finally {

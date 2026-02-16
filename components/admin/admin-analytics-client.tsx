@@ -4,16 +4,22 @@ import { useState, useEffect } from 'react'
 import { StatsChart } from '@/components/reports/stats-chart'
 import { Skeleton } from '@/components/ui/skeletons'
 import { Users, Building2, Briefcase, TrendingUp } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+
+interface AdminStats {
+    kpis: { totalAgents: number; totalCompanies: number; activeMissionsCount: number; totalVolume: number }
+    charts: { monthlyActivity: { name: string; value: number; count: number }[] }
+}
 
 export function AdminAnalyticsClient() {
-    const [data, setData] = useState<any>(null)
+    const [data, setData] = useState<AdminStats | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         fetch('/api/reports/admin/stats')
             .then(res => res.json())
             .then(setData)
-            .catch(console.error)
+            .catch(() => { /* silent */ })
             .finally(() => setIsLoading(false))
     }, [])
 
@@ -23,21 +29,21 @@ export function AdminAnalyticsClient() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KpiCard
                     label="Agents"
-                    value={data?.kpis.totalAgents}
+                    value={data?.kpis.totalAgents ?? 0}
                     icon={Users}
                     color="text-blue-600 bg-blue-100"
                     loading={isLoading}
                 />
                 <KpiCard
                     label="Entreprises"
-                    value={data?.kpis.totalCompanies}
+                    value={data?.kpis.totalCompanies ?? 0}
                     icon={Building2}
                     color="text-purple-600 bg-purple-100"
                     loading={isLoading}
                 />
                 <KpiCard
                     label="Missions Actives"
-                    value={data?.kpis.activeMissionsCount}
+                    value={data?.kpis.activeMissionsCount ?? 0}
                     icon={Briefcase}
                     color="text-green-600 bg-green-100"
                     loading={isLoading}
@@ -57,7 +63,7 @@ export function AdminAnalyticsClient() {
                     <h3 className="text-lg font-bold text-gray-900 mb-4">Volume d'Affaires Mensuel</h3>
                     <div className="h-[300px]">
                         {isLoading ? <Skeleton className="w-full h-full" /> : (
-                            <StatsChart data={data?.charts.monthlyActivity} type="area" color="#f59e0b" unit="€" />
+                            <StatsChart data={data?.charts.monthlyActivity ?? []} type="area" color="#f59e0b" unit="€" />
                         )}
                     </div>
                 </div>
@@ -67,7 +73,7 @@ export function AdminAnalyticsClient() {
                     <div className="h-[300px]">
                         {isLoading ? <Skeleton className="w-full h-full" /> : (
                             <StatsChart
-                                data={data?.charts.monthlyActivity.map((d: any) => ({ name: d.name, value: d.count }))}
+                                data={data?.charts.monthlyActivity.map((d) => ({ name: d.name, value: d.count })) ?? []}
                                 type="bar"
                                 color="#3b82f6"
                                 unit=""
@@ -80,7 +86,7 @@ export function AdminAnalyticsClient() {
     )
 }
 
-function KpiCard({ label, value, icon: Icon, color, loading }: any) {
+function KpiCard({ label, value, icon: Icon, color, loading }: { label: string; value: string | number | null; icon: LucideIcon; color: string; loading: boolean }) {
     return (
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">

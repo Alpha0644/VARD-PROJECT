@@ -48,7 +48,7 @@ export function StatsChart({ data, type = 'bar', color = CHART_THEME.colors.prim
                         />
                         <Tooltip
                             contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                            formatter={(value: any) => [`${value} ${unit}`, 'Valeur']}
+                            formatter={(value: number | string | undefined) => [`${value ?? ''} ${unit}`, 'Valeur']}
                         />
                         <Area
                             type="monotone"
@@ -84,7 +84,7 @@ export function StatsChart({ data, type = 'bar', color = CHART_THEME.colors.prim
                     <Tooltip
                         cursor={{ fill: '#f3f4f6' }}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: any) => [`${value} ${unit}`, 'Valeur']}
+                        formatter={(value: number | string | undefined) => [`${value ?? ''} ${unit}`, 'Valeur']}
                     />
                     <Bar
                         dataKey="value"

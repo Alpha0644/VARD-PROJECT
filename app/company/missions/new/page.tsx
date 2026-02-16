@@ -123,15 +123,12 @@ export default function NewMissionPage() {
 
             if (res.ok) {
                 const data = await res.json()
-                console.log('[Mission Created] API Response:', data)
-                console.log('[Mission Created] Debug Info:', data.debug)
                 setSuccess(true)
                 setTimeout(() => {
                     router.push('/company/missions')
                 }, 2000)
             } else {
                 const data = await res.json()
-                console.error('[Mission Creation Failed]', data)
                 setError(data.error || 'Erreur lors de la création')
             }
         } catch {

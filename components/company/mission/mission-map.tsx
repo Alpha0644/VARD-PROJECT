@@ -26,7 +26,6 @@ export function MissionMap({ latitude, longitude, agentLocation: initialAgentLoc
         const channel = pusherClient.subscribe(`private-mission-${missionId}`)
 
         channel.bind('server-location-update', (data: { lat: number; lng: number }) => {
-            console.log('📍 Live Update:', data)
             setAgentLocation({ lat: data.lat, lng: data.lng })
         })
 

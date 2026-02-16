@@ -14,11 +14,9 @@ export function AutoTracker({ missionId, status }: { missionId: string; status: 
 
     useEffect(() => {
         if (shouldTrack && !isTracking) {
-            console.log('🔄 Auto-starting GPS tracking...')
             startTracking()
             toast.info('📍 Tracking GPS activé')
         } else if (!shouldTrack && isTracking) {
-            console.log('⏹ Auto-stopping GPS tracking...')
             stopTracking()
             toast.info('⏹ Fin du tracking')
         }
