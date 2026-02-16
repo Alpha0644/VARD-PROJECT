@@ -61,19 +61,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     },
                 })
 
-                // Auth validation (no debug logs in production)
-                if (!user) {
-
-                    return null
-                }
-                if (!user.passwordHash) {
-
+                if (!user || !user.passwordHash) {
                     return null
                 }
 
                 // Verify password
                 const isPasswordValid = await compare(password, user.passwordHash)
-
 
                 if (!isPasswordValid) {
                     return null

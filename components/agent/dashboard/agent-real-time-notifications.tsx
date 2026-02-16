@@ -29,9 +29,6 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
     useEffect(() => {
         if (!userId) return
 
-        // Subscribe to user's private channel
-        // Must match backend: private-user-{userId}
-        // Subscribe to private channel
         const channel = pusherClient.subscribe(`private-user-${userId}`)
 
         channel.bind('pusher:subscription_succeeded', () => {
@@ -39,7 +36,7 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
         })
 
         channel.bind('pusher:subscription_error', (status: unknown) => {
-            // Subscription error — silent in production
+            console.error('[NOTIF] Subscription FAILED for private-user-' + userId, status)
         })
 
         // 1. Listen for NEW Missions (Matching Engine)
@@ -48,7 +45,6 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
             title: string
             link?: string
         }) => {
-
             addNotification({
                 type: 'new',
                 missionId: data.missionId,
@@ -57,11 +53,12 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
                 link: data.link || '/agent/dashboard'
             })
             if (navigator.vibrate) navigator.vibrate([200, 100, 200])
+            router.refresh() // Update dashboard data
         })
 
         // 2. Listen for CANCELLED Missions
         channel.bind('mission:cancelled', (data: {
-            id: string // mission ID
+            id: string
             title: string
         }) => {
 
@@ -88,6 +85,8 @@ export function AgentRealTimeNotifications({ userId }: AgentRealTimeNotification
             } catch (err: unknown) {
                 // Silent error handling
             }
+
+            router.refresh() // Update dashboard data
         })
 
         return () => {

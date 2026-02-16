@@ -128,7 +128,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Admin-only routes
-    if (pathname.startsWith('/admin') && role !== 'ADMIN') {
+    if (pathname.startsWith('/admin') && pathname !== '/admin/login' && role !== 'ADMIN') {
         return addSecurityHeaders(NextResponse.redirect(new URL('/unauthorized', request.url)))
     }
 

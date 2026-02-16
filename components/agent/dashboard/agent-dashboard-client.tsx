@@ -104,36 +104,8 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
             )
         }
 
-        // Subscribe to private channel for personal notifications (cancellation, etc.)
-        if (userId) {
-            // Must match backend: private-user-{userId}
-            const privateChannel = pusherClient.subscribe(`private-user-${userId}`)
-
-            // Event: Mission Cancelled
-            privateChannel.bind('mission:cancelled', (data: { id: string, title?: string }) => {
-                // Toast handled by AgentRealTimeNotifications
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200])
-                router.refresh()
-            })
-
-            // Event: New Personalized Mission (Nearby match)
-            privateChannel.bind('mission:new', (data: { missionId: string, title: string }) => {
-                // Toast handled by AgentRealTimeNotifications
-                if (navigator.vibrate) navigator.vibrate([100, 50, 100])
-                router.refresh()
-            })
-
-            privateChannel.bind('mission:update', (data: unknown) => {
-                // Keep generic update if not handled elsewhere, or redundant
-                router.refresh()
-            })
-
-            return () => {
-                pusherClient.unsubscribe(`private-user-${userId}`)
-            }
-        } else {
-            console.warn('[Dashboard] ⚠️ Skipping private subscription: No userId provided')
-        }
+        // ✅ FIX: Private channel is owned ONLY by AgentRealTimeNotifications
+        // No duplicate subscription here — prevents channel kill on cleanup
 
         // Fetch missions if no active mission
         if (!hasActiveMission) {
@@ -147,33 +119,31 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
                 .catch(console.error)
                 .finally(() => setLoading(false))
 
-            // Real-time updates (Public)
+            // Real-time updates (Public channel — no auth needed)
             const channel = pusherClient.subscribe('public-missions')
             channel.bind('mission:created', (newMission: PendingMission) => {
                 setMissions(prev => [newMission, ...prev])
-                // Haptic feedback if available
                 if (navigator.vibrate) navigator.vibrate(100)
                 toast.info('Nouvelle mission disponible !')
             })
 
+            // Load rejected missions
+            fetch('/api/agent/reject')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.rejectedIds) {
+                        setRejectedIds(data.rejectedIds)
+                    }
+                })
+                .catch(console.error)
+
             return () => {
                 pusherClient.unsubscribe('public-missions')
-                // Unsubscribe private handled in separate effect or here if we have ID
             }
         } else {
             setLoading(false)
         }
-
-        // Load rejected missions
-        fetch('/api/agent/reject')
-            .then(res => res.json())
-            .then(data => {
-                if (data.rejectedIds) {
-                    setRejectedIds(data.rejectedIds)
-                }
-            })
-            .catch(console.error)
-    }, [hasActiveMission, userId]) // Added userId dependency
+    }, [hasActiveMission, userId])
 
     // Filter and sort missions
     const filteredMissions = useMemo(() => {
