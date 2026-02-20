@@ -39,7 +39,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
     // Disable dangerous features
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=()')
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=*, payment=()')
 
     // Additional hardening
     response.headers.set('X-DNS-Prefetch-Control', 'off')
@@ -52,8 +52,8 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.pusher.com https://sockjs.pusher.com",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
-        "img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org",
-        "connect-src 'self' https://*.pusher.com wss://*.pusher.com https://*.supabase.co https://*.upstash.io",
+        "img-src 'self' data: blob: https://*.supabase.co https://tile.openstreetmap.org https://*.tile.openstreetmap.org",
+        "connect-src 'self' http://10.220.219.231:* https://*.pusher.com wss://*.pusher.com https://*.supabase.co https://*.upstash.io https://tile.openstreetmap.org https://*.tile.openstreetmap.org",
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "form-action 'self'",

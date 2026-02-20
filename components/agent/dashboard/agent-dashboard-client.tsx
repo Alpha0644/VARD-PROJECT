@@ -7,7 +7,7 @@ import { MissionProposalsList } from '@/components/agent/mission-proposals'
 import { MissionFiltersButton, MissionFilters, defaultFilters } from '@/components/agent/ui/mission-filters'
 import { pusherClient } from '@/lib/pusher-client'
 import { useRouter } from 'next/navigation'
-import { Shield, FileBarChart, Bell, BellOff, Loader2 } from 'lucide-react'
+import { Shield, Loader2, Bell, BellOff } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { LocationControl } from './location-control'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
@@ -246,6 +246,30 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
 
     const { isSubscribed, subscribe, isLoading: notifLoading, isSupported: notifSupported } = usePushNotifications()
 
+    // Auto-subscribe to push notifications on dashboard load
+    useEffect(() => {
+        let mounted = true
+
+        const autoSubscribe = async () => {
+            if (notifSupported && !isSubscribed && !notifLoading) {
+                try {
+                    await subscribe()
+                    // Don't toast on auto-subscribe success to avoid spam
+                } catch (err) {
+                    console.warn('[Dash] Auto-subscribe failed (User may have denied):', err)
+                }
+            }
+        }
+
+        // Slight delay to not block initial render
+        const timer = setTimeout(autoSubscribe, 2000)
+
+        return () => {
+            mounted = false
+            clearTimeout(timer)
+        }
+    }, [notifSupported, isSubscribed, notifLoading, subscribe])
+
     // Toggle View for Reports
     if (view === 'REPORTS') {
         return (
@@ -276,65 +300,52 @@ export function AgentDashboardClient({ hasActiveMission, userName, userId }: Age
                 />
             </div>
 
-            {/* Control Buttons - Top Left Stack */}
-            <div className="absolute top-20 left-4 z-40 flex flex-col gap-3">
-                {/* Reports Button */}
-                <button
-                    onClick={() => setView('REPORTS')}
-                    className="bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg border border-gray-200 hover:bg-white transition-all"
-                    title="Rapports"
-                >
-                    <FileBarChart className="w-6 h-6 text-gray-700" />
-                </button>
-
+            {/* Left Side Controls — Location + Filters + Notif */}
+            <div className="absolute top-[calc(env(safe-area-inset-top)+1rem)] left-4 z-40 flex flex-col gap-2.5">
                 {/* Location Control */}
                 <LocationControl
                     userId={userId}
                     onLocationUpdate={(pos) => setUserPosition(pos)}
                 />
 
-                {/* Notification Button */}
+                {/* Filters Button */}
+                <MissionFiltersButton
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    missionCount={filteredMissions.length}
+                />
+
+                {/* Notification Toggle */}
                 {notifSupported && (
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
                         onClick={async () => {
                             if (!isSubscribed) {
                                 try {
                                     await subscribe()
-                                    toast.success('Notifications activées !')
-                                } catch (err: any) {
-                                    toast.error('Erreur Notification', {
-                                        description: err.message
-                                    })
+                                    toast.success('Notifications activées')
+                                } catch {
+                                    toast.error('Impossible d\'activer les notifications')
                                 }
                             } else {
                                 toast.info('Notifications déjà actives')
                             }
                         }}
                         disabled={notifLoading}
-                        className={`p-3 rounded-full shadow-lg border backdrop-blur-sm transition-all ${isSubscribed
-                            ? 'bg-green-500/90 border-green-400 text-white'
-                            : 'bg-white/90 border-orange-300 text-orange-600 hover:bg-white'
+                        className={`w-11 h-11 rounded-full shadow-lg border backdrop-blur-xl flex items-center justify-center transition-all ${isSubscribed
+                            ? 'bg-black/50 border-green-400/40'
+                            : 'bg-black/50 border-white/15'
                             }`}
-                        title={isSubscribed ? 'Notifications actives' : 'Activer les notifications'}
                     >
                         {notifLoading ? (
-                            <Loader2 className="w-6 h-6 animate-spin" />
+                            <Loader2 className="w-5 h-5 text-white animate-spin" />
                         ) : isSubscribed ? (
-                            <Bell className="w-6 h-6" />
+                            <Bell className="w-5 h-5 text-green-400" />
                         ) : (
-                            <BellOff className="w-6 h-6" />
+                            <BellOff className="w-5 h-5 text-white/50" />
                         )}
-                    </button>
+                    </motion.button>
                 )}
-            </div>
-
-            {/* Filters Button - Top Right */}
-            <div className="absolute top-20 right-4 z-40">
-                <MissionFiltersButton
-                    filters={filters}
-                    onFiltersChange={setFilters}
-                    missionCount={filteredMissions.length}
-                />
             </div>
 
             {/* Bottom Sheet with Missions */}

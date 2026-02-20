@@ -9,6 +9,8 @@ export default defineConfig({
         exclude: [
             'node_modules/**',
             'dist/**',
+            '.next/**',
+            '**/.next/**',
             '**/*.spec.ts', // Playwright E2E tests
             '**/*.e2e.ts',
         ],

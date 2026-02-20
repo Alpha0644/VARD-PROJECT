@@ -40,11 +40,11 @@ vi.mock('@/lib/db', () => ({
         company: { findUnique: vi.fn(), create: vi.fn() },
         mission: { create: vi.fn() },
         missionNotification: { create: vi.fn() },
-        user: {
+        user: { findMany: vi.fn() },
+        agent: {
             findMany: vi.fn().mockResolvedValue([
-                { id: 'agent-1', email: 'agent1@test.com' },
-                { id: 'agent-2', email: 'agent2@test.com' },
-                { id: 'agent-3', email: 'agent3@test.com' }
+                { userId: 'user-agent-1' },
+                { userId: 'user-agent-2' }
             ])
         },
         pushSubscription: { findMany: vi.fn().mockResolvedValue([]) },
@@ -119,8 +119,14 @@ describe('POST /api/missions', () => {
             // Mock mission creation
             vi.mocked(db.mission.create).mockResolvedValue(mockMission as any)
 
-            // Mock nearby agents
+            // Mock nearby agents (unused in current MVP but kept for compatibility)
             vi.mocked(findNearbyAgents).mockResolvedValue(['agent-1', 'agent-2'])
+
+            // Mock all agents for broadcast
+            vi.mocked(db.agent.findMany).mockResolvedValue([
+                { userId: 'user-agent-1' },
+                { userId: 'user-agent-2' }
+            ] as any)
 
             // Mock notification creation
             vi.mocked(db.missionNotification.create).mockResolvedValue({} as any)
@@ -146,7 +152,7 @@ describe('POST /api/missions', () => {
             // Assert
             expect(response.status).toBe(200)
             expect(data.mission).toBeDefined()
-            expect(data.notifiedCount).toBe(2)
+            expect(data.notifiedCount).toBe(2) // Matches mock agents count
             expect(db.mission.create).toHaveBeenCalledWith(
                 expect.objectContaining({
                     data: expect.objectContaining({
@@ -157,7 +163,7 @@ describe('POST /api/missions', () => {
             )
         })
 
-        it('notifies nearby agents within 10km radius', async () => {
+        it('notifies all agents regardless of radius (MVP logic)', async () => {
             vi.mocked(auth).mockResolvedValue({
                 user: { id: 'user-123', role: 'COMPANY', isVerified: true },
             } as any)
@@ -171,8 +177,11 @@ describe('POST /api/missions', () => {
 
             vi.mocked(db.company.findUnique).mockResolvedValue(mockCompany as any)
             vi.mocked(db.mission.create).mockResolvedValue(mockMission as any)
-            vi.mocked(findNearbyAgents).mockResolvedValue(['agent-1', 'agent-2', 'agent-3'])
-            vi.mocked(db.missionNotification.create).mockResolvedValue({} as any)
+
+            // Mock 3 agents
+            vi.mocked(db.agent.findMany).mockResolvedValue([
+                { userId: 'a1' }, { userId: 'a2' }, { userId: 'a3' }
+            ] as any)
 
             const request = new Request('http://localhost:3000/api/missions', {
                 method: 'POST',
@@ -189,9 +198,7 @@ describe('POST /api/missions', () => {
             const response = await POST(request)
             const data = await response.json()
 
-            expect(findNearbyAgents).toHaveBeenCalledWith(45.764, 4.8357, 10)
             expect(data.notifiedCount).toBe(3)
-            expect(db.missionNotification.create).toHaveBeenCalledTimes(3)
         })
     })
 
@@ -207,7 +214,7 @@ describe('POST /api/missions', () => {
             const response = await POST(request)
 
             expect(response.status).toBe(401)
-            expect(await response.json()).toEqual({ error: 'Non autorisé' })
+            expect(await response.json()).toEqual({ code: 'UNAUTHORIZED', error: 'Non autorisé' }) // Matches handleApiError
         })
 
         it('returns 401 if user is not COMPANY role', async () => {
@@ -223,7 +230,7 @@ describe('POST /api/missions', () => {
             const response = await POST(request)
 
             expect(response.status).toBe(401)
-            expect(await response.json()).toEqual({ error: 'Non autorisé' })
+            expect(await response.json()).toEqual({ code: 'UNAUTHORIZED', error: 'Non autorisé' })
         })
 
         it('returns 403 if company is not verified', async () => {
@@ -239,7 +246,7 @@ describe('POST /api/missions', () => {
             const response = await POST(request)
 
             expect(response.status).toBe(403)
-            expect(await response.json()).toEqual({ error: 'Compte non vérifié' })
+            expect(await response.json()).toEqual({ code: 'FORBIDDEN', error: 'Compte non vérifié' })
         })
 
         it('returns 429 if rate limit exceeded', async () => {
@@ -263,7 +270,7 @@ describe('POST /api/missions', () => {
 
             expect(response.status).toBe(429)
             const data = await response.json()
-            expect(data.error).toBe('Trop de requêtes')
+            expect(data.error).toBe('Limite: 20 créations de missions par minute')
         })
 
         it('returns 400 on validation error', async () => {

@@ -25,7 +25,8 @@ vi.mock('@/lib/db', () => ({
         },
         missionNotification: {
             create: vi.fn(),
-        }
+        },
+        agent: { findMany: vi.fn() }
     }
 }))
 
@@ -95,11 +96,13 @@ describe('Agent Notification Dispatch', () => {
             companyId: 'company-id'
         } as any)
 
-        // 2. Setup "Nearby Agents" - The Critical Part
-        // We simulate that Redis returns the USER ID of the agent
-        vi.mocked(findNearbyAgents).mockResolvedValue([TARGET_AGENT_ID])
+        // 2. Setup "All Agents" - The Critical Part
+        // Mock db.agent.findMany used in route.ts
+        vi.mocked(db.agent.findMany).mockResolvedValue([
+            { userId: TARGET_AGENT_ID }
+        ] as any)
 
-        // Mock User lookup (needed for emails, but also confirms ID validity)
+        // Mock User lookup
         vi.mocked(db.user.findMany).mockResolvedValue([
             { id: TARGET_AGENT_ID, email: 'agent@test.com' } as any
         ])
@@ -129,7 +132,7 @@ describe('Agent Notification Dispatch', () => {
             expect.objectContaining({          // Data
                 title: MISSION_DATA.title,
                 companyName: 'Test Company',
-                link: `/agent/missions/new-mission-id` // Verify link format if needed
+                link: `/agent/dashboard` // Verify link format
             })
         )
         // Also verify public feed verification (optional)
@@ -143,14 +146,8 @@ describe('Agent Notification Dispatch', () => {
         // Since logic batches them, checks if sendPushToAll is called
         expect(sendPushToAll).toHaveBeenCalled()
 
-        // 6. Verify Database Notification
-        expect(db.missionNotification.create).toHaveBeenCalledWith({
-            data: {
-                missionId: 'new-mission-id',
-                agentId: TARGET_AGENT_ID, // Should match User ID
-                status: 'SENT'
-            }
-        })
+        // 6. Verify Database Notification (REMOVED IN MVP)
+        // expect(db.missionNotification.create).toHaveBeenCalledWith(...)
 
         console.log('✅ Notification logic verified: Events sent to', TARGET_AGENT_ID)
     })

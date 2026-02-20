@@ -36,6 +36,8 @@ describe('POST /api/auth/register', () => {
                 password: 'SecurePass123',
                 name: 'Test User',
                 role: 'AGENT',
+                cartePro: 'CNAPS-123456789',
+                carteProExp: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
             }),
         })
 

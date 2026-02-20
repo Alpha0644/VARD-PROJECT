@@ -22,9 +22,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     useSecureCookies: process.env.NODE_ENV === 'production',
     cookies: {
         sessionToken: {
-            name: `next-auth.session-token`,
+            name: `next-auth.session-token-mobile`, // Nouveau nom pour forcer reset
             options: {
-                httpOnly: true,
+                httpOnly: true, // On garde HttpOnly pour sécu, mais on force Lax
                 sameSite: 'lax',
                 path: '/',
                 secure: process.env.NODE_ENV === 'production',

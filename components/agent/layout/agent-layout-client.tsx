@@ -1,4 +1,5 @@
 'use client'
+import { useEffect } from 'react'
 
 import { AgentTopBar } from '@/components/agent/layout/top-bar'
 import { AgentBottomNav } from '@/components/agent/layout/bottom-nav'
@@ -14,6 +15,13 @@ interface AgentLayoutClientProps {
 
 function AgentLayoutContent({ children, userId }: AgentLayoutClientProps) {
     const { isCollapsed, toggleSidebar } = useSidebar()
+
+    // Debug session cookie
+    useEffect(() => {
+        console.log('🍪 Cookies on load:', document.cookie)
+        const hasSession = document.cookie.includes('next-auth.session-token')
+        console.log('✅ Session token present:', hasSession)
+    }, [])
 
     return (
         <div className="relative min-h-screen bg-black text-white overflow-hidden flex">

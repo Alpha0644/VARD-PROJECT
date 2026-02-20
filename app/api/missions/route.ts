@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { checkApiRateLimit } from '@/lib/rate-limit'
 import { pusherServer } from '@/lib/pusher'
-import { sendPushToAll, PushSubscriptionData } from '@/lib/web-push'
+import { broadcastToAllAgents } from '@/lib/fcm'
 import { createMissionSchema } from '@/lib/validations/mission'
 import { logger, logMission, logError } from '@/lib/logger'
 import {
@@ -98,38 +98,20 @@ export async function POST(req: Request) {
             logError(e, { context: 'pusher-broadcast', missionId: mission.id })
         }
 
-        // Send Push Notifications to all subscribed agents
+        // Send Push Notifications to all subscribed agents (Web + FCM)
         try {
-            const subscriptions = await db.pushSubscription.findMany({
-                select: {
-                    endpoint: true,
-                    p256dh: true,
-                    auth: true
+            const pushPayload = {
+                title: 'Nouvelle mission disponible',
+                body: `${mission.title} · ${mission.location}`,
+                tag: `mission-${mission.id}`,
+                data: {
+                    url: `/agent/missions/${mission.id}`,
+                    missionId: mission.id
                 }
-            })
-
-            if (subscriptions.length > 0) {
-                const formattedSubs: PushSubscriptionData[] = subscriptions.map(sub => ({
-                    endpoint: sub.endpoint,
-                    keys: {
-                        p256dh: sub.p256dh,
-                        auth: sub.auth
-                    }
-                }))
-
-                const pushPayload = {
-                    title: `Nouvelle mission: ${mission.title}`,
-                    body: `À ${mission.location} - ${company.companyName}`,
-                    icon: '/icon-192.png',
-                    data: {
-                        url: `/agent/missions/${mission.id}`,
-                        missionId: mission.id
-                    }
-                }
-
-                await sendPushToAll(formattedSubs, pushPayload)
-                logger.info({ missionId: mission.id, subscribersCount: subscriptions.length }, 'Push notifications sent')
             }
+
+            const result = await broadcastToAllAgents(pushPayload)
+            logger.info({ missionId: mission.id, ...result }, 'Push notifications sent (Web + FCM)')
         } catch (pushError) {
             logError(pushError, { context: 'push-notifications', missionId: mission.id })
         }

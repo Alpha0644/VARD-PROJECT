@@ -1,10 +1,9 @@
 'use client'
 
-import { User, TrendingUp, Loader2, Bell, BellOff } from 'lucide-react'
+import { TrendingUp, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { usePushNotifications } from '@/hooks/use-push-notifications'
 
 interface AgentStats {
     user: {
@@ -26,14 +25,6 @@ export function AgentTopBar() {
     const [stats, setStats] = useState<AgentStats | null>(null)
     const [loading, setLoading] = useState(true)
 
-    const {
-        isSupported,
-        isSubscribed,
-        isLoading: pushLoading,
-        subscribe,
-        unsubscribe
-    } = usePushNotifications()
-
     useEffect(() => {
         fetch('/api/agent/stats')
             .then(res => res.json())
@@ -46,87 +37,48 @@ export function AgentTopBar() {
             .finally(() => setLoading(false))
     }, [])
 
-    const handleNotifToggle = async () => {
-        if (isSubscribed) {
-            await unsubscribe()
-        } else {
-            try {
-                await subscribe()
-                if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                    navigator.vibrate([50, 50, 50])
-                }
-            } catch (error) {
-                console.error('Subscription failed', error)
-            }
-        }
-    }
-
     const earnings = stats?.month.estimatedEarnings ?? 0
     const userImage = stats?.user?.image
+    const userName = stats?.user?.name
 
+    // Hidden on mobile (md:flex), visible on desktop only
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 p-4 pt-[calc(env(safe-area-inset-top)+1rem)] flex justify-between items-center pointer-events-none">
-            {/* Left side: Profile + Notifications */}
-            <div className="flex items-center gap-2 pointer-events-auto">
-                {/* Profile Button */}
-                <Link href="/agent/profile/edit">
+        <header className="fixed top-0 left-0 right-0 z-50 p-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] hidden md:flex justify-between items-center pointer-events-none">
+            {/* Left: Avatar (desktop only) */}
+            <div className="pointer-events-auto">
+                <Link href="/agent/profile">
                     <motion.div
-                        whileTap={{ scale: 0.95 }}
-                        className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-lg hover:bg-black/60 transition-colors overflow-hidden"
+                        whileTap={{ scale: 0.93 }}
+                        className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-xl border border-white/15 flex items-center justify-center shadow-lg overflow-hidden"
                     >
                         {userImage ? (
-                            <img src={userImage} alt="Profile" className="w-full h-full object-cover" />
+                            <img src={userImage} alt="Profil" className="w-full h-full object-cover" />
                         ) : (
-                            <User className="w-5 h-5 text-white" />
+                            <span className="text-white text-sm font-semibold">
+                                {userName?.charAt(0)?.toUpperCase() || 'V'}
+                            </span>
                         )}
                     </motion.div>
                 </Link>
-
-                {/* Notification Toggle */}
-                {isSupported && (
-                    <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleNotifToggle}
-                        disabled={pushLoading}
-                        className={`w-11 h-11 rounded-full backdrop-blur-xl border flex items-center justify-center shadow-lg transition-colors ${isSubscribed
-                            ? 'bg-green-500/40 border-green-400/40 hover:bg-green-500/60'
-                            : 'bg-black/40 border-white/20 hover:bg-black/60'
-                            }`}
-                    >
-                        {pushLoading ? (
-                            <Loader2 className="w-5 h-5 text-white animate-spin" />
-                        ) : isSubscribed ? (
-                            <Bell className="w-5 h-5 text-white" />
-                        ) : (
-                            <BellOff className="w-5 h-5 text-white/60" />
-                        )}
-                    </motion.button>
-                )}
             </div>
 
-            {/* Earnings Pill */}
+            {/* Right: Earnings Pill (desktop only) */}
             <div className="pointer-events-auto">
                 <motion.div
-                    initial={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-full px-4 py-2.5 flex items-center gap-3 shadow-lg"
+                    className="bg-black/50 backdrop-blur-xl border border-white/15 rounded-full px-3.5 py-2 flex items-center gap-2.5 shadow-lg"
                 >
-                    <div className="flex items-center gap-1.5">
-                        <TrendingUp className="w-4 h-4 text-green-400" />
-                        <span className="text-gray-400 text-xs font-medium uppercase tracking-wider">
-                            Ce mois
-                        </span>
-                    </div>
-                    <div className="h-4 w-px bg-white/20" />
+                    <TrendingUp className="w-3.5 h-3.5 text-green-400" />
                     <AnimatePresence mode="wait">
                         {loading ? (
-                            <Loader2 className="w-4 h-4 text-white animate-spin" />
+                            <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
                         ) : (
                             <motion.span
                                 key={earnings}
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="text-white font-bold text-lg"
+                                className="text-white font-semibold text-sm"
                             >
                                 {earnings.toLocaleString('fr-FR', {
                                     style: 'currency',

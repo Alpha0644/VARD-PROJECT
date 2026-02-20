@@ -122,7 +122,12 @@ export function AgentMap({ missions = [], onMissionClick }: AgentMapProps) {
                 (pos) => {
                     setPosition([pos.coords.latitude, pos.coords.longitude])
                 },
-                (err) => console.error('Geolocation error:', err),
+                (err) => {
+                    // Silent fallback — map defaults to Paris center
+                    if (err.code !== err.PERMISSION_DENIED) {
+                        console.warn('[Map] Géolocalisation non disponible, utilisation de Paris par défaut')
+                    }
+                },
                 { enableHighAccuracy: true, timeout: 10000 }
             )
             setWatchId(id)
@@ -137,7 +142,7 @@ export function AgentMap({ missions = [], onMissionClick }: AgentMapProps) {
 
     if (!isMounted) {
         return (
-            <div className="h-full w-full bg-gray-900 flex items-center justify-center">
+            <div className="h-screen w-full bg-gray-900 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span className="text-white/70 text-sm">Chargement de la carte...</span>
@@ -146,21 +151,27 @@ export function AgentMap({ missions = [], onMissionClick }: AgentMapProps) {
         )
     }
 
-    // Paris default center if no position yet
+    // Paris default center — zoom 11 to see all Île-de-France
     const center: [number, number] = position || [48.8566, 2.3522]
+    const defaultZoom = position ? 13 : 11
 
     return (
-        <div className="relative h-full w-full">
+        <div className="relative h-screen w-full">
             <MapContainer
                 center={center}
-                zoom={13}
+                zoom={defaultZoom}
                 style={{ height: '100%', width: '100%' }}
                 zoomControl={false}
+                scrollWheelZoom={true}
+                touchZoom={true}
+                doubleClickZoom={true}
+                dragging={true}
             >
-                {/* Dark Mode Tiles */}
+                {/* Map Tiles — OpenStreetMap (fiable sur tous les appareils) */}
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    maxZoom={19}
                 />
 
                 {/* Agent Position Marker */}

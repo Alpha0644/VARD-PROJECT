@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { pusherServer } from '@/lib/pusher'
-import { sendPushNotification } from '@/lib/web-push'
+import { sendNotificationToUser } from '@/lib/fcm'
 import { logger, logError, logMission } from '@/lib/logger'
 
 export async function POST(
@@ -99,34 +99,14 @@ export async function POST(
                         title: mission.title
                     })
 
-                    const subscription = await db.pushSubscription.findFirst({
-                        where: { userId: agentUserId },
-                        orderBy: { createdAt: 'desc' }
-                    })
-
-                    if (subscription) {
-                        try {
-                            const payload = {
-                                title: '🚫 Mission Annulée',
-                                body: `L'entreprise a annulé la mission "${mission.title}".`,
-                                icon: '/icons/icon-192x192.png',
-                                data: { url: '/agent/missions' }
-                            }
-
-                            const subFormatted = {
-                                endpoint: subscription.endpoint,
-                                keys: {
-                                    p256dh: subscription.p256dh,
-                                    auth: subscription.auth
-                                }
-                            }
-
-                            await sendPushNotification(subFormatted, payload)
-                        } catch (e) {
-                            logError(e, { context: 'cancel-push-failed', agentUserId, missionId: id })
-                        }
-                    } else {
-                        logger.warn({ agentUserId, missionId: id }, 'No push subscription found during cancellation')
+                    try {
+                        await sendNotificationToUser(agentUserId, {
+                            title: 'Mission annulée',
+                            body: `${mission.title} · Annulée par l'entreprise`,
+                            data: { url: '/agent/missions' }
+                        })
+                    } catch (e) {
+                        logError(e, { context: 'cancel-push-failed', agentUserId, missionId: id })
                     }
                 }
             }

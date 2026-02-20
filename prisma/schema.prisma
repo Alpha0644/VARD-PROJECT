@@ -185,11 +185,15 @@ model PushSubscription {
     id        String   @id @default(cuid())
     userId    String
     endpoint  String   @unique
-    p256dh    String   // Public key
-    auth      String   // Auth secret
+    p256dh    String?  // Web Push public key (Web only)
+    auth      String?  // Web Push auth secret (Web only)
+    fcmToken  String?  // Firebase Cloud Messaging token (Mobile only)
+    platform  String   @default("web") // "web" | "android" | "ios"
     createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
     
     @@index([userId])
+    @@index([platform])
 }
 
 model Review {

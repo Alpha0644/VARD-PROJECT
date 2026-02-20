@@ -66,6 +66,74 @@ tests/visual/reference/
 
 # Cost monitoring history (can be committed if you want)
 .omega/cost-history.json
+# OMEGA v3.1 - Git Ignore File
+# Files and folders that should NEVER be committed
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+*.lcov
+.nyc_output
+
+# Next.js
+.next/
+out/
+build/
+
+# Production
+dist/
+
+# Environment variables (SECRETS!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Vercel
+.vercel
+
+# Sentry
+.sentryclirc
+
+# Mutation testing reports
+.stryker-tmp/
+/reports/
+
+# Visual regression
+tests/visual/test/
+tests/visual/reference/
+
+# Cost monitoring history (can be committed if you want)
+.omega/cost-history.json
 
 # Personal notes (optional)
 TODO.md
@@ -79,3 +147,7 @@ test-results/
 auth_fail.txt
 auth_results.txt
 logs.txt
+
+# Firebase (NEVER commit these)
+service-account.json
+google-services.json
